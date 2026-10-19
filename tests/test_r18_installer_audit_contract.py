@@ -17,8 +17,9 @@ class R18ReleaseGate(unittest.TestCase):
         self.assertIn('tar.exe -a -c', ONEDIR)
         self.assertIn('set "INSTALLER_PAYLOAD=0"', ONEDIR)
     def test_version_filename_sanitized(self):
-        self.assertIn('findstr /R /X', BUILD)
-        self.assertNotIn('set /p "SFM_APP_VERSION="', BUILD)
+        self.assertIn('call :validate_release_version', BUILD)
+        self.assertIn('for /f "usebackq delims="', BUILD)
+        self.assertIn('REASON=%VERSION_PROBLEM%', BUILD)
     def test_appmutex_from_real_application(self):
         app=(ROOT / 'source/Sunrise.FileManager/App.xaml.cs').read_text()
         self.assertIn(r'Local\SunriseFileManagerCEF',app)

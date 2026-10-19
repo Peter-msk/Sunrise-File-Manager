@@ -27,13 +27,38 @@ set "FAILED_STAGE=PREFLIGHT"
 >> "%RESULT%" echo FORMAT=INSTALLER_SETUP_EXE
 >> "%RESULT%" echo COMPANY_LOGIC_TESTS=SKIPPED
 if not exist "%ROOT%\COMPANY_SOURCE_ONLY.flag" goto :fail_company
-if not exist "%VERSION_FILE%" goto :fail_version
-if not exist "%ISS%" goto :fail_version
+REM Always report which preflight check failed; do not treat all errors as a missing SDK.
+set "VERSION_PROBLEM="
+set "VERSION_DIAG=%LOG_DIR%\R15_version_preflight.log"
+> "%VERSION_DIAG%" echo STAGE=VERSION_PREFLIGHT
+>> "%VERSION_DIAG%" echo VERSION_FILE=%VERSION_FILE%
+>> "%VERSION_DIAG%" echo ISS_FILE=%ISS%
+if not exist "%VERSION_FILE%" (
+ set "VERSION_PROBLEM=VERSION_FILE_MISSING"
+ goto :fail_version
+)
+if not exist "%ISS%" (
+ set "VERSION_PROBLEM=INNO_SCRIPT_MISSING"
+ goto :fail_version
+)
+REM Read the first non-empty line directly. Previous nested FINDSTR regex gave no
+REM diagnostic when no line matched, even for a perfectly normal 1.0.0 file.
 set "SFM_APP_VERSION="
-REM Obtain only a validated three-part numeric version from the release file.
-REM This avoids using an arbitrary version-file string inside CMD or a filename.
-for /f "delims=" %%V in ('findstr /R /X /C:"[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" "%VERSION_FILE%"') do if not defined SFM_APP_VERSION set "SFM_APP_VERSION=%%V"
-if not defined SFM_APP_VERSION goto :fail_version
+for /f "usebackq delims=" %%V in ("%VERSION_FILE%") do if not defined SFM_APP_VERSION set "SFM_APP_VERSION=%%V"
+if not defined SFM_APP_VERSION (
+ set "VERSION_PROBLEM=VERSION_FILE_EMPTY"
+ goto :fail_version
+)
+REM Validate that the exact value consists of THREE nonempty decimal segments.
+REM Do not silently fall back to a different version or continue with bad data.
+call :validate_release_version "%SFM_APP_VERSION%"
+if errorlevel 1 (
+ set "VERSION_PROBLEM=VERSION_INVALID_EXPECTED_THREE_NUMERIC_SEGMENTS"
+ goto :fail_version
+)
+>> "%VERSION_DIAG%" echo CHECK=PASS
+>> "%VERSION_DIAG%" echo VERSION=%SFM_APP_VERSION%
+echo [VERSION] OK: %SFM_APP_VERSION% from installer\RELEASE_VERSION.txt
 REM The release version is maintained in installer\RELEASE_VERSION.txt.
 REM Do not modify it silently or derive it from the internal Rxx revision.
 set "FINAL_SETUP=%DIST%\Sunrise_File_Manager_%SFM_APP_VERSION%_Setup.exe"
@@ -122,11 +147,52 @@ echo "%FINAL_SETUP%"
 if "%NO_PAUSE%"=="0" start "" explorer.exe /select,"%FINAL_SETUP%"
 if "%NO_PAUSE%"=="0" pause
 exit /b 0
+REM Version check is intentionally independent of FINDSTR's regex engine and
+REM Windows file line-ending style; uses built-in FOR tokenization and digit checks.
+:validate_release_version
+setlocal EnableExtensions DisableDelayedExpansion
+set "VRAW=%~1"
+set "VMAJOR="
+set "VMINOR="
+set "VPATCH="
+set "VEXTRA="
+for /f "tokens=1-4 delims=." %%A in ("%VRAW%") do (
+ set "VMAJOR=%%A"
+ set "VMINOR=%%B"
+ set "VPATCH=%%C"
+ set "VEXTRA=%%D"
+)
+if not defined VMAJOR (endlocal & exit /b 1)
+if not defined VMINOR (endlocal & exit /b 1)
+if not defined VPATCH (endlocal & exit /b 1)
+if defined VEXTRA (endlocal & exit /b 1)
+REM An exact reconstruction rejects leading/trailing/doubled dots.
+if not "%VRAW%"=="%VMAJOR%.%VMINOR%.%VPATCH%" (endlocal & exit /b 1)
+call :check_decimal_segment "%VMAJOR%"
+if errorlevel 1 (endlocal & exit /b 1)
+call :check_decimal_segment "%VMINOR%"
+if errorlevel 1 (endlocal & exit /b 1)
+call :check_decimal_segment "%VPATCH%"
+if errorlevel 1 (endlocal & exit /b 1)
+endlocal & exit /b 0
+
+:check_decimal_segment
+if "%~1"=="" exit /b 1
+REM Digits are FOR delimiters. If ANY other character remains, reject.
+for /f "delims=0123456789" %%D in ("%~1") do exit /b 1
+exit /b 0
+
 :fail_company
 set "FAILED_STAGE=COMPANY_POLICY"
 goto :fail
 :fail_version
 set "FAILED_STAGE=VERSION_OR_INSTALLER_CONFIG"
+if not defined VERSION_PROBLEM set "VERSION_PROBLEM=UNKNOWN_VERSION_CONFIG_ERROR"
+>> "%VERSION_DIAG%" echo CHECK=FAILED
+>> "%VERSION_DIAG%" echo REASON=%VERSION_PROBLEM%
+echo [ERROR] VERSION preflight failed: %VERSION_PROBLEM%
+echo [ERROR] Expected installer\RELEASE_VERSION.txt as a single version such as 1.0.0.
+echo [ERROR] Detailed diagnostic: build-logs\R15_version_preflight.log
 goto :fail
 :fail_inno
 set "FAILED_STAGE=INNO_SETUP_NOT_FOUND"
@@ -161,6 +227,7 @@ set "FAILED_STAGE=COMMIT_RESTORE"
 echo [ERROR] Installer build stopped at %FAILED_STAGE%.
 > "%RESULT%" echo STATUS=FAILED
 >> "%RESULT%" echo STAGE=%FAILED_STAGE%
+if defined VERSION_PROBLEM >> "%RESULT%" echo DETAIL=%VERSION_PROBLEM%
 >> "%RESULT%" echo FORMAT=INSTALLER_SETUP_EXE
 >> "%RESULT%" echo COMPANY_LOGIC_TESTS=SKIPPED
 if "%NO_PAUSE%"=="0" pause

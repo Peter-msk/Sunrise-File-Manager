@@ -16,6 +16,10 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 - 로컬 Ollama AI 연결은 선택 기능이며, AI 없이도 파일 관리 가능
 - 창·탭·분할 및 일부 탐색 상태 재실행 복원
 
+### R19 설치형 버전검사 핫픽스 R01
+
+`VERSION_OR_INSTALLER_CONFIG` 오류를 세부 진단하도록 개선했습니다. 정상 `installer/RELEASE_VERSION.txt`는 `1.0.0`이며, 문제 발생 시 `build-logs/R15_version_preflight.log`와 `R15_INSTALLER_BUILD_RESULT.txt`를 확인합니다. 상세 내용은 `docs/R19_INSTALLER_VERSION_HOTFIX_R01.md`를 참조하세요. Windows 실빌드 결과는 아직 검증되지 않았습니다.
+
 ## 빌드 환경
 
 **Windows x64 빌드 PC**에서 다음 개발도구가 필요합니다.
