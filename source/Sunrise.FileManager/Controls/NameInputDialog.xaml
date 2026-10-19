@@ -1,0 +1,16 @@
+<Window Style="{StaticResource AppWindow}" x:Class="Sunrise.FileManager.Controls.NameInputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="420" Height="174" MinWidth="340" MaxHeight="220"
+        WindowStartupLocation="CenterOwner" WindowStyle="SingleBorderWindow"
+        ResizeMode="NoResize" ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="38"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <TextBlock x:Name="PromptText" Text="이름" FontSize="12" Margin="0,0,0,8"/>
+        <TextBox Grid.Row="1" x:Name="NameBox" MinHeight="30" VerticalContentAlignment="Center"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Button Content="취소" MinWidth="70" Margin="0,0,8,0" IsCancel="True"/>
+            <Button Content="확인" MinWidth="70" IsDefault="True" Click="Confirm_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

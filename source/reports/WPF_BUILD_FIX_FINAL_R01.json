@@ -1,0 +1,35 @@
+{
+  "baseline": "Sunrise_File_Manager_OpenSource_Full.zip",
+  "patch": "Sunrise_File_Manager_WPF_Build_Hotfix_R01.zip",
+  "code_changes": [
+    {
+      "path": "source/Sunrise.FileManager/MainWindow.xaml.cs",
+      "sha256_before": "d7687fd7e12b2784db8885862933b36e6fde3ed2f2399f4f04b04869e4525146",
+      "sha256_after": "7703e1239230df18ba099a6b82f360210a48525eb732d44fcec8d85fc630e74d"
+    },
+    {
+      "path": "source/Sunrise.FileManager/Controls/FileInspector.xaml.cs",
+      "sha256_before": "2737bd0eae0db7345e3309153219ce892a15b6e07fb7ed440937cb8ad6faf99e",
+      "sha256_after": "886b98edf4e60ab0aa07149d347ca7f3800c8ccdbd58a41b987ee4c1e31337e4"
+    }
+  ],
+  "source_preservation": "Pending verification",
+  "windows_wpf_build": "NOT_RUN",
+  "notes": "Linux environment lacks Windows WPF runtime and dotnet SDK",
+  "baseline_file_count": 125,
+  "removed_original_files": [],
+  "changed_original_files": [
+    "source/Sunrise.FileManager/Controls/FileInspector.xaml.cs",
+    "source/Sunrise.FileManager/MainWindow.xaml.cs"
+  ],
+  "new_files_before_manifest": [
+    "WPF_BUILD_FIX_FINAL_R01.md",
+    "source/reports/WPF_BUILD_FIX_FINAL_R01.json",
+    "source/tests/test_wpf_hotfix_integration.py"
+  ],
+  "python_regression": "45 passed, 26 subtests passed",
+  "xaml_static_audit": "PASS 368 contracts",
+  "wpf_compile_windows": "NOT RUN; no Windows environment / dotnet in this session",
+  "original_source_files_preserved": true,
+  "assembly_or_executable_generated": false
+}

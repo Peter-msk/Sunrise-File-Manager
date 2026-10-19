@@ -1,0 +1,22 @@
+<UserControl x:Class="Sunrise.FileManager.Controls.FilePreviewPanel" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" MinWidth="260" Background="{DynamicResource ThemeSurface}">
+ <Border Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1">
+  <Grid x:Name="PreviewRegion" Background="{DynamicResource ThemeSoft}">
+    <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="*"/><RowDefinition Height="30"/></Grid.RowDefinitions>
+    <Grid Grid.Row="0" Background="{DynamicResource ThemeSoftAlt}">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+     <Grid Grid.Column="0" Margin="12,5,4,5">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <TextBlock Text="미리보기" FontWeight="SemiBold" VerticalAlignment="Center"/>
+      <TextBlock Grid.Column="1" x:Name="PreviewInfo" FontSize="11" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis" Margin="8,0,0,0" VerticalAlignment="Center"/>
+     </Grid>
+     <Button x:Name="ClosePreviewButton" Grid.Column="1" Content="✕" ToolTip="미리보기 열 닫기" AutomationProperties.Name="미리보기 닫기" Click="ClosePreviewButton_Click" Width="29" Height="26" Padding="0" Margin="0,4,8,4" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}"/>
+    </Grid>
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource ThemePreviewCanvas}" Padding="9">
+     <Grid><TextBox x:Name="PreviewText" IsReadOnly="True" IsReadOnlyCaretVisible="False" TextWrapping="Wrap" Background="{DynamicResource ThemeSurface}" BorderThickness="0" VerticalContentAlignment="Top" Padding="12" FontSize="12" Text="파일을 선택하세요"/>
+      <Image x:Name="PreviewImage" Visibility="Collapsed" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Top" MaxWidth="700"/>
+     </Grid>
+    </ScrollViewer>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"><Button x:Name="PreviousPage" Content="‹ 이전" Click="PreviousPage_Click" Padding="6,2" MinHeight="24"/><TextBlock x:Name="PageCount" Text="" VerticalAlignment="Center" Margin="12,0" FontSize="11"/><Button x:Name="NextPage" Content="다음 ›" Click="NextPage_Click" Padding="6,2" MinHeight="24"/></StackPanel>
+  </Grid>
+ </Border>
+</UserControl>

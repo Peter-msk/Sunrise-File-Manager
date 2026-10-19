@@ -1,0 +1,42 @@
+<Window Style="{StaticResource AppWindow}" x:Class="Sunrise.FileManager.Controls.PreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sunrise · 문서 미리보기" Width="1030" Height="770" MinWidth="620" MinHeight="460"
+        WindowStartupLocation="CenterOwner" Closing="Window_Closing" KeyDown="Window_KeyDown">
+    <Grid Margin="16">
+        <Grid.RowDefinitions><RowDefinition Height="46"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" LastChildFill="True">
+            <Button DockPanel.Dock="Right" Content="닫기" Click="Close_Click" Width="66" Margin="10,0,0,4"/>
+            <Button DockPanel.Dock="Right" Content="연결 앱에서 열기" Click="OpenOriginal_Click" BorderBrush="{DynamicResource PanelBorder}" Margin="8,0,0,4"/>
+            <TextBlock x:Name="DocumentName" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        </DockPanel>
+        <StackPanel Grid.Row="1"><TextBlock x:Name="HangulNotice" Visibility="Collapsed" Text="HWPX는 저장된 첫 쪽 이미지 또는 텍스트를 표시합니다. 전체 문서와 편집은 연결 앱에서 확인하세요." Background="{DynamicResource ThemeNotice}" Foreground="{DynamicResource ThemeNoticeText}" Padding="10,8" TextWrapping="Wrap" Margin="0,0,0,8"/><TextBlock x:Name="DocumentDetail" FontSize="11" TextTrimming="CharacterEllipsis"
+                   Foreground="{DynamicResource TextMuted}" Margin="0,0,0,10"/></StackPanel>
+        <Border Grid.Row="2" Padding="15" Background="{DynamicResource ThemePreviewCanvas}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="7">
+            <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <Border x:Name="PageSurface" Background="{DynamicResource ThemeSoft}" Padding="34" HorizontalAlignment="Center" Width="740" MinHeight="550">
+                    <Grid>
+                        <TextBox x:Name="PageText" TextWrapping="Wrap" IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                                 BorderThickness="0" Background="Transparent" Foreground="{DynamicResource TextPrimary}"
+                                 FontFamily="Malgun Gothic" FontSize="14" VerticalScrollBarVisibility="Disabled"
+                                 HorizontalScrollBarVisibility="Disabled" Text="미리보기를 불러오는 중..."/>
+                        <Image x:Name="PageImage" Stretch="Uniform" Visibility="Collapsed"/>
+                    </Grid>
+                </Border>
+            </ScrollViewer>
+        </Border>
+        <Grid Grid.Row="3" Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <WrapPanel>
+                <Button x:Name="TextFallbackButton" Content="PDF 텍스트 보기" Click="TextFallback_Click" Margin="0,0,8,0" Visibility="Collapsed"/>
+                <Button x:Name="PreviousButton" Content="이전" Click="Previous_Click" Width="64"/>
+                <TextBlock x:Name="PageCounter" Text="1 / 1" VerticalAlignment="Center" Margin="12,0" MinWidth="52" TextAlignment="Center"/>
+                <Button x:Name="NextButton" Content="다음" Click="Next_Click" Width="64"/>
+            </WrapPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="확대" VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}" Margin="8,0"/>
+                <Slider x:Name="ZoomSlider" Minimum="75" Maximum="175" Value="100" Width="90" TickFrequency="25" IsSnapToTickEnabled="True" ValueChanged="Zoom_ValueChanged"/>
+                <TextBlock x:Name="ZoomLabel" Text="100%" Width="42" Margin="6,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

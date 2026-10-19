@@ -1,0 +1,16 @@
+PASS: no_powershell_dependency
+PASS: ascii_crlf_cmd
+PASS: sdk_10_consistent
+PASS: recognizes_dotnet_10
+PASS: no_downgrade_sdk_8_9
+PASS: no_framework_dependent_fallback
+PASS: verified_wpf_runtime
+PASS: stage_then_publish
+PASS: full_source_copy
+PASS: zip_validation
+PASS: error_status
+PASS: runner_exists
+PASS: current_installer_company
+PASS: source_complete
+PASS: install_ollama_separate
+PASS: 15 CMD packaging contract checks

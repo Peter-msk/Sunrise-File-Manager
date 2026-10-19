@@ -1,0 +1,28 @@
+{
+  "baseline": "Sunrise_File_Manager_OpenSource_Full(1).zip",
+  "compared_with": "Sunrise_File_Manager_OpenSource_Full_BUILD_PIPELINE_R02.zip",
+  "source_files_retained": 147,
+  "changed_original_code_files": [
+    "source/Sunrise.FileManager/Features/FileSystem/FileActionsService.ArchiveAndShell.cs",
+    "source/tests/LogicTests/AiOllamaAndExplorerTests.cs"
+  ],
+  "build_log_errors_addressed": [
+    "CS1001",
+    "CS1002",
+    "CS8997"
+  ],
+  "python_unittest": {
+    "passed": 51,
+    "failed": 0
+  },
+  "xaml_source_audit": {
+    "passed": 382,
+    "failed": 0
+  },
+  "layout_contract": {
+    "passed": 144,
+    "failed": 0
+  },
+  "windows_dotnet_build": "NOT_RUN_dotnet_not_installed_in_execution_environment",
+  "previous_ollama_and_cmd_unchanged": true
+}

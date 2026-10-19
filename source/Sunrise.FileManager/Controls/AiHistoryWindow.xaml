@@ -1,0 +1,34 @@
+<Window Style="{StaticResource AppWindow}" x:Class="Sunrise.FileManager.Controls.AiHistoryWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="작업 기록 · 검증형 되돌리기" Width="1000" Height="650" MinWidth="760" MinHeight="480"
+ Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}"
+ WindowStartupLocation="CenterOwner" Closing="Window_Closing">
+ <Grid Margin="14">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <StackPanel Grid.Row="0">
+   <TextBlock Text="작업 기록 · 되돌리기" FontSize="21" FontWeight="SemiBold"/>
+   <TextBlock Text="이름 변경·동일 드라이브 이동만 검증 후 되돌립니다. 복사·폴더 생성·휴지통 작업은 자동으로 되돌리지 않습니다." TextWrapping="Wrap" Margin="0,8"/>
+  </StackPanel>
+  <ComboBox x:Name="Jobs" Grid.Row="1" DisplayMemberPath="Display" SelectionChanged="Jobs_SelectionChanged" Margin="0,0,0,8"/>
+  <WrapPanel Grid.Row="2" Margin="0,0,0,8">
+   <Button x:Name="ReloadButton" Content="기록 새로고침" Click="Reload_Click" Margin="0,0,6,4"/>
+   <Button x:Name="InspectButton" Content="중단 상태 검사" Click="Inspect_Click" Margin="0,0,6,4"/>
+   <Button x:Name="PreviewButton" Content="되돌리기 미리보기" Click="Preview_Click" Margin="0,0,6,4"/>
+   <Button x:Name="UndoButton" Content="승인 후 되돌리기" Click="Undo_Click" IsEnabled="False" Margin="0,0,6,4"/>
+   <Button Content="취소" Click="Cancel_Click" Margin="0,0,6,4"/>
+  </WrapPanel>
+  <DataGrid x:Name="Rows" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" EnableRowVirtualization="True">
+   <DataGrid.Columns>
+    <DataGridTextColumn Header="작업" Binding="{Binding Action}" Width="110"/>
+    <DataGridTextColumn Header="현재 / 변경 전" Binding="{Binding Before}" Width="*"/>
+    <DataGridTextColumn Header="변경 후 / 원래 경로" Binding="{Binding After}" Width="*"/>
+    <DataGridTextColumn Header="상태" Binding="{Binding Status}" Width="220"/>
+   </DataGrid.Columns>
+  </DataGrid>
+  <StackPanel Grid.Row="4" Margin="0,10,0,0">
+   <ProgressBar x:Name="Progress" Minimum="0" Maximum="100" Height="12"/>
+   <TextBlock x:Name="Status" Text="기록을 불러오고 있습니다." TextWrapping="Wrap" Margin="0,6,0,0"/>
+  </StackPanel>
+ </Grid>
+</Window>

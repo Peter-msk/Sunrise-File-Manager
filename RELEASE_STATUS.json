@@ -1,0 +1,66 @@
+{
+  "product": "Sunrise File Manager",
+  "edition": "Installer (Windows x64)",
+  "license": "Apache-2.0",
+  "onboard_ai": {
+    "engine": "Ollama (https://github.com/ollama/ollama)",
+    "endpoint": "http://127.0.0.1:11434",
+    "gemini_removed": true,
+    "installer_shell": "cmd.exe (PowerShell strictly prohibited)",
+    "onboarding_flow": "Explains Onboard AI feature on AI Connect button click, lets user choose Install vs Skip, auto-installs from GitHub via cmd.exe"
+  },
+  "windows_explorer_parity": [
+    "Back/Forward/Up/Refresh navigation + clickable Breadcrumb path bar + editable Address bar (Ctrl+L/Alt+D)",
+    "Multi-tab browsing (Ctrl+T new tab, Ctrl+W close tab, Ctrl+Tab switch tab, Open folder in new tab)",
+    "Quick Access sidebar (Home, Desktop, Downloads, Documents, Pictures, Music, Videos, Recycle Bin) + Pinned Favorites",
+    "This PC drive list with volume labels, free/total capacity text, and visual usage bars",
+    "Full file operations: Open, Open With, Cut, Copy, Paste, Duplicate (Ctrl+D), New Folder (Ctrl+Shift+N), New File (Ctrl+N), Rename (F2), Recycle (Delete), Permanent Delete (Shift+Delete)",
+    "Built-in ZIP archive compression, extraction (with Zip-Slip protection), and ZIP content preview",
+    "View modes (Details, List, Large Icons/Thumbnails, Small Icons, Tiles), Category filter, Show Hidden Items, Show File Extensions, Item Checkboxes",
+    "Internal & external Windows Explorer Drag-and-Drop (DataFormats.FileDrop) + subfolder drop",
+    "Open CMD Here (cmd.exe), Open in Windows Explorer, Copy Path (Ctrl+Shift+C), Copy Name, Windows Properties (Alt+Enter), SHA-256 hash inspector"
+  ],
+  "build_pipeline": {
+    "revision": "R16_INSTALLER_AUDIT",
+    "target_sdk": "10.0.x",
+    "framework": "net10.0-windows10.0.19041.0",
+    "distribution": "Windows x64 signed installer Setup EXE",
+    "ollama_required_for_build": false,
+    "windows_compilation_verified": false,
+    "reason": "Current authoring host is Linux without dotnet SDK or Windows WPF runtime; requires Windows validation.",
+    "company_mode": {
+      "entrypoint": "BUILD_ON_WINDOWS_COMPANY.cmd",
+      "logic_tests": "SKIPPED_DUE_TO_COMPANY_DOCUMENT_ACCESS_POLICY",
+      "fixture": "EXCLUDED_IN_COMPANY_ZIP",
+      "self_contained_publish": true,
+      "run_gui_tests": false
+    },
+    "windows_setup_verified": false,
+    "signing_verified_on_windows": false
+  },
+  "distribution_policy": {
+    "revision": "R16_INSTALLER_AUDIT",
+    "official_format": "installer",
+    "setup_engine": "Inno Setup",
+    "initial_installer_version": "1.0.0",
+    "official_builder": "BUILD_ON_WINDOWS_COMPANY.cmd",
+    "backend": "R14 signed self-contained WPF OneDir embedded in installer",
+    "company_document_tests": "SKIPPED",
+    "windows_install_verify": "PENDING",
+    "online_update_endpoint": "NOT_CONFIGURED",
+    "source_audit": "STATIC_TEST_PASS_WINDOWS_GATES_PENDING"
+  },
+  "revision": "R19_MEMO_AUTHOR_INTEGRITY_OPTIN_DPAPI_HISTORY",
+  "release_qualification": "SOURCE_STATIC_PASS_WINDOWS_RELEASE_PENDING",
+  "drive_comparison_baseline": "Sunrise_File_Manager_COMPANY_FULL_SOURCE_R12_AUDITED.zip",
+  "memo_security": {
+    "author_display_name": "optional_user_input_fallback_windows_username",
+    "shared_memo_format": "legacy_GZIP_JSON_NOT_ENCRYPTED",
+    "local_tamper_reference": "DPAPI_PROTECTED_SHA256_FIRST_OBSERVATION",
+    "local_history": "OPT_IN_DPAPI_ENCRYPTED_MEMO_ONLY",
+    "history_retention": "25_PER_MEMO_250MB_GLOBAL",
+    "restore": "USER_APPROVED_VERSION_SELECT_COMPARE",
+    "identity_authentication": "NOT_IMPLEMENTED",
+    "windows_runtime_verification": "PENDING"
+  }
+}

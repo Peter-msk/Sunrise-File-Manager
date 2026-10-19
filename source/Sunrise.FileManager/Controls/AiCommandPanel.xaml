@@ -1,0 +1,92 @@
+<UserControl x:Class="Sunrise.FileManager.Controls.AiCommandPanel"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Foreground="{DynamicResource TextPrimary}" MinHeight="560">
+ <Border Background="{DynamicResource PanelBackground}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="4" Padding="14">
+  <Grid>
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="70"/><RowDefinition Height="Auto"/><RowDefinition Height="2*" MinHeight="80"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <Grid Grid.Row="0">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel Grid.Column="0">
+     <TextBlock Text="AI 파일 검색 · 정리" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+     <TextBlock Text="탐색 범위 지정 → 명령 입력 → 결과 검토 → 승인 후 실행" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
+     <TextBlock x:Name="ScopeLabel" Text="탐색기에서 항목을 선택하세요." TextWrapping="Wrap" FontSize="12"/>
+    </StackPanel>
+    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+     <TextBlock x:Name="OllamaBadgeText" Text="AI 상태 확인 전" MaxWidth="88" TextTrimming="CharacterEllipsis" FontSize="11.5" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+     <Button x:Name="OllamaConnectButton" Style="{StaticResource PrimaryButton}" Content="AI 연결" Click="OllamaConnect_Click" Padding="10,5" FontWeight="SemiBold" ToolTip="Ollama 연결 및 설치"/>
+     <Button x:Name="CloseAiPanelButton" Content="✕ 닫기" Style="{StaticResource ExplorerCommand}" Click="CloseAiPanel_Click" Padding="10,5" Margin="7,0,0,0" ToolTip="AI 파일 정리 영역 닫기 (F8)"/>
+    </StackPanel>
+   </Grid>
+   <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+   <StackPanel Margin="0,8,0,6">
+    <TextBlock Text="① 탐색 범위" FontWeight="SemiBold" Margin="0,0,0,5"/>
+    <ComboBox x:Name="ScopeMode" SelectedIndex="0" SelectionChanged="Input_Changed" Margin="0,0,0,7">
+     <ComboBoxItem Content="선택한 항목만 (기본)"/>
+     <ComboBoxItem Content="현재 폴더 및 하위 폴더 검색 (최대 5,000개 검사)"/>
+    </ComboBox>
+    <TextBlock Text="② AI 명령 / 정리 방법" FontWeight="SemiBold" Margin="0,0,0,5"/>
+    <ComboBox x:Name="QuickAction" SelectedIndex="0" SelectionChanged="QuickAction_Changed" ToolTip="정리 방식 선택 · 내 PC 온보드 AI(Ollama) 또는 오프라인 규칙 실행">
+     <ComboBoxItem Content="자연어 명령 (파일 검색·본문 검색·복사·이동·이름 변경·휴지통)" Tag="__natural__"/>
+     <ComboBoxItem Content="직접 명령 입력 (고급 · 기존 문법)" Tag=""/>
+     <ComboBoxItem Content="파일 유형별 분류하여 이동 (문서·이미지 등)" Tag="유형별 이동"/>
+     <ComboBoxItem Content="파일 확장자별 분류하여 이동 (PDF·HWPX 등)" Tag="확장자별 이동"/>
+     <ComboBoxItem Content="수정 날짜별 분류하여 이동" Tag="날짜별 이동"/>
+     <ComboBoxItem Content="수정 연도별 분류하여 이동" Tag="연도별 이동"/>
+     <ComboBoxItem Content="파일 크기별 분류하여 이동" Tag="크기별 이동"/>
+     <ComboBoxItem Content="파일 유형별 분류하여 복사 (원본 유지)" Tag="유형별 복사"/>
+    </ComboBox>
+    <TextBlock x:Name="QuickDescription" Text="파일명·위치를 변경하기 전 결과를 반드시 검토합니다." Foreground="{DynamicResource TextMuted}" FontSize="11" Margin="0,5,0,2" TextWrapping="Wrap"/>
+    <Expander Header="온보드 AI 엔진 선택 (외부 클라우드 서버 전송 없음 · 100% 내 PC 실행)" IsExpanded="True" Margin="0,5,0,0">
+     <StackPanel Margin="0,4">
+      <ComboBox x:Name="Provider" SelectedIndex="0" SelectionChanged="Provider_Changed">
+       <ComboBoxItem Content="로컬 규칙 엔진 · 즉시 실행 (기본 · AI 미설치 시에도 사용 가능)"/>
+       <ComboBoxItem Content="Ollama · 내 PC 온보드 오픈소스 AI (GitHub: ollama/ollama)"/>
+      </ComboBox>
+      <ComboBox x:Name="DataGrade" SelectedIndex="0" SelectionChanged="Input_Changed" Margin="0,5,0,0" Visibility="Collapsed">
+       <ComboBoxItem Content="내부자료 · 로컬 온보드 전용"/><ComboBoxItem Content="일반자료 · 로컬 온보드 전용"/><ComboBoxItem Content="보호·기밀자료 · 로컬 온보드 전용"/>
+      </ComboBox>
+     </StackPanel>
+    </Expander>
+    <TextBlock Text="명령 입력 (예: 최근 7일 수정된 한글/PDF 파일 찾아줘 / 선택한 파일 주제별 폴더로 분류해 줘)" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="0,8,0,2"/>
+    <TextBox x:Name="CommandBox" AcceptsReturn="True" Height="64" MaxLength="4000" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" TextChanged="Input_Changed" Margin="0,6,0,0"/>
+    <Expander Header="지원 명령과 제한사항" Margin="0,4"><TextBlock x:Name="HelpText" FontSize="12" TextWrapping="Wrap"/></Expander>
+    <CheckBox x:Name="ContentReadApproval" Content="문서 본문 읽기 허용 (선택한 검색 범위 내 PDF·HWPX·DOCX·TXT·MD, 외부 전송 없음)"
+              IsChecked="False" Checked="Input_Changed" Unchecked="Input_Changed" Margin="0,6,0,3"
+              ToolTip="본문 검색 및 온보드 AI 문서 요약에서 사용됩니다. PDF 앞 4쪽, DOCX/HWPX 본문 앞부분 최대 16,000자까지 로컬 읽기"/>
+    <TextBlock Text="② 결과 파일을 저장할 폴더" FontWeight="SemiBold" Margin="0,8,0,2"/>
+    <WrapPanel Margin="0,4">
+     <Button x:Name="DestinationButton" Content="📁 대상 폴더 지정…" Style="{StaticResource ExplorerCommand}" Click="Destination_Click" Margin="0,0,6,0"/>
+     <Button x:Name="UseOtherPaneButton" Content="⇄ 반대쪽 분할 패널 폴더 사용" Style="{StaticResource ExplorerCommand}" Click="UseOtherPane_Click" Margin="0,0,6,0" ToolTip="2~4분할 화면에서 다른 탐색기 패널에 열려 있는 폴더를 즉시 대상 폴더로 지정합니다."/>
+     <Button x:Name="UseCurrentFolderButton" Content="📂 현재 폴더를 대상으로 지정" Style="{StaticResource ExplorerCommand}" Click="UseCurrentFolder_Click" ToolTip="현재 탐색기 폴더 아래에 분류 폴더를 생성하도록 지정합니다."/>
+    </WrapPanel>
+    <TextBlock x:Name="DestinationLabel" Text="대상 폴더 미선택 · 이동/복사는 실행 전 반드시 지정" TextWrapping="Wrap" MaxHeight="34" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" FontSize="12"/>
+    <ComboBox x:Name="Collision" SelectedIndex="0" SelectionChanged="Input_Changed" Margin="0,5"><ComboBoxItem Content="충돌: 건너뛰기"/><ComboBoxItem Content="충돌: 번호를 붙인 이름 미리보기"/></ComboBox>
+   </StackPanel>
+   </ScrollViewer>
+   <WrapPanel Grid.Row="2" Margin="0,0,0,6">
+    <Button x:Name="PlanButton" Style="{StaticResource PrimaryButton}" Content="③ 검색·작업 계획 확인" Click="Plan_Click" Margin="0,0,4,4"/>
+    <Button x:Name="ExecuteButton" Style="{StaticResource PrimaryButton}" Content="④ 확인하고 실행" Click="Execute_Click" IsEnabled="False" Margin="0,0,4,4"/>
+    <Button x:Name="AskOllamaButton" Content="💬 온보드 AI 문서 요약·질의" Click="AskOllama_Click" Margin="0,0,4,4" ToolTip="선택한 파일이나 현재 폴더 정보를 내 PC의 Ollama 온보드 AI로 요약·질의합니다."/>
+    <Button x:Name="SaveSummaryMemoButton" Content="📝 요약을 #memo로 저장" Click="SaveSummaryMemo_Click" Visibility="Collapsed" Margin="0,0,4,4" ToolTip="방금 생성된 온보드 AI 요약 결과를 선택 파일의 #memo에 저장합니다."/>
+    <Button x:Name="SaveSummaryMdButton" Content="📄 요약을 .md 파일로 저장" Click="SaveSummaryMd_Click" Visibility="Collapsed" Margin="0,0,4,4" ToolTip="방금 생성된 온보드 AI 요약 결과를 현재 폴더에 마크다운(.md) 파일로 저장합니다."/>
+    <Button x:Name="InspectionButton" Content="중복 검사 / 분류 도구" Click="Inspection_Click" Margin="0,0,4,4"/>
+    <Button x:Name="HistoryButton" Content="작업 기록 / 되돌리기" Click="History_Click" Margin="0,0,4,4"/>
+    <Button x:Name="CancelButton" Content="계획 해제" Click="Cancel_Click" Margin="0,0,0,4"/>
+   </WrapPanel>
+   <DataGrid Grid.Row="3" x:Name="PlanGrid" MouseDoubleClick="PlanGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" EnableRowVirtualization="True" HorizontalScrollBarVisibility="Auto">
+    <DataGrid.Columns>
+     <DataGridTextColumn Header="작업" Binding="{Binding Action}" Width="70"/>
+     <DataGridTextColumn Header="변경 전" Binding="{Binding Before}" Width="200"/>
+     <DataGridTextColumn Header="변경 후" Binding="{Binding After}" Width="200"/>
+     <DataGridTextColumn Header="상태" Binding="{Binding Status}" Width="240"/>
+    </DataGrid.Columns>
+   </DataGrid>
+   <ScrollViewer Grid.Row="4" MaxHeight="105" VerticalScrollBarVisibility="Auto">
+   <StackPanel Margin="0,6,0,0">
+    <ProgressBar x:Name="Progress" Minimum="0" Maximum="100" Height="10"/>
+    <TextBlock x:Name="Status" Text="대기" TextWrapping="Wrap" FontSize="12" Margin="0,5,0,0"/>
+   </StackPanel>
+   </ScrollViewer>
+  </Grid>
+ </Border>
+</UserControl>

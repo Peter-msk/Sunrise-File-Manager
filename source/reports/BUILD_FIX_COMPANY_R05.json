@@ -1,0 +1,13 @@
+{
+  "version": "R05",
+  "base_archive": "Sunrise_File_Manager_OpenSource_Full_COMPANY_BUILD_R04.zip",
+  "fixed_file": "source/Sunrise.FileManager/Controls/AiCommandPanel.xaml.cs",
+  "fix": "SelectionSummary.Text -> ScopeLabel.Text",
+  "base_sha256": "7a51f3bf70375c8895239b9674ab4b5f60eabf0a92a30b5d923b2cc907bbc77c",
+  "before_sha256": "03735d44591abccd87658558c4b814b2cee15cd722b5ea6a618725d8cf8f60d6",
+  "after_sha256": "22b6ffd0e729bf23b0aac8302c89a235e876b3f23f485e3cf5624b8f728521e4",
+  "preserved_file_count": 154,
+  "unchanged_original_file_count": 152,
+  "dotnet_windows_build": "NOT_RUN (Windows/.NET SDK unavailable in this environment)",
+  "company_no_document_test_policy": "PRESERVED"
+}

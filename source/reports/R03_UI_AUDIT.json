@@ -1,0 +1,8 @@
+{
+  "revision": "v1.8.2 UI Audit R03",
+  "environment": "Debian Linux x86_64",
+  "wpf_compile": "NOT_RUN",
+  "actual_windows_screenshot": "NOT_RUN",
+  "static_xaml_contracts": "PASS",
+  "windows_smoke_script": "PREPARED_NOT_RUN"
+}

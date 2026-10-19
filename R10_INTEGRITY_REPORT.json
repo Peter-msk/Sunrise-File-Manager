@@ -1,0 +1,30 @@
+{
+  "baseline_archive": "Sunrise_File_Manager_COMPANY_FULL_SOURCE_R09_ONEFILE_RELEASE.zip",
+  "baseline_count": 171,
+  "modified": [
+    "BUILD_ON_WINDOWS_COMPANY.cmd",
+    "BUILD_RELEASE_ONEFILE.cmd",
+    "source/Sunrise.FileManager/App.xaml",
+    "source/Sunrise.FileManager/Controls/ExplorerPane.xaml.cs",
+    "source/Sunrise.FileManager/Controls/FolderTree.xaml",
+    "source/Sunrise.FileManager/MainWindow.xaml",
+    "source/Sunrise.FileManager/MainWindow.xaml.cs",
+    "source/Sunrise.FileManager/Services/SessionStore.cs",
+    "source/Sunrise.FileManager/Services/ThemeManager.cs",
+    "source/tests/test_ui_contract.py"
+  ],
+  "removed": [],
+  "added": [
+    "R10_UI_SESSION_HANDOFF.md",
+    "R10_PYTHON_TEST_RESULT.txt",
+    "source/tests/test_r10_unified_nav_theme_session.py"
+  ],
+  "document_fixtures": [],
+  "validation": {
+    "python_test_cases": 55,
+    "python_result": "PASS",
+    "xaml_files": 13,
+    "xaml_xml": "PASS",
+    "windows_wpf_build": "NOT_RUN"
+  }
+}

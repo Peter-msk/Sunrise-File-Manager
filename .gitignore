@@ -1,0 +1,33 @@
+# .NET / Visual Studio
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+# Release output and local state
+build/
+dist/
+build-logs/
+artifacts/
+*.pfx
+*.p12
+*.pem
+*.key
+*.snk
+.env
+.env.*
+!*.env.example
+# IDE/system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# Local runtime/user content
+memo-integrity/
+memo-snapshots/
+session.json

@@ -1,0 +1,19 @@
+{
+  "base": "COMPANY_BUILD_R06_UI_LAYOUT",
+  "release": "R07 OneDir + Light/Dark + Splitter Grips",
+  "tests_passed": {
+    "source": 51,
+    "company_and_r07": 15,
+    "xaml_files": 13,
+    "event_handlers": 207
+  },
+  "windows_build": "NOT_PERFORMED: no Windows WPF runtime/.NET SDK in current container",
+  "company_policy": "Document content testing skipped; no fixture PDFs included",
+  "checksums": {
+    "BUILD_RELEASE_ONEDIR.cmd": "3b3531587b7a6f3d1f83dee3b6025b826b493c3b616db73b2c2821e1bf72094f",
+    "BUILD_ON_WINDOWS_COMPANY.cmd": "092ee7875ec9c5979cbe9376c2b7fbd898dfce64dfaa977ac00cf670d7f546fc",
+    "source/Sunrise.FileManager/Services/ThemeManager.cs": "25c25c95aef3bcf8a9b3ebb3e5bd3ba3f78f29ef7fe829e288e8771133ca7597",
+    "source/Sunrise.FileManager/MainWindow.xaml": "b5873951c0a3e33ca4e000ef572cabab10d51047db10526e50158aa46f74aca7",
+    "source/Sunrise.FileManager/App.xaml": "3e9ada8014f275eedd8f991fea26a9e80f0d0ec295b77e8e182f10ad5dcab823"
+  }
+}

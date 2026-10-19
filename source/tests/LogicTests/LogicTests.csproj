@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Sunrise.FileManager/Models/ExplorerTab.cs" Link="ExplorerTab.cs" />
+    <Compile Include="../../Sunrise.FileManager/Models/FileEntry.cs" Link="FileEntry.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/DirectoryScanner.cs" Link="DirectoryScanner.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/FileListView.cs" Link="FileListView.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/HangulPreviewService.cs" Link="HangulPreviewService.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/FilePreviewService.cs" Link="FilePreviewService.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/PagedPreviewService.cs" Link="PagedPreviewService.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/SessionStore.cs" Link="SessionStore.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/FileMemoStore.cs" Link="FileMemoStore.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/MemoIntegrityBaseline.cs" Link="MemoIntegrityBaseline.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/MemoLocalSnapshots.cs" Link="MemoLocalSnapshots.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/FolderTreeScanner.cs" Link="FolderTreeScanner.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/TransferService.cs" Link="TransferService.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/ExplorerUndoService.cs" Link="ExplorerUndoService.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/FileActionsService.cs" Link="FileActionsService.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/FileSystem/FileActionsService.ArchiveAndShell.cs" Link="FileActionsService.ArchiveAndShell.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/Explorer/ExplorerCommandRouter.cs" Link="ExplorerCommandRouter.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/Workspace/WorkspaceSplitLayoutEngine.cs" Link="WorkspaceSplitLayoutEngine.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/UiLayoutPolicy.cs" Link="UiLayoutPolicy.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/ThumbnailRetention.cs" Link="ThumbnailRetention.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/WindowsRecycleService.cs" Link="WindowsRecycleService.cs" />
+    <Compile Include="../../Sunrise.FileManager/Services/Ai*.cs" Link="%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Fixtures/river_report.pdf" CopyToOutputDirectory="PreserveNewest" Condition="'$(SunriseCompanyBuild)' != '1' And Exists('Fixtures/river_report.pdf')" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PdfPig" Version="0.1.15" />
+  </ItemGroup>
+</Project>

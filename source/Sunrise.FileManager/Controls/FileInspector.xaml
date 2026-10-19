@@ -1,0 +1,55 @@
+<UserControl x:Class="Sunrise.FileManager.Controls.FileInspector" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" MinWidth="295" Background="{DynamicResource ThemeSurface}">
+ <Border BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" Background="{DynamicResource ThemeSurface}">
+  <Grid>
+   <Grid.RowDefinitions><RowDefinition Height="42"/><RowDefinition Height="*" MinHeight="165"/><RowDefinition Height="11"/><RowDefinition Height="*" MinHeight="165"/></Grid.RowDefinitions>
+   <Border Grid.Row="0" Background="{DynamicResource ThemeSoftAlt}" Padding="12,0">
+    <Grid>
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+     <TextBlock Text="상세정보 · 스마트 파일 메모" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+     <Button Grid.Column="1" x:Name="FolderSizeButton" Content="용량계산" Click="FolderSizeButton_Click" Padding="7,2" MinHeight="24" FontSize="11" Margin="0,0,4,0" ToolTip="선택한 폴더의 전체 용량·파일 수·하위 폴더 수를 계산합니다."/>
+     <Button Grid.Column="2" x:Name="HashButton" Content="SHA-256" Click="HashButton_Click" Padding="7,2" MinHeight="24" FontSize="11" ToolTip="선택한 파일의 SHA-256 무결성 해시를 계산합니다."/>
+    </Grid>
+   </Border>
+   <Grid Grid.Row="1" Margin="12,8,12,8"><Grid.RowDefinitions><RowDefinition Height="26"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <TextBlock Text="속성 및 상세 정보" FontSize="13" FontWeight="SemiBold"/>
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><StackPanel>
+     <TextBlock x:Name="DetailName" Text="파일을 선택하세요" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,1,0,8"/>
+     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+      <CheckBox x:Name="ReadOnlyCheck" Content="읽기 전용" Click="AttributeCheck_Click" FontSize="11.5" Margin="0,0,12,0" IsEnabled="False"/>
+      <CheckBox x:Name="HiddenCheck" Content="숨김 속성" Click="AttributeCheck_Click" FontSize="11.5" IsEnabled="False"/>
+     </StackPanel>
+     <TextBlock Text="유형 및 특성" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailType" Margin="0,2,0,7" Text="—"/>
+     <TextBlock Text="크기" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailSize" Margin="0,2,0,7" Text="—"/>
+     <TextBlock Text="수정한 날짜" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailModified" Margin="0,2,0,7" Text="—"/>
+     <TextBlock Text="만든 날짜" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailCreated" Margin="0,2,0,7" Text="—"/>
+     <TextBlock Text="파일 위치" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailLocation" TextWrapping="Wrap" Margin="0,2,0,7" Text="—"/>
+     <TextBlock x:Name="DetailHash" TextWrapping="Wrap" FontSize="10.5" FontFamily="Consolas" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,4"/>
+    </StackPanel></ScrollViewer>
+   </Grid>
+   <GridSplitter Style="{StaticResource SunriseHorizontalSplitter}" Grid.Row="2" Background="{DynamicResource PanelBorder}" HorizontalAlignment="Stretch" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" ShowsPreview="True"/>
+   <Grid Grid.Row="3" Margin="12,8,12,10"><Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid Grid.Row="0">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+     <TextBlock Text="스마트 파일 메모 (#memo)" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+     <Button Grid.Column="1" x:Name="AiMemoButton" Content="🤖 AI 요약" Click="AiMemoButton_Click" Padding="8,3" MinHeight="27" Margin="0,0,4,0" FontSize="11.5" ToolTip="온보드 AI(Ollama)로 이 문서를 요약하여 메모 입력창에 추가합니다."/>
+     <Button Grid.Column="2" x:Name="SaveButton" Content="메모 저장" Click="SaveButton_Click" Style="{StaticResource PrimaryButton}" Padding="10,3" MinHeight="27"/>
+    </Grid>
+    <Grid Grid.Row="1" Margin="0,6,0,2">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+     <Button Grid.Column="0" x:Name="AcceptMemoChangeButton" Content="변경 확인·기준 갱신" HorizontalAlignment="Left" Padding="6,2" FontSize="10.5" IsEnabled="False" Click="AcceptMemoChangeButton_Click" ToolTip="표시된 메모 변경이 정상임을 사용자가 직접 확인한 경우에만 누르세요."/>
+     <TextBlock Grid.Column="1" Text="작성자" VerticalAlignment="Center" Margin="4,0,5,0" FontSize="11"/>
+     <TextBox Grid.Column="2" x:Name="MemoAuthorInput" Width="100" MaxLength="40" MinHeight="25" VerticalContentAlignment="Center" Padding="5,1" ToolTip="비워 두면 Windows PC 사용자명으로 저장합니다. 직접 입력한 이름은 신원 인증을 의미하지 않습니다."/>
+    </Grid>
+    <Grid Grid.Row="2" Margin="0,6,0,6">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*" MinWidth="50"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+     <ComboBox x:Name="MemoHistory" Grid.Column="0" MinHeight="29" DisplayMemberPath="Label" SelectionChanged="MemoHistory_SelectionChanged" ToolTip="기존 날짜별 메모 선택"/>
+     <CheckBox Grid.Column="1" x:Name="MemoBackupsEnabled" Content="로컬 이력" FontSize="10.5" Margin="6,0,5,0" VerticalAlignment="Center" Click="MemoBackupsEnabled_Click" ToolTip="동의 시 메모만 Windows 사용자 계정으로 암호화하여 날짜별로 보관합니다. 원본문서는 복제하지 않습니다."/>
+     <Button Grid.Column="2" x:Name="RestoreMemoButton" Content="복원" Padding="5,2" FontSize="10.5" Click="RestoreMemoButton_Click" IsEnabled="False" ToolTip="기존 로컬 암호화 기록을 확인한 뒤 최근 버전으로 되돌립니다."/>
+    </Grid>
+    <TextBox Grid.Row="3" x:Name="MemoEditor" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextChanged="MemoEditor_TextChanged" MaxLength="200000" MinHeight="80" Padding="9,7"/>
+    <TextBlock Grid.Row="4" x:Name="MemoStatus" Text="파일을 선택하면 메모를 작성할 수 있습니다." TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="0,8,0,2"/>
+    <TextBlock Grid.Row="5" Text="저장 위치: 원본 폴더/#memo (파일 이동·이름변경 시 자동 동반) · Ctrl+S" TextWrapping="Wrap" FontSize="10" Foreground="{DynamicResource TextMuted}"/>
+   </Grid>
+  </Grid>
+ </Border>
+</UserControl>

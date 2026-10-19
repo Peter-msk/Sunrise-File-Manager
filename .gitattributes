@@ -1,0 +1,9 @@
+*.cs text eol=crlf
+*.xaml text eol=crlf
+*.cmd text eol=crlf
+*.iss text eol=crlf
+*.md text eol=lf
+*.json text eol=lf
+*.png binary
+*.ico binary
+*.zip binary

@@ -1,0 +1,29 @@
+<UserControl x:Class="Sunrise.FileManager.Controls.FolderTree" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" MinWidth="135" Foreground="{DynamicResource TextPrimary}">
+ <Border Background="{DynamicResource ThemeTreeCanvas}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,1,0">
+  <ScrollViewer x:Name="NavigationScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" PreviewMouseWheel="NavigationScroll_PreviewMouseWheel" PanningMode="VerticalOnly">
+   <StackPanel Margin="8,6,6,8">
+     <TextBlock Text="빠른 이동 · 기본 폴더" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" Margin="6,2,0,6"/>
+     <Button Content="🏠 홈 (사용자 폴더)" Tag="Home" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Button Content="🖥 바탕화면" Tag="Desktop" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Button Content="⬇ 다운로드" Tag="Downloads" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Button Content="📄 문서" Tag="Documents" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Button Content="🖼 사진" Tag="Pictures" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Button Content="🎵 음악" Tag="Music" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Button Content="🎬 동영상" Tag="Videos" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Button Content="🗑 휴지통 열기" Tag="RecycleBin" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Separator Margin="4,8"/>
+     <DockPanel Margin="0,0,0,4">
+      <Button DockPanel.Dock="Right" x:Name="PinCurrentButton" Content="+ 고정" ToolTip="현재 열린 폴더를 즐겨찾기에 고정" Padding="6,2" MinHeight="22" FontSize="11" Click="PinCurrent_Click"/>
+      <TextBlock Text="⭐ 즐겨찾기 고정 폴더" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+     </DockPanel>
+     <StackPanel x:Name="PinnedPanel" Margin="0,2,0,4"/>
+     <Separator Margin="4,8"/>
+     <DockPanel>
+      <Button DockPanel.Dock="Right" Content="⟳" ToolTip="드라이브 및 트리 다시 읽기" Width="28" Padding="0" Click="Reload_Click"/>
+      <TextBlock Text="💻 이 PC (드라이브 및 폴더)" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+     </DockPanel>
+    <TreeView x:Name="FolderItems" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextPrimary}" FontSize="12" Padding="6,2" SelectedItemChanged="FolderItems_SelectedItemChanged" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+   </StackPanel>
+  </ScrollViewer>
+ </Border>
+</UserControl>

@@ -1,0 +1,18 @@
+{
+  "product": "Sunrise File Manager",
+  "revision": "R15_INSTALLER_MIGRATION",
+  "scope": "source_static_and_contract_only",
+  "official_distribution": "INSTALLER_SETUP_EXE",
+  "installer_engine": "Inno Setup 6",
+  "company_policy": "document tests and fixture access skipped",
+  "source_code_changed_count": 0,
+  "source_code_removed_count": 0,
+  "xaml_files_parsed": 13,
+  "contract_tests_passed": 35,
+  "windows_wpf_compilation": "NOT_RUN",
+  "windows_installer_compile": "NOT_RUN",
+  "windows_authenticode_signature": "NOT_RUN",
+  "windows_install_upgrade_uninstall": "NOT_RUN",
+  "auto_update_server": "NOT_CONFIGURED",
+  "initial_installer_version": "1.0.0"
+}
