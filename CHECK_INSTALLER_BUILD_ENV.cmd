@@ -36,10 +36,23 @@ if errorlevel 1 (
 ) else (
   echo [PASS] Windows SDK SignTool detected
 )
-set "SDK10_FOUND="
-for %%D in ("%ProgramW6432%\dotnet\dotnet.exe" "%ProgramFiles%\dotnet\dotnet.exe" "%LOCALAPPDATA%\Microsoft\dotnet\dotnet.exe" "%USERPROFILE%\.dotnet\dotnet.exe") do if not defined SDK10_FOUND if exist "%%~D" call :probe_sdk "%%~D"
-for /f "delims=" %%D in ('where.exe dotnet.exe 2^>nul') do if not defined SDK10_FOUND call :probe_sdk "%%~D"
-if defined SDK10_FOUND (echo [PASS] .NET 10 SDK detected) else (echo [FAIL] .NET 10 SDK not found & set /a MISSING+=1 >nul)
+REM Resolve the SDK once, without FOR /F command-substitution of quoted paths.
+set "SUNRISE_DOTNET_RESOLVED="
+set "SUNRISE_DOTNET_VERSION="
+call "%ROOT%\build-tools\FindDotNet10.cmd" > "%LOG%\R15_dotnet_discovery.log" 2>&1
+if errorlevel 1 (
+  echo [FAIL] .NET 10 SDK missing, incompatible, or detection failed
+  echo        Check build-logs\R15_dotnet_probe.log and R15_dotnet_candidate.log
+  set /a MISSING+=1 >nul
+) else (
+  if not defined SUNRISE_DOTNET_RESOLVED (
+    echo [FAIL] SDK resolver returned no executable
+    set /a MISSING+=1 >nul
+  ) else (
+    echo [PASS] .NET 10 SDK detected: %SUNRISE_DOTNET_VERSION%
+    echo        "%SUNRISE_DOTNET_RESOLVED%"
+  )
+)
 if "%MISSING%"=="0" (
   > "%REPORT%" echo STATUS=TOOLS_PRESENT
   >> "%REPORT%" echo WINDOWS_CERTIFICATE_AND_SIGNING=NOT_TESTED
@@ -50,10 +63,7 @@ if "%MISSING%"=="0" (
 > "%REPORT%" echo STATUS=MISSING_PREREQUISITES
 >> "%REPORT%" echo COUNT=%MISSING%
 >> "%REPORT%" echo WINDOWS_CERTIFICATE_AND_SIGNING=NOT_TESTED
-echo [BLOCKED] %MISSING% prerequisite checks failed. See R15_inno_probe.log and R15_signtool_probe.log in build-logs.
+echo [BLOCKED] %MISSING% prerequisite checks failed. See R15_inno_probe.log, R15_signtool_probe.log and R15_dotnet_probe.log in build-logs.
 echo [HELP] Inno Setup official download: https://jrsoftware.org/isdl.php
 if "%NO_PAUSE%"=="0" pause
 exit /b 1
-:probe_sdk
-for /f "tokens=1" %%S in ('"%~1" --list-sdks 2^>nul ^| findstr /R /C:"^10\."') do if not defined SDK10_FOUND set "SDK10_FOUND=%%S"
-exit /b 0

@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R19_INSTALLER_PIPELINE_FULL_AUDIT_R03",
+  "revision": "R19_DOTNET_SDK_PATH_QUOTING_HOTFIX_R04",
   "company_policy": true,
   "document_fixture_included": false,
   "official_distribution": "SETUP_EXE",
-  "status": "STATIC_AND_SOURCE_CONTRACT_PASS_WINDOWS_INSTALLER_PENDING",
-  "file_count": 230,
+  "status": "STATIC_PASS_WINDOWS_DOTNET_10_RETEST_PENDING",
+  "file_count": 233,
   "files": [
     {
       "path": ".gitattributes",
@@ -64,8 +64,8 @@
     },
     {
       "path": "BUILD_RELEASE_ONEDIR.cmd",
-      "sha256": "af2ffac7db31d1d1851c6d4a32426101fc26e57055231848aa5ee29de640de80",
-      "bytes": 13637
+      "sha256": "d985a7c2ffdd430b8146de1050b3ee185d13b79a732ae5fb45ef51bcd389847b",
+      "bytes": 13364
     },
     {
       "path": "BUILD_RELEASE_ONEFILE.cmd",
@@ -84,8 +84,8 @@
     },
     {
       "path": "CHECK_INSTALLER_BUILD_ENV.cmd",
-      "sha256": "bccb975806397604516bfd87a7c7872d490fb7733f500bbed453ec0fe2d2fb38",
-      "bytes": 3499
+      "sha256": "1c6171ecd1f28a60bc9331de558cce9551e95b8150b43bc85c215632f14b9a17",
+      "bytes": 3566
     },
     {
       "path": "CHECK_SDK.cmd",
@@ -199,8 +199,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "d7b3acc488796b3455119143d8dec70742824dadcbeaa1af52b871f4de8bab30",
-      "bytes": 6318
+      "sha256": "d5c905589ac31bf386cf4263691584eb0d5d33a6319176d7234ff9f6895a3250",
+      "bytes": 6937
     },
     {
       "path": "RELEASE_STATUS.json",
@@ -248,6 +248,11 @@
       "bytes": 98
     },
     {
+      "path": "build-tools/FindDotNet10.cmd",
+      "sha256": "3b62d1234b94128332db8500994ea778c37647376ed5e368034e69a5859cad83",
+      "bytes": 3100
+    },
+    {
       "path": "build-tools/FindInnoSetup.cmd",
       "sha256": "cf3ecdf43943ad4024bfbad90bd7d578b8e3491b28e940f1447f9913302f71a6",
       "bytes": 2690
@@ -286,6 +291,11 @@
       "path": "docs/R18_FINAL_BUILD_INSTALLER_AUDIT.md",
       "sha256": "bae5925ccce26d31673e37de3af40fe3b3789513cb2819d536375463ffb1ac07",
       "bytes": 8465
+    },
+    {
+      "path": "docs/R19_DOTNET_SDK_PATH_HOTFIX_R04.md",
+      "sha256": "2749cdcdf7d381deee9735723a1eaf8e913f5ae53fae89e315b2848616251b00",
+      "bytes": 3233
     },
     {
       "path": "docs/R19_INSTALLER_PIPELINE_AUDIT_R03.md",
@@ -1091,6 +1101,11 @@
       "path": "tests/test_r18_installer_audit_contract.py",
       "sha256": "d072f432614c7c15b2604ae159312d22d48ef10fe904117b0901304dd0c47d52",
       "bytes": 2309
+    },
+    {
+      "path": "tests/test_r19_dotnet_sdk_path_hotfix_r04.py",
+      "sha256": "cafb7f72d64b29ea7a2b9f1b879978ffc1d139f95a3d091c0f3cbcf401fead8f",
+      "bytes": 3601
     },
     {
       "path": "tests/test_r19_installer_preflight_r03.py",

@@ -28,6 +28,10 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 
 `INNO_SETUP_NOT_FOUND` 진단을 위해 회사용 빌드 전에 `CHECK_INSTALLER_BUILD_ENV.cmd`를 실행할 수 있습니다. Inno Setup이 없으면 설치/사용승인을 받은 후 설치해야 하며 빌드 스크립트는 자동 다운로드·설치를 하지 않습니다. 기본 위치/현재 사용자 위치/설치 레지스트리/PATH와 명시적인 `SUNRISE_ISCC` 경로를 탐색합니다. `build-logs/R15_inno_probe.log`에서 진단합니다. 실서명·Windows 설치 검증은 여전히 별도로 필요합니다.
 
+### R19 .NET 10 SDK 공백 경로 핫픽스 R04
+
+사전점검에서 `Inno Setup`과 `SignTool`은 PASS인데 `'C:\Program'은(는) ...`와 `[FAIL] .NET 10 SDK not found`가 함께 발생하던 CMD 인용부호 오류를 수정했습니다. `build-tools/FindDotNet10.cmd`가 SDK 후보를 직접 실행해 `--version` 결과를 로그로 저장한 뒤 판독하며, 사전점검과 실제 WPF 게시 경로가 동일한 탐색기를 사용합니다. 실제 SDK 설치 여부가 확인되지 않으면 설치를 단정하지 않습니다. 자세한 내용은 `docs/R19_DOTNET_SDK_PATH_HOTFIX_R04.md`를 참조하세요.
+
 ## 빌드 환경
 
 **Windows x64 빌드 PC**에서 다음 개발도구가 필요합니다.

@@ -48,14 +48,11 @@ set "FOUND_SDK_VER="
 set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 set "DOTNET_NOLOGO=1"
 set "DOTNET_CLI_UI_LANGUAGE=en"
-for %%D in (
- "%ProgramW6432%\dotnet\dotnet.exe"
- "%ProgramFiles%\dotnet\dotnet.exe"
- "%LOCALAPPDATA%\Microsoft\dotnet\dotnet.exe"
- "%USERPROFILE%\.dotnet\dotnet.exe"
-) do if not defined DOTNET_EXE if exist "%%~D" call :probe_sdk "%%~D"
-for /f "delims=" %%D in ('where.exe dotnet.exe 2^>nul') do if not defined DOTNET_EXE call :probe_sdk "%%~D"
-if not defined DOTNET_EXE goto :fail_sdk
+call "%ROOT%\build-tools\FindDotNet10.cmd" > "%LOG_DIR%\R14_dotnet_discovery.log" 2>&1
+if errorlevel 1 goto :fail_sdk
+if not defined SUNRISE_DOTNET_RESOLVED goto :fail_sdk
+set "DOTNET_EXE=%SUNRISE_DOTNET_RESOLVED%"
+set "FOUND_SDK_VER=%SUNRISE_DOTNET_VERSION%"
 for %%I in ("%DOTNET_EXE%") do set "DOTNET_ROOT=%%~dpI"
 set "PATH=%DOTNET_ROOT%;%PATH%"
 "%DOTNET_EXE%" --list-sdks > "%LOG_DIR%\R14_sdk_list.log" 2>&1
@@ -217,13 +214,6 @@ if not exist "%STAGE%\app\Sunrise.FileManager.dll" goto :fail_release
 >> "%RESULT%" echo GROUP_SIGNER=CN=Sunrise Group
 echo [SUCCESS] Signed installer payload ready: "%STAGE%\app"
 exit /b 0
-:probe_sdk
-if not exist "%~1" exit /b 0
-for /f "tokens=1" %%S in ('"%~1" --list-sdks 2^>nul ^| findstr /R /C:"^10\."') do if not defined DOTNET_EXE (
-  set "DOTNET_EXE=%~1"
-  set "FOUND_SDK_VER=%%S"
-)
-exit /b 0
 :fail_restore
 if exist "%FINAL%" rmdir /s /q "%FINAL%"
 if exist "%FINAL_ZIP%" del /f /q "%FINAL_ZIP%"
@@ -243,7 +233,7 @@ goto :fail_release
 echo [ERROR] Missing WPF project: %PROJECT%
 goto :fail
 :fail_sdk
-echo [ERROR] .NET 10 SDK was not found.
+echo [ERROR] .NET 10 SDK could not be selected. See build-logs\R15_dotnet_probe.log and R14_dotnet_discovery.log.
 goto :fail
 :fail_cd
 echo [ERROR] Cannot access project directory.
