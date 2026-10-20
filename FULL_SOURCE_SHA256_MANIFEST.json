@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R19_V3_SIGNING_HELPER_REMOVAL_R02",
+  "revision": "R19_INSTALLER_PIPELINE_FULL_AUDIT_R03",
   "company_policy": true,
   "document_fixture_included": false,
   "official_distribution": "SETUP_EXE",
-  "status": "SOURCE_STATIC_PASS_WINDOWS_V3_RETEST_PENDING",
-  "file_count": 225,
+  "status": "STATIC_AND_SOURCE_CONTRACT_PASS_WINDOWS_INSTALLER_PENDING",
+  "file_count": 230,
   "files": [
     {
       "path": ".gitattributes",
@@ -59,13 +59,13 @@
     },
     {
       "path": "BUILD_RELEASE_INSTALLER.cmd",
-      "sha256": "8bbb1449e49940b69a0a31cc8e8f7a63c9f5920fb4da75b8d67b94ec11e92d12",
-      "bytes": 11717
+      "sha256": "ff6947a15d9b724ba13fb945ab04e99c5d8d23713fe0e12270af71d9dec5e01f",
+      "bytes": 11448
     },
     {
       "path": "BUILD_RELEASE_ONEDIR.cmd",
-      "sha256": "c78282bce7cc1cf9fb8776b203487967aa38ff7fc2adcc35fd50fed46f6fa789",
-      "bytes": 13905
+      "sha256": "af2ffac7db31d1d1851c6d4a32426101fc26e57055231848aa5ee29de640de80",
+      "bytes": 13637
     },
     {
       "path": "BUILD_RELEASE_ONEFILE.cmd",
@@ -81,6 +81,11 @@
       "path": "CAPTURE_UI_WINDOWS.cmd",
       "sha256": "68acec7e62b07b182189066fa879d353395fe581ef47388dd8357cdb89fb4bdf",
       "bytes": 76
+    },
+    {
+      "path": "CHECK_INSTALLER_BUILD_ENV.cmd",
+      "sha256": "8f9a9b1337a7a5b20f67c1f8bb0a08087d7b410bb8a7dd538af32ea6be75d32e",
+      "bytes": 3379
     },
     {
       "path": "CHECK_SDK.cmd",
@@ -194,8 +199,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "2baf7f12a70ff9005e5eb7abc577867599c95fdf9ad27e989a0ae85746487279",
-      "bytes": 5478
+      "sha256": "d7b3acc488796b3455119143d8dec70742824dadcbeaa1af52b871f4de8bab30",
+      "bytes": 6318
     },
     {
       "path": "RELEASE_STATUS.json",
@@ -243,6 +248,16 @@
       "bytes": 98
     },
     {
+      "path": "build-tools/FindInnoSetup.cmd",
+      "sha256": "cf3ecdf43943ad4024bfbad90bd7d578b8e3491b28e940f1447f9913302f71a6",
+      "bytes": 2690
+    },
+    {
+      "path": "build-tools/FindSignTool.cmd",
+      "sha256": "45aef57e4b5df8c63dc53590fa1e6e2a9b8f87a6a27cb50c51f276bb90e0b0bd",
+      "bytes": 1327
+    },
+    {
       "path": "build-tools/Sunrise.GroupSigning.ps1",
       "sha256": "9602eb3acaeebd1cbf2fc2d824b1a73a930de60617358b5fd42777b5727c1f5e",
       "bytes": 4883
@@ -271,6 +286,11 @@
       "path": "docs/R18_FINAL_BUILD_INSTALLER_AUDIT.md",
       "sha256": "bae5925ccce26d31673e37de3af40fe3b3789513cb2819d536375463ffb1ac07",
       "bytes": 8465
+    },
+    {
+      "path": "docs/R19_INSTALLER_PIPELINE_AUDIT_R03.md",
+      "sha256": "bb58750a53b3f4f881750c9a74dcb7506fe28b5316bad707c617056a15fea135",
+      "bytes": 3630
     },
     {
       "path": "docs/R19_INSTALLER_VERSION_HOTFIX_R01.md",
@@ -309,8 +329,8 @@
     },
     {
       "path": "installer/SunriseFileManager.iss",
-      "sha256": "335f7b709eae688ca859e7bd8b29032f9fe743b67d677b2d2ef760bfefd901e2",
-      "bytes": 3250
+      "sha256": "210376ae1f582de6874dcc7f6b1774d514d8409394910640f28bd93c67d8eaa6",
+      "bytes": 3254
     },
     {
       "path": "source/README.md",
@@ -1071,6 +1091,11 @@
       "path": "tests/test_r18_installer_audit_contract.py",
       "sha256": "d072f432614c7c15b2604ae159312d22d48ef10fe904117b0901304dd0c47d52",
       "bytes": 2309
+    },
+    {
+      "path": "tests/test_r19_installer_preflight_r03.py",
+      "sha256": "e6f1dbb07cb4ee79b5c937bcafb76d27b80d2a2df884db5375424b2ea2215cca",
+      "bytes": 2403
     },
     {
       "path": "tests/test_r19_memo_provenance_contract.py",

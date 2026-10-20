@@ -68,20 +68,22 @@ set "UNSIGNED_SETUP=%INSTALLER_STAGE%\Sunrise_File_Manager_%SFM_APP_VERSION%_Set
 set "SUNRISE_RELEASE_VERSION=%SFM_APP_VERSION%"
 set "TIMESTAMP_URL=http://timestamp.digicert.com"
 if defined SUNRISE_TIMESTAMP_URL set "TIMESTAMP_URL=%SUNRISE_TIMESTAMP_URL%"
-set "ISCC="
-for /f "delims=" %%I in ('where.exe ISCC.exe 2^>nul') do if not defined ISCC if exist "%%~I" set "ISCC=%%~I"
-if not defined ISCC if exist "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
-if not defined ISCC if exist "%ProgramFiles%\Inno Setup 6\ISCC.exe" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
-if not defined ISCC if exist "%ProgramFiles(x86)%\Inno Setup 7\ISCC.exe" set "ISCC=%ProgramFiles(x86)%\Inno Setup 7\ISCC.exe"
-if not defined ISCC if exist "%ProgramFiles%\Inno Setup 7\ISCC.exe" set "ISCC=%ProgramFiles%\Inno Setup 7\ISCC.exe"
-if not defined ISCC goto :fail_inno
+REM Resolve Inno Setup once, with a separate log for installed-vs-path diagnostics.
+set "SUNRISE_ISCC_RESOLVED="
+call "%ROOT%\build-tools\FindInnoSetup.cmd" > "%LOG_DIR%\R15_inno_probe.log" 2>&1
+if errorlevel 1 goto :fail_inno
+if not defined SUNRISE_ISCC_RESOLVED goto :fail_inno
+set "ISCC=%SUNRISE_ISCC_RESOLVED%"
+echo [INNO] Using: "%ISCC%"
 if not exist "%SIGNING_SCRIPT%" goto :fail_signing_script
 if not exist "%POWERSHELL_EXE%" goto :fail_signing_script
-set "SIGNTOOL="
-for /f "delims=" %%S in ('where.exe signtool.exe 2^>nul') do if not defined SIGNTOOL if exist "%%~S" set "SIGNTOOL=%%~S"
-if not defined SIGNTOOL for /d %%V in ("%ProgramFiles(x86)%\Windows Kits\10\bin\10.*") do if exist "%%~V\x64\signtool.exe" set "SIGNTOOL=%%~V\x64\signtool.exe"
-if not defined SIGNTOOL if exist "%ProgramFiles%\Windows Kits\10\bin" for /d %%V in ("%ProgramFiles%\Windows Kits\10\bin\10.*") do if exist "%%~V\x64\signtool.exe" set "SIGNTOOL=%%~V\x64\signtool.exe"
-if not defined SIGNTOOL goto :fail_signtool
+REM Reuse the same Windows SDK SignTool detection in installer and payload builds.
+set "SUNRISE_SIGNTOOL_RESOLVED="
+call "%ROOT%\build-tools\FindSignTool.cmd" > "%LOG_DIR%\R15_signtool_probe.log" 2>&1
+if errorlevel 1 goto :fail_signtool
+if not defined SUNRISE_SIGNTOOL_RESOLVED goto :fail_signtool
+set "SIGNTOOL=%SUNRISE_SIGNTOOL_RESOLVED%"
+echo [SIGNTOOL] Using: "%SIGNTOOL%"
 if exist "%INSTALLER_STAGE%" rmdir /s /q "%INSTALLER_STAGE%"
 if exist "%INSTALLER_STAGE%" goto :fail_stage
 mkdir "%INSTALLER_STAGE%"
@@ -97,9 +99,8 @@ if not exist "%CERT_FILE%" goto :fail_payload
 set "CERT_THUMBPRINT="
 for /f "usebackq tokens=1,2 delims==" %%A in ("%CERT_FILE%") do if /I "%%A"=="THUMBPRINT" set "CERT_THUMBPRINT=%%B"
 if not defined CERT_THUMBPRINT goto :fail_payload
-set "DOTNET_EXE="
-for %%D in ("%ProgramW6432%\dotnet\dotnet.exe" "%ProgramFiles%\dotnet\dotnet.exe" "%LOCALAPPDATA%\Microsoft\dotnet\dotnet.exe" "%USERPROFILE%\.dotnet\dotnet.exe") do if not defined DOTNET_EXE if exist "%%~D" set "DOTNET_EXE=%%~D"
-if not defined DOTNET_EXE goto :fail_payload
+REM The .NET SDK was already selected and verified by the signed payload stage.
+REM Do not reject successful WPF output by re-probing an unused dotnet.exe path.
 set "FAILED_STAGE=INSTALLER_COMPILE"
 >> "%RESULT%" echo STAGE=INSTALLER_COMPILE
 set "SUNRISE_INSTALLER_PAYLOAD=%APP_DIR%"
@@ -199,7 +200,10 @@ echo [ERROR] Detailed diagnostic: build-logs\R15_version_preflight.log
 goto :fail
 :fail_inno
 set "FAILED_STAGE=INNO_SETUP_NOT_FOUND"
-echo [ERROR] Inno Setup ISCC.exe is required on the build PC. No auto-installation performed.
+echo [ERROR] Inno Setup compiler ISCC.exe was not found or configured path is invalid.
+echo [ERROR] See build-logs\R15_inno_probe.log for each discovery route.
+echo [ERROR] To configure a custom install, use: set "SUNRISE_ISCC=C:\Path\To\ISCC.exe"
+echo [ERROR] If absent, install Inno Setup with IT approval. No automatic installation.
 goto :fail
 :fail_signing_script
 set "FAILED_STAGE=SIGNING_SCRIPT_UNAVAILABLE"
@@ -207,6 +211,7 @@ echo [ERROR] Group-signing verification requires Windows PowerShell and the sour
 goto :fail
 :fail_signtool
 set "FAILED_STAGE=SIGNTOOL_NOT_FOUND"
+echo [ERROR] See build-logs\R15_signtool_probe.log. No automatic installation.
 goto :fail
 :fail_stage
 set "FAILED_STAGE=STAGING"

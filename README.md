@@ -24,6 +24,10 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 
 과거 빌드 시 컴파일·실행하던 미서명 `Sunrise.Signing.exe`를 공식 빌드 흐름에서 제거했습니다. 기존 그룹 인증서 선별은 Windows PowerShell 인증서 API, 서명 및 검증은 Windows SDK SignTool을 사용합니다. 보안 솔루션 예외 등록/PowerShell ExecutionPolicy 우회 없이 동작하도록 설계했으며, 정책이 허용하지 않으면 빌드가 중단됩니다. Windows에서의 실제 V3 재검증은 미완료입니다. `docs/R19_V3_SIGNING_EXECUTABLE_HOTFIX_R02.md`를 참조하십시오.
 
+### R19 설치형 빌드 사전점검 R03
+
+`INNO_SETUP_NOT_FOUND` 진단을 위해 회사용 빌드 전에 `CHECK_INSTALLER_BUILD_ENV.cmd`를 실행할 수 있습니다. Inno Setup이 없으면 설치/사용승인을 받은 후 설치해야 하며 빌드 스크립트는 자동 다운로드·설치를 하지 않습니다. 기본 위치/현재 사용자 위치/설치 레지스트리/PATH와 명시적인 `SUNRISE_ISCC` 경로를 탐색합니다. `build-logs/R15_inno_probe.log`에서 진단합니다. 실서명·Windows 설치 검증은 여전히 별도로 필요합니다.
+
 ## 빌드 환경
 
 **Windows x64 빌드 PC**에서 다음 개발도구가 필요합니다.
@@ -36,8 +40,17 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 명령 프롬프트에서 프로젝트 루트의 다음 파일을 실행합니다.
 
 ```cmd
+CHECK_INSTALLER_BUILD_ENV.cmd
 BUILD_ON_WINDOWS_COMPANY.cmd
 ```
+
+Inno Setup이 다른 위치에 설치된 경우 빌드를 실행하는 CMD 창에서 명시적으로 설정할 수 있습니다.
+
+```cmd
+set "SUNRISE_ISCC=C:\YourApprovedTools\Inno Setup 6\ISCC.exe"
+BUILD_ON_WINDOWS_COMPANY.cmd
+```
+
 
 빌드는 `BUILD_RELEASE_INSTALLER.cmd` → `BUILD_RELEASE_ONEDIR.cmd --installer-payload` → WPF 게시 → Authenticode 서명 → Inno Setup 설치파일 생성·서명 → 검증 순으로 진행됩니다. 빌드 성공 시 `dist\Sunrise_File_Manager_1.0.0_Setup.exe`를 기대합니다(버전은 `installer\RELEASE_VERSION.txt`를 기준으로 생성). 회사 빌드는 문서 내용 검사·문서 Fixture·UI 캡처를 실행하지 않습니다.
 

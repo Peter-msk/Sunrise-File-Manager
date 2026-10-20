@@ -70,10 +70,11 @@ set "FAILED_STAGE=SIGNING_PREFLIGHT"
 >> "%RESULT%" echo STAGE=SIGNING_PREFLIGHT
 if not exist "%SIGNING_SCRIPT%" goto :fail_signing
 if not exist "%POWERSHELL_EXE%" goto :fail_signing
-for /f "delims=" %%S in ('where.exe signtool.exe 2^>nul') do if not defined SIGNTOOL if exist "%%~S" set "SIGNTOOL=%%~S"
-if not defined SIGNTOOL for /d %%V in ("%ProgramFiles(x86)%\Windows Kits\10\bin\10.*") do if exist "%%~V\x64\signtool.exe" set "SIGNTOOL=%%~V\x64\signtool.exe"
-if not defined SIGNTOOL if exist "%ProgramFiles%\Windows Kits\10\bin" for /d %%V in ("%ProgramFiles%\Windows Kits\10\bin\10.*") do if exist "%%~V\x64\signtool.exe" set "SIGNTOOL=%%~V\x64\signtool.exe"
-if not defined SIGNTOOL goto :fail_signing
+set "SUNRISE_SIGNTOOL_RESOLVED="
+call "%ROOT%\build-tools\FindSignTool.cmd" > "%LOG_DIR%\R14_signtool_probe.log" 2>&1
+if errorlevel 1 goto :fail_signing
+if not defined SUNRISE_SIGNTOOL_RESOLVED goto :fail_signing
+set "SIGNTOOL=%SUNRISE_SIGNTOOL_RESOLVED%"
 REM Security suite may flag a newly generated, unsigned Sunrise.Signing.exe.
 REM Use Windows PowerShell certificate APIs for preflight, not a custom generated EXE.
 REM Respect corporate script policies: do NOT override ExecutionPolicy or V3 settings.
