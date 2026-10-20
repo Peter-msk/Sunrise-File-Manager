@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.1",
+  "app_id": "sunrise_file_manager",
+  "product_id": "SUNRISE-FILE-MANAGER-WIN-DESKTOP",
+  "product_family": "Sunrise File Manager",
+  "publisher_id": "SUNRISE-SOFTWARE",
+  "channel": "stable",
+  "platform": "windows-x64",
+  "package_kind": "installer",
+  "version": "1.0.0",
+  "latest_version": "1.0.0",
+  "official_release": true,
+  "release_date": "2026-10-21",
+  "release_url": "",
+  "download_url": "",
+  "download_file_name": "Sunrise_File_Manager_1.0.0_Setup.exe",
+  "sha256": "",
+  "file_size_bytes": 0,
+  "update_endpoint_configured": false,
+  "notice_url": "https://raw.githubusercontent.com/Peter-msk/Sunrise_Control/main/products/sunrise_file_manager/notice.txt",
+  "release_notes": "공식 소스 기준 1.0.0: 분할 탐색기, 파일 미리보기 및 공유 메모, AI 정리 팝업, Sunrise Control v1 중앙 정책, 공지사항 및 사용자 승인 기반 업데이트 확인. Windows 공식 설치파일의 실제 서명·배포 검증 전까지 다운로드 엔드포인트는 비활성화됩니다."
+}

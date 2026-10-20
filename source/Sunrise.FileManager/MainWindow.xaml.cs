@@ -16,6 +16,7 @@ namespace Sunrise.FileManager;
 /// </summary>
 public partial class MainWindow : Window
 {
+    private SunriseControlService.Policy _controlPolicy = new("allow", "allow", "", "", "fallback");
     private readonly ExplorerPane[] _panes = new ExplorerPane[4];
     private readonly Grid[] _hosts = new Grid[4];
     private int _visiblePanels = 1;
@@ -184,6 +185,16 @@ public partial class MainWindow : Window
         if (settingsWarning is not null)
             Dispatcher.BeginInvoke(new Action(() =>
                 MessageBox.Show(settingsWarning, "설정 복원 알림", MessageBoxButton.OK, MessageBoxImage.Warning)));
+    }
+
+    public void ApplyControlPolicy(SunriseControlService.Policy policy) => _controlPolicy = policy;
+
+    private void Notice_Click(object sender, RoutedEventArgs e) => OpenControlWindow();
+    private void UpdateCheck_Click(object sender, RoutedEventArgs e) => OpenControlWindow();
+    private void OpenControlWindow()
+    {
+        var window = new SunriseControlWindow(_controlPolicy) { Owner = this };
+        window.ShowDialog();
     }
 
     private void ThemeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)

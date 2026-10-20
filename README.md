@@ -1,4 +1,4 @@
-# Sunrise File Manager 1.0.0 (R19 R13)
+# Sunrise File Manager 1.0.0 (R19 R15 · Sunrise Control 중앙화)
 
 Sunrise Group의 Windows 10/11 x64용 .NET 10 WPF 파일 관리 프로그램입니다. 분할 탐색기, 탭, 폴더 검색, PDF/HWPX/DOCX·이미지 미리보기, 공유 메모 `#memo`, 선택형 Ollama 기능을 포함합니다.
 
@@ -50,3 +50,14 @@ GitHub `Peter-msk/Sunrise_capture`의 최신 릴리스 `v4.2.0`(2026-09-30)은 `
 - 미리보기는 우측 패널의 확대·축소/너비 맞춤/독립 창 열기, 독립 창의 100%/너비·페이지 맞춤 및 Ctrl+휠 등 키보드·마우스 기본 조작을 지원하도록 소스 수정.
 - 상세 변경 및 PC 검증 항목: `docs/R19_R14_UI_POPUP_PREVIEW_HANDOVER.md`.
 - 현재 **소스 검증 완료, Windows 실제 WPF 컴파일·UI 실기 검증 및 공식 설치파일 생성은 별도 확인 필요**.
+
+## R19 R15 — 공식 1.0.0 · Sunrise Control · 업데이트/공지
+
+- 제품의 공식 버전 기준은 `1.0.0`으로 유지합니다. 이 시점의 상태는 **공식 소스 기준 확정**, Windows 실제 서명 Setup 릴리스 게이트는 **PENDING**입니다.
+- 중앙 Control ID: `sunrise_file_manager`, 공개 저장소: `Peter-msk/Sunrise_Control/control.txt` schema v1.
+- 실행 시작 시 중앙 `operation=allow/maintenance/block` 및 `update=allow/block/required`, `minimum_version`을 반영합니다. HTTPS 조회 실패 시 유효 TTL 캐시 후 v1 fail-open fallback을 사용합니다.
+- `설정 · 기능 > 공지사항 · 버전 정보`와 `업데이트 확인`을 제공합니다.
+- File Manager 저장소는 비공개이므로 공지/버전의 런타임 공개 엔드포인트는 `Sunrise_Control/products/sunrise_file_manager/latest.json`, `notice.txt`를 사용합니다. 제품 원본도 이 저장소 루트에 보존합니다.
+- 새 Setup 파일이 **실제로** 서명·검증·배포되어 `download_url`, SHA256, 크기가 제공된 경우에만 사용자 승인 후 다운로드·해시 검증·실행할 수 있습니다. 검증된 설치파일이 아직 없으므로 R15에서는 다운로드 기능을 비활성화합니다.
+- Control v2 서명 정책/리스 설계는 미구현이며, v1 정책은 인증된 원격 라이선스 서버가 아닙니다.
+- 구현 및 검증 게이트: `docs/R19_R15_SUNRISE_CONTROL_RELEASE_HANDOVER.md`.
