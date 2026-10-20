@@ -14,7 +14,7 @@ class SigningRegression(unittest.TestCase):
   self.assertFalse((ROOT/'build-tools/Sunrise.GroupSigning.ps1').exists())
   self.assertIn('<OutputType>Library</OutputType>',CS)
  def test_signatures_required(self):
-  self.assertIn('FindSunriseCertificate.cmd',ONEDIR)
+  self.assertIn('EnsureSunriseGroupSigning.cmd',ONEDIR)
   self.assertIn('/fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "%SUNRISE_CERT_SUBJECT_CN%" /s My',ONEDIR)
   self.assertIn('/SSunriseGroup=',INSTALL)
   self.assertIn('SignedUninstaller=yes',(ROOT/'installer/SunriseFileManager.iss').read_text())
@@ -24,7 +24,7 @@ class SigningRegression(unittest.TestCase):
   for s in (ONEDIR,INSTALL,NATIVE):
    for bad in ('-ExecutionPolicy Bypass','Add-MpPreference','Set-MpPreference','Invoke-WebRequest','certreq.exe'):
     self.assertNotIn(bad,s)
-  self.assertIn('CERT_CREATION_DISABLED',NATIVE)
+  self.assertIn('RequestType = Cert',(ROOT/'build-tools/Sunrise.GroupCodeSigning.inf').read_text())
  def test_no_customer_document_access(self):
   for s in (ONEDIR,INSTALL,NATIVE):
    self.assertNotIn('LogicTests.csproj',s)

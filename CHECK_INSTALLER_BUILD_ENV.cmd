@@ -17,7 +17,11 @@ if exist "%ROOT%\COMPANY_SOURCE_ONLY.flag" (echo [PASS] Company source policy ma
 if exist "%ROOT%\installer\SunriseFileManager.iss" (echo [PASS] Inno source configuration) else (echo [FAIL] Inno source configuration missing & set /a MISSING+=1 >nul)
 if exist "%ROOT%\installer\RELEASE_VERSION.txt" (echo [PASS] Installer release version file) else (echo [FAIL] Release version missing & set /a MISSING+=1 >nul)
 if exist "%ROOT%\source\Sunrise.FileManager\Sunrise.FileManager.csproj" (echo [PASS] WPF project) else (echo [FAIL] WPF project missing & set /a MISSING+=1 >nul)
-if exist "%ROOT%\build-tools\FindSunriseCertificate.cmd" (echo [PASS] Native certutil certificate discovery) else (echo [FAIL] Native certificate discovery missing & set /a MISSING+=1 >nul)
+if exist "%ROOT%\build-tools\EnsureSunriseGroupSigning.cmd" (echo [PASS] Build-integrated certificate provisioner) else (echo [FAIL] Build certificate provisioner missing & set /a MISSING+=1 >nul)
+if exist "%ROOT%\build-tools\Sunrise.GroupCodeSigning.inf" (echo [PASS] Code-signing certificate INF template) else (echo [FAIL] Signing INF template missing & set /a MISSING+=1 >nul)
+if exist "%ROOT%\build-tools\FindSunriseCertificate.cmd" (echo [PASS] Native certificate metadata verifier) else (echo [FAIL] Certificate metadata verifier missing & set /a MISSING+=1 >nul)
+where.exe certreq.exe >nul 2>&1
+if errorlevel 1 (echo [FAIL] Windows certreq.exe missing & set /a MISSING+=1 >nul) else (echo [PASS] Windows certreq.exe available)
 where.exe certutil.exe >nul 2>&1
 if errorlevel 1 (echo [FAIL] Windows certutil.exe missing & set /a MISSING+=1 >nul) else (echo [PASS] Windows certutil.exe available)
 set "SUNRISE_ISCC_RESOLVED="
@@ -57,7 +61,7 @@ if errorlevel 1 (
 if "%MISSING%"=="0" (
   > "%REPORT%" echo STATUS=TOOLS_PRESENT
   >> "%REPORT%" echo WINDOWS_CERTIFICATE_AND_SIGNING=NOT_TESTED
-  echo [READY] Required tools detected. Certificate and actual signing are checked separately.
+  echo [READY] Required tools detected. First official build creates the group certificate if no pin exists.
   echo [NEXT] Run CHECK_SIGNING_CERT.cmd before BUILD_ON_WINDOWS_COMPANY.cmd.
   if "%NO_PAUSE%"=="0" pause
   exit /b 0

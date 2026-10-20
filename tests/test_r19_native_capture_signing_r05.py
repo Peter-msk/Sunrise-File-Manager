@@ -9,7 +9,7 @@ PREFLIGHT=(ROOT/'CHECK_INSTALLER_BUILD_ENV.cmd').read_text('ascii')
 class CaptureSigningR05(unittest.TestCase):
  def test_capture_certutil_and_sha1_method(self):
   self.assertIn('certutil.exe -user -store My',CERT)
-  self.assertIn('FindSunriseCertificate.cmd', PAYLOAD)
+  self.assertIn('EnsureSunriseGroupSigning.cmd', PAYLOAD)
   self.assertIn('CN=Sunrise Group',CERT)
   self.assertIn('CERT_MATCH_COUNT',CERT)
   self.assertIn('40 hexadecimal characters', CERT)

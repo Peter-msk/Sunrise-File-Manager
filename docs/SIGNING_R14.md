@@ -8,16 +8,16 @@
 
 ## 사용자 실행 절차
 1. R14 전체 소스 ZIP을 독립 폴더에 압축 해제한다.
-2. 빌드 PC의 `Cert:\CurrentUser\My` (현재 사용자 - 개인)에 기존 Sunrise Group 코드 서명 인증서가 있는지 확인한다. 인증서에는 개인키가 있어야 한다.
+2. R19 R07 공식 빌드는 기존 외부 인증서를 요구하지 않는다. 최초 빌드에서 Windows certreq로 자체서명 `CN=Sunrise Group` 인증서를 생성하고 CurrentUser/My에 저장한다.
 3. Windows SDK의 `signtool.exe`가 설치되어 있어야 한다. 기존 SDK 설치경로 또는 PATH에서 자동 탐색한다.
 4. `BUILD_ON_WINDOWS_COMPANY.cmd` 실행.
 5. 성공한 경우 `dist\SunriseFileManager_OneDir_R14\Sunrise File Manager.cmd`로 실행.
 6. 파일 속성 → 디지털 서명에서 Sunrise Group 서명 정보 확인. 서명 저장 후 인증서 신뢰 상태는 별개다.
 
 ## 코드서명 정책
-- 기본값은 **기존 인증서 재사용**. 새 인증서 자동 발급은 기본 OFF.
-- **R19 V3 보완 이후** 빌드 시 신규 인증서 생성은 지원하지 않는다. `SUNRISE_ALLOW_CERT_CREATE=1`이 설정되어 있으면 안내 후 실패한다.
-- 인증서가 없는 경우 IT/보안 담당자가 승인된 Sunrise Group 코드서명 인증서를 Windows 현재 사용자 개인 저장소에 등록해야 한다.
+- **R19 R07 기준:** 첫 공식 빌드에서 `certreq.exe -new -user -q`와 `RequestType=Cert` INF로 자체서명 인증서를 생성하며, 다음 빌드부터 생성된 동일 인증서를 고정 지문으로 재사용한다.
+- 외부 인증서 검색/자동 대체는 공식 빌드 경로에서 사용하지 않는다. 생성 후 고정된 인증서를 임의로 삭제하거나 다른 것으로 자동 교체하지 않는다.
+- 최초 빌드 시 생성된 인증서 개인키가 사라진 경우에는 자동 재생성을 하지 않고 원복 또는 서명자 변경 절차를 요청한다.
 - PFX/P12, 개인키/암호/자격증명은 소스, ZIP, 사용자용 `app/`에 들어가지 않는다.
 - `Sunrise.FileManager.exe` 및 `Sunrise.FileManager.dll`처럼 **이 프로젝트가 생성한 실행 PE**만 서명한다.
 - Microsoft/.NET/PdfPig 런타임·종속 DLL을 Sunrise Group 명의로 재서명하지 않는다.
@@ -57,3 +57,7 @@
 
 ## R19 R06 인증서 진단
 `CHECK_SIGNING_CERT.cmd`와 `docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md`를 참조한다. Capture 인증서 사용은 명시적 프로필 및 조직 승인 조건이며, 게시자 이름이 Capture로 바뀐다.
+
+## R19 R07 최신 빌드-내 인증서 생성 기준
+
+`docs/R19_INBUILD_SELF_SIGNING_R07.md`를 우선 참조한다. 이전 R14~R06 인증서 수동 검색·Capture 프로필 설명은 기록용이며 현재 공식 정책과 다른 경우 R07이 우선한다.

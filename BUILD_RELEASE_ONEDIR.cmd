@@ -63,16 +63,17 @@ if "%COMPANY_MODE%"=="1" echo [COMPANY POLICY] LogicTests and document fixture a
 REM Build-time only: discover SignTool. Never copy credentials or tools into user package.
 set "FAILED_STAGE=SIGNING_PREFLIGHT"
 >> "%RESULT%" echo STAGE=SIGNING_PREFLIGHT
-if not exist "%ROOT%\build-tools\FindSunriseCertificate.cmd" goto :fail_signing
+if not exist "%ROOT%\build-tools\EnsureSunriseGroupSigning.cmd" goto :fail_signing
 set "SUNRISE_SIGNTOOL_RESOLVED="
 call "%ROOT%\build-tools\FindSignTool.cmd" > "%LOG_DIR%\R14_signtool_probe.log" 2>&1
 if errorlevel 1 goto :fail_signing
 if not defined SUNRISE_SIGNTOOL_RESOLVED goto :fail_signing
 set "SIGNTOOL=%SUNRISE_SIGNTOOL_RESOLVED%"
-REM Sunrise Capture signing pattern: native certutil lookup, pinned SHA1, native SignTool.
-REM No PS1, generated signer EXE, V3 exceptions, or security policy changes.
+REM Build time: certreq generates a self-signed GROUP cert on first build only.
+REM A persistent pin in LocalAppData prevents silent identity rotation on updates.
+REM No project signing EXE, PS1, vendor-code re-sign or security bypass.
 set "SUNRISE_CERT_THUMBPRINT="
-call "%ROOT%\build-tools\FindSunriseCertificate.cmd" > "%LOG_DIR%\R14_signing_discovery.log" 2>&1
+call "%ROOT%\build-tools\EnsureSunriseGroupSigning.cmd" > "%LOG_DIR%\R14_cert_provision_console.log" 2>&1
 if errorlevel 1 goto :fail_signing
 if not defined SUNRISE_CERT_THUMBPRINT goto :fail_signing
 set "CERT_THUMBPRINT=%SUNRISE_CERT_THUMBPRINT%"
@@ -217,7 +218,9 @@ goto :fail
 echo [ERROR] Certificate preflight or Authenticode signing failed. Existing release preserved.
 echo [ERROR] Check R14_signing_preflight.log, R14_sign_exe.log, R14_sign_dll.log or R14_verify*.log.
 echo [ERROR] Required signer: GROUP (default) or explicitly approved CAPTURE profile.
-echo [ERROR] The detailed certificate STATUS is in R14_signing_preflight.log.
+echo [ERROR] Build certificate status: build-logs\R14_cert_provision.log.
+if exist "%LOG_DIR%\R14_cert_provision.log" type "%LOG_DIR%\R14_cert_provision.log"
+echo [ERROR] Certutil diagnostics: build-logs\R14_signing_preflight.log.
 if exist "%LOG_DIR%\R14_signing_preflight.log" type "%LOG_DIR%\R14_signing_preflight.log"
 echo [ERROR] No PS1/EXE helper is executed. Do not alter antivirus policy; contact IT if blocked.
 goto :fail_release

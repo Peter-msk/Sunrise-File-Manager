@@ -73,7 +73,7 @@ if errorlevel 1 goto :fail_inno
 if not defined SUNRISE_ISCC_RESOLVED goto :fail_inno
 set "ISCC=%SUNRISE_ISCC_RESOLVED%"
 echo [INNO] Using: "%ISCC%"
-if not exist "%ROOT%\build-tools\FindSunriseCertificate.cmd" goto :fail_signing_script
+if not exist "%ROOT%\build-tools\EnsureSunriseGroupSigning.cmd" goto :fail_signing_script
 REM Reuse the same Windows SDK SignTool detection in installer and payload builds.
 set "SUNRISE_SIGNTOOL_RESOLVED="
 call "%ROOT%\build-tools\FindSignTool.cmd" > "%LOG_DIR%\R15_signtool_probe.log" 2>&1
@@ -207,7 +207,7 @@ echo [ERROR] If absent, install Inno Setup with IT approval. No automatic instal
 goto :fail
 :fail_signing_script
 set "FAILED_STAGE=SIGNING_SCRIPT_UNAVAILABLE"
-echo [ERROR] Native certutil certificate discovery requires build-tools\FindSunriseCertificate.cmd.
+echo [ERROR] Native certificate creation requires build-tools\EnsureSunriseGroupSigning.cmd.
 goto :fail
 :fail_signtool
 set "FAILED_STAGE=SIGNTOOL_NOT_FOUND"
@@ -220,6 +220,7 @@ goto :fail
 set "FAILED_STAGE=PAYLOAD_BUILD"
 echo [ERROR] OneDir signed payload build failed. See R15_payload_build.log and R14 logs.
 if exist "%LOG_DIR%\R14_BUILD_RESULT.txt" type "%LOG_DIR%\R14_BUILD_RESULT.txt"
+if exist "%LOG_DIR%\R14_cert_provision.log" type "%LOG_DIR%\R14_cert_provision.log"
 if exist "%LOG_DIR%\R14_signing_preflight.log" type "%LOG_DIR%\R14_signing_preflight.log"
 goto :fail
 :fail_compile

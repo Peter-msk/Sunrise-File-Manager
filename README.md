@@ -40,7 +40,15 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 
 Windows 실기 로그에서 SDK 10.0.301, Inno Setup, SignTool은 정상이었고 `SIGNING_PREFLIGHT`에서 중단되었습니다. R06부터 `CHECK_SIGNING_CERT.cmd`로 인증서만 먼저 검사할 수 있고, 빌드 로그에 `CERT_NOT_FOUND`, `SHA1_NOT_PARSED`, `MULTIPLE_CERTIFICATES`, `SUBJECT_MISMATCH` 등을 명시합니다. 기본 서명 주체는 계속 **CN=Sunrise Group**입니다.
 
-Sunrise Capture 인증서 `CN=Sunrise Capture Self-Signed Code Signing`를 회사에서 File Manager에도 사용하도록 승인한 경우에만 같은 CMD 세션에서 `set "SUNRISE_CERT_PROFILE=CAPTURE"`를 설정하세요. 이 경우 **Windows 게시자 표시도 Capture 인증서 이름으로 달라짐**을 유의해야 합니다. 자동 대체·인증서 생성·서명 생략은 없습니다. 인증서 개인키의 실제 사용 가능 여부는 SignTool의 서명 결과로 확인합니다. `docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md`를 참조하십시오.
+R06 이전에는 Capture 인증서를 선택할 수 있었으나, **R07 공식 배포에서는 이를 허용하지 않습니다.** Sunrise Group 자체서명 인증서는 최초 공식 빌드에서 생성되고 이후 고정 지문을 재사용합니다. 인증서 개인키의 실제 사용 가능 여부는 SignTool의 서명 결과로 확인합니다. `docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md`를 참조하십시오.
+
+### R19 빌드 과정의 Sunrise Group 자체서명 인증서 생성 R07
+
+공식 빌드 `BUILD_ON_WINDOWS_COMPANY.cmd`는 **프로그램의 첫 빌드 때 Windows 기본 `certreq.exe`로 자체서명 코드서명 인증서 `CN=Sunrise Group`을 생성**합니다. 인증서 생성만을 위한 사용자 정의 EXE/PS1는 만들거나 실행하지 않습니다. 생성되는 RSA 3072비트 개인키는 Windows `CurrentUser\My`에 비내보내기 형태로 보관되고, `SignTool`이 해당 인증서로 WPF EXE·DLL과 Inno Setup Setup·Uninstaller에 Authenticode 서명을 삽입합니다.
+
+첫 생성 인증서의 **공개 SHA-1 지문만** `%LOCALAPPDATA%\SunriseGroup\FileManager\Signing\group_signer.sha1`에 고정합니다. 다음 빌드에서는 같은 인증서를 재사용합니다. 삭제·만료되거나 개인키가 사라지면 묵시적으로 다시 만들지 않고 실패하며, IT 승인 하에 동일한 키를 복원하거나 게시자 변경 및 갱신 절차를 계획해야 합니다. `CHECK_SIGNING_CERT.cmd`는 읽기 전용으로 확인하고 인증서는 실제 공식 빌드에서만 생성합니다.
+
+**주의:** 이 인증서는 **자체서명이며, CN=Sunrise Group 이름만으로 법적 조직 신원이나 공인 게시자 신뢰가 증명되지 않습니다.** Windows SmartScreen/V3와 다른 PC의 인증서 신뢰는 여전히 보장되지 않습니다. 개인키/PFX는 소스·GitHub·설치파일에 넣지 않으며, 사용자의 Trusted Root 저장소도 자동으로 변경하지 않습니다. 경고를 없애기 위해 보안 기능을 변경하지 않습니다. 자세한 내용: `docs/R19_INBUILD_SELF_SIGNING_R07.md`.
 
 ## 빌드 환경
 
@@ -49,7 +57,7 @@ Sunrise Capture 인증서 `CN=Sunrise Capture Self-Signed Code Signing`를 회�
 1. .NET 10 SDK (WPF Windows 타깃)
 2. Inno Setup 6/7 및 `ISCC.exe`
 3. Windows SDK `signtool.exe`
-4. Windows `certutil.exe` 및 빌드 PC의 기존 코드서명 인증서 (`CN=Sunrise Group`, 개인키 포함). PowerShell은 필요하지 않습니다.
+4. Windows 기본 `certreq.exe`·`certutil.exe` (인증서 최초 생성 및 확인). PowerShell과 별도 서명 EXE는 필요하지 않습니다.
 
 명령 프롬프트에서 프로젝트 루트의 다음 파일을 실행합니다.
 

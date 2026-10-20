@@ -1,4 +1,4 @@
-"""R06 signing preflight contracts; only source text, no certificate or document access."""
+"""Legacy R06 certificate resolver contracts (R07 build calls a project provisioning wrapper)."""
 from pathlib import Path
 import unittest
 ROOT=Path(__file__).resolve().parents[1]
@@ -42,7 +42,7 @@ class R06SigningPreflight(unittest.TestCase):
         self.assertIn('SIGNING_PREFLIGHT',P)
     def test_separate_readonly_preflight_and_diagnostic_propagation(self):
         self.assertIn('CHECK_SIGNING_CERT.cmd',(ROOT/'CHECK_INSTALLER_BUILD_ENV.cmd').read_text('ascii'))
-        self.assertIn('call "%CD%\\build-tools\\FindSunriseCertificate.cmd"',D)
+        self.assertIn('call "%CD%\\build-tools\\EnsureSunriseGroupSigning.cmd" --check-only',D)
         self.assertIn('R14_signing_preflight.log',D)
         self.assertIn('R14_signing_preflight.log',P)
         self.assertIn('R14_signing_preflight.log',I)

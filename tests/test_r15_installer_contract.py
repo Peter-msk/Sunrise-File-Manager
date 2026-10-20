@@ -87,7 +87,7 @@ class InstallerContractTests(unittest.TestCase):
 
     def test_no_automatic_installer_download(self):
         self.assertNotIn('winget install', BUILD.lower())
-        self.assertIn('FindSunriseCertificate.cmd', BUILD)
+        self.assertIn('EnsureSunriseGroupSigning.cmd', BUILD)
         self.assertNotIn('-ExecutionPolicy', BUILD)
         self.assertNotIn('Invoke-WebRequest', BUILD)
         self.assertNotIn('curl ', BUILD.lower())
