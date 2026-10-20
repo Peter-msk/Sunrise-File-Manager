@@ -6,10 +6,11 @@ SRC=ROOT/'source'/'Sunrise.FileManager'
 
 class R13OneDirOllamaContracts(unittest.TestCase):
     def test_company_entrypoint_is_onedir(self):
-        for name in ('BUILD_ON_WINDOWS_COMPANY.cmd','BUILD_ON_WINDOWS.cmd'):
+        for name in ('BUILD_ON_WINDOWS_COMPANY.cmd',):
             data=(ROOT/name).read_text('ascii')
-            self.assertIn('BUILD_' + ('RELEASE_INSTALLER.cmd' if name=='BUILD_ON_WINDOWS_COMPANY.cmd' else 'ON_WINDOWS_COMPANY.cmd'), data)
-            self.assertNotIn('BUILD_RELEASE_ONEFILE.cmd', data)
+            self.assertIn('BUILD_RELEASE_INSTALLER.cmd',data)
+        self.assertTrue((ROOT/'BUILD_DEV_EXE.cmd').exists())
+        self.assertNotIn('BUILD_RELEASE_ONEFILE.cmd', data)
         self.assertIn('BUILD_RELEASE_ONEDIR.cmd', (ROOT/'BUILD_RELEASE_INSTALLER.cmd').read_text('ascii'))
 
     def test_onedir_wpf_compiles_without_fixture_access(self):
@@ -51,7 +52,7 @@ class R13OneDirOllamaContracts(unittest.TestCase):
 
     def test_cmd_ascii_crlf(self):
         for file in ('BUILD_RELEASE_ONEDIR.cmd', 'BUILD_ON_WINDOWS_COMPANY.cmd',
-                     'BUILD_ON_WINDOWS.cmd','BUILD_DEV_FULL_SOURCE.cmd','RUN_FILE_MANAGER.cmd'):
+                     'BUILD_DEV_EXE.cmd','BUILD_RELEASE_INSTALLER.cmd','RUN_FILE_MANAGER.cmd'):
             data=(ROOT/file).read_bytes()
             self.assertTrue(data.isascii(),file)
             self.assertNotIn(b'\n',data.replace(b'\r\n',b''),file)

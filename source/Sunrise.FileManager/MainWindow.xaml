@@ -17,7 +17,7 @@
        <Button x:Name="FourButton" Style="{StaticResource ExplorerToggle}" Content="4분할" Click="Four_Click" ToolTip="네 개 탐색기 분할 (Ctrl+4)"/>
       </StackPanel>
      </Border>
-     <Button x:Name="AiToggleButton" Style="{StaticResource PrimaryButton}" Content="AI 파일 정리" Click="AiToggle_Click" ToolTip="AI 도킹 창 열기/닫기 (F8)" Margin="0,0,6,0"/>
+     <Button x:Name="AiToggleButton" Style="{StaticResource PrimaryButton}" Content="AI 파일 정리" Click="AiToggle_Click" ToolTip="AI 파일 검색·정리 팝업 열기/닫기 (F8)" Margin="0,0,6,0"/>
      <Menu Style="{StaticResource SunrisePaneMenu}" VerticalAlignment="Center" MinHeight="34">
       <MenuItem Header="설정 · 기능 ▾" Padding="12,7">
        <MenuItem Header="AI 연결 및 설치" Click="AiConnect_Click"/>
@@ -58,7 +58,7 @@
     <TextBlock Text="동일 드라이브 드래그: 이동 · Ctrl+드래그: 복사 · 분할 변경 시 작업 폴더 자동 보존" FontSize="11.5" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
    </WrapPanel>
   </Border>
-  <!-- R03: preview is ALWAYS the last full-height column; F8 docks below the file list only. -->
+  <!-- The preview stays in the rightmost column; AI work runs in an independent popup window. -->
   <Grid x:Name="WorkspaceShell" Grid.Row="2" Margin="6" SnapsToDevicePixels="True">
    <Grid.ColumnDefinitions>
     <ColumnDefinition Width="*"/>
@@ -71,25 +71,19 @@
      <ColumnDefinition x:Name="InspectorDividerColumn" Width="11"/>
      <ColumnDefinition x:Name="InspectorColumn" Width="330"/>
     </Grid.ColumnDefinitions>
-    <Grid.RowDefinitions>
-     <RowDefinition Height="*"/>
-     <RowDefinition x:Name="AiRow" Height="0"/>
-    </Grid.RowDefinitions>
+    <Grid.RowDefinitions><RowDefinition Height="*"/></Grid.RowDefinitions>
     <ScrollViewer x:Name="WorkspaceViewport" Grid.Row="0" Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" SnapsToDevicePixels="True">
      <Grid x:Name="Workspace" Width="800" Height="500"/>
     </ScrollViewer>
-    <GridSplitter Style="{StaticResource SunriseVerticalSplitter}" x:Name="InspectorSplitter" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Background="{DynamicResource ThemeSplitter}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="True"/>
-    <local:FileInspector x:Name="Inspector" Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"/>
-    <ScrollViewer x:Name="AiViewport" Grid.Row="1" Grid.Column="0" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource ThemeSurface}">
-     <local:AiCommandPanel x:Name="AiPanel" Visibility="Collapsed" Height="500" Margin="8,4,8,0"/>
-    </ScrollViewer>
+    <GridSplitter Style="{StaticResource SunriseVerticalSplitter}" x:Name="InspectorSplitter" Grid.Row="0" Grid.Column="1" Background="{DynamicResource ThemeSplitter}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="True"/>
+    <local:FileInspector x:Name="Inspector" Grid.Row="0" Grid.Column="2"/>
    </Grid>
    <GridSplitter Style="{StaticResource SunriseVerticalSplitter}" x:Name="PreviewColumnSplitter" Grid.Column="1" Background="{DynamicResource ThemeSplitter}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="True" Visibility="Collapsed"/>
    <local:FilePreviewPanel x:Name="PreviewPane" Grid.Column="2" Visibility="Collapsed"/>
   </Grid>
   <Border Grid.Row="3" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0" Padding="14,7">
    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="200"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-    <StackPanel Margin="0,0,12,0"><TextBlock x:Name="JobStatus" Text="준비됨 · Windows 기본 탐색기 호환 모드" Foreground="{DynamicResource TextMuted}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, ElementName=JobDetail}"/><TextBlock x:Name="JobDetail" Visibility="Collapsed" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource TextMuted}"/></StackPanel>
+    <StackPanel Margin="0,0,12,0"><TextBlock x:Name="JobStatus" Text="준비됨 · Windows 기본 탐색기 호환 모드" Foreground="{DynamicResource TextMuted}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/><TextBlock x:Name="JobDetail" Visibility="Collapsed" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource TextMuted}"/></StackPanel>
     <ProgressBar x:Name="JobProgress" Visibility="Collapsed" Grid.Column="1" Minimum="0" Maximum="100" Height="7" VerticalAlignment="Center" Margin="0,0,12,0"/>
     <Button x:Name="CancelJobButton" Visibility="Collapsed" Grid.Column="2" Content="취소" Click="CancelJob_Click" IsEnabled="False" Padding="8,2" MinHeight="24"/>
    </Grid>

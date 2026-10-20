@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1]
 class SigningContract(unittest.TestCase):
  def test_signing_sequence(self):
   s=(ROOT/'BUILD_RELEASE_ONEDIR.cmd').read_text('ascii')
-  steps=['set "FAILED_STAGE=SIGNING_PREFLIGHT"','set "FAILED_STAGE=WPF_PUBLISH"','set "FAILED_STAGE=AUTHENTICODE_SIGN"','set "FAILED_STAGE=SIGNATURE_CHECK"','set "FAILED_STAGE=PACKAGE"','set "FAILED_STAGE=COMMIT"']
+  steps=['set "FAILED_STAGE=WPF_PUBLISH"','set "FAILED_STAGE=SIGNING_PREFLIGHT"','set "FAILED_STAGE=AUTHENTICODE_SIGN"','set "FAILED_STAGE=SIGNATURE_CHECK"','set "FAILED_STAGE=PACKAGE"','set "FAILED_STAGE=COMMIT"']
   self.assertEqual(sorted(s.index(t) for t in steps),[s.index(t) for t in steps]); self.assertIn('SignTool',s)
  def test_signing_targets_and_no_vendor_resign(self):
   s=(ROOT/'BUILD_RELEASE_ONEDIR.cmd').read_text('ascii')

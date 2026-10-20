@@ -2,7 +2,7 @@
  <Border Margin="2" BorderThickness="1" Background="{DynamicResource ThemeSurface}" CornerRadius="3">
   <Border.Style><Style TargetType="Border"><Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/><Style.Triggers><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger></Style.Triggers></Style></Border.Style>
   <Grid>
-   <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="36"/><RowDefinition x:Name="AddressRow" Height="42"/><RowDefinition x:Name="BreadcrumbRow" Height="28"/><RowDefinition Height="42"/><RowDefinition Height="*"/><RowDefinition Height="30"/></Grid.RowDefinitions>
+   <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="36"/><RowDefinition x:Name="AddressRow" Height="42"/><RowDefinition x:Name="BreadcrumbRow" Height="28"/><RowDefinition Height="*"/><RowDefinition Height="30"/></Grid.RowDefinitions>
 
 
 
@@ -84,7 +84,7 @@
    <!-- Row 1: Windows 11 Style Top Folder Tab Bar -->
    <Grid Grid.Row="1" Background="{DynamicResource ThemeTab}">
     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="32"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-    <TextBlock x:Name="PaneTitle" Text="탐색기" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+    <TextBlock x:Name="PaneTitle" Text="탐색기" FontSize="11" ToolTip="현재 탐색기 분할 창" FontWeight="SemiBold" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="10,0,10,0"/>
     <ScrollViewer x:Name="TabScroll" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="Tabs_PreviewMouseWheel" ToolTip="마우스 휠로 탭을 좌우로 이동합니다. (Ctrl+T: 새 탭, Ctrl+W: 탭 닫기)">
      <ItemsControl x:Name="TabStrip"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate><DataTemplate>
@@ -95,7 +95,7 @@
      </ItemsControl>
     </ScrollViewer>
     <Button Style="{StaticResource ExplorerNavButton}" Grid.Column="2" Content="+" Click="NewTab_Click" ToolTip="새 탭 열기 (Ctrl+T)" FontSize="18" Padding="0"/>
-    <TextBlock Grid.Column="3" x:Name="PaneStatus" MaxWidth="175" FontSize="11" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" VerticalAlignment="Center" Margin="6,0,10,0"/>
+    <TextBlock Grid.Column="3" x:Name="PaneStatus" MaxWidth="175" FontSize="11" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" VerticalAlignment="Center" Margin="6,0,8,0"/>
    </Grid>
 
    <!-- Row 1: Windows Explorer Navigation Buttons (← → ↑ ⟳), Address Bar, and Search Box -->
@@ -132,8 +132,10 @@
     </Grid>
    </Border>
 
-   <!-- Row 3: Windows 11 File Explorer Standard Command Bar (+ 새로 만들기 | 잘라내기 · 복사 · 붙여넣기 · 이름 바꾸기 · 삭제 · 실행취소 | 정렬/필터 · 보기 | 압축/목록내보내기/도구 | 창 표시) -->
-   <ToolBar Grid.Row="4" Background="{DynamicResource ThemeSurface}" Foreground="{DynamicResource TextPrimary}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1" Padding="5,2" FontSize="12" ToolBarTray.IsLocked="True">
+   <!-- Retired visual command row: actions remain available through menus/keyboard.
+        The hidden named controls preserve existing view/clipboard command bindings.
+        Windows 11 File Explorer Standard Command Bar (+ 새로 만들기 | 잘라내기 · 복사 · 붙여넣기 · 이름 바꾸기 · 삭제 · 실행취소 | 정렬/필터 · 보기 | 압축/목록내보내기/도구 | 창 표시) -->
+   <ToolBar Grid.Row="0" Visibility="Collapsed" Background="{DynamicResource ThemeSurface}" Foreground="{DynamicResource TextPrimary}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1" Padding="5,2" FontSize="12" ToolBarTray.IsLocked="True">
     <ToolBar.Resources><Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
       <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
       <Setter Property="FontSize" Value="12"/>
@@ -183,12 +185,12 @@
     <Button Foreground="{DynamicResource TextPrimary}" x:Name="PreviewToggle" Visibility="Collapsed" Content="◨ 미리보기" Click="PreviewToggle_Click" ToolTip="우측 독립 미리보기 창 표시/숨김 (Alt+P / Space)"/>
    </ToolBar>
 
-   <!-- Row 4: Navigation Tree + FilesGrid + Optional Local Details -->
-   <Grid Grid.Row="5">
+   <!-- File navigation: reclaimed command-bar height -->
+   <Grid Grid.Row="4">
     <Grid.ColumnDefinitions><ColumnDefinition x:Name="TreeColumn" Width="215"/><ColumnDefinition x:Name="TreeDividerColumn" Width="6"/><ColumnDefinition Width="*" MinWidth="100"/><ColumnDefinition x:Name="DetailsDividerColumn" Width="1"/><ColumnDefinition x:Name="DetailsColumn" Width="0"/></Grid.ColumnDefinitions>
     <local:FolderTree Grid.Column="0" x:Name="NavigationTree"/>
     <GridSplitter Grid.Column="1" x:Name="TreeDivider" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{DynamicResource PanelBorder}"/>
-    <DataGrid Grid.Column="2" x:Name="FilesGrid" Margin="5,0,5,0" FontSize="13" SelectionMode="Extended" CanUserResizeColumns="True"
+    <DataGrid Grid.Column="2" x:Name="FilesGrid" MinColumnWidth="46" Margin="5,0,5,0" FontSize="13" SelectionMode="Extended" CanUserResizeColumns="True"
               EnableRowVirtualization="True" EnableColumnVirtualization="True"
               VirtualizingPanel.VirtualizationMode="Recycling" SelectionChanged="FilesGrid_SelectionChanged"
               MouseDoubleClick="FilesGrid_MouseDoubleClick" Sorting="FilesGrid_Sorting"
@@ -251,19 +253,21 @@
         </DataTemplate>
        </DataGridTemplateColumn.CellTemplate>
       </DataGridTemplateColumn>
-      <DataGridTextColumn Header="이름" Binding="{Binding DisplayName}" SortMemberPath="Name" Width="*" MinWidth="175">
+      <DataGridTextColumn Header="이름" Binding="{Binding DisplayName}" SortMemberPath="Name" Width="2*" MinWidth="190">
        <DataGridTextColumn.ElementStyle>
         <Style TargetType="TextBlock">
          <Setter Property="Foreground" Value="{Binding NameForeground}"/>
          <Setter Property="VerticalAlignment" Value="Center"/>
+         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+         <Setter Property="ToolTip" Value="{Binding DisplayName}"/>
         </Style>
        </DataGridTextColumn.ElementStyle>
       </DataGridTextColumn>
-      <DataGridTextColumn Header="수정한 날짜" Binding="{Binding ModifiedDisplay}" SortMemberPath="ModifiedAt" Width="150" />
-      <DataGridTextColumn Header="유형" Binding="{Binding TypeName}" SortMemberPath="TypeName" Width="95" />
+      <DataGridTextColumn Header="수정한 날짜" Binding="{Binding ModifiedDisplay}" SortMemberPath="ModifiedAt" Width="152" />
+      <DataGridTextColumn Header="유형" Binding="{Binding TypeName}" SortMemberPath="TypeName" Width="112" />
       <DataGridTextColumn Header="크기" Binding="{Binding SizeDisplay}" SortMemberPath="SizeBytes" Width="90" />
-      <DataGridTextColumn Header="메모" Binding="{Binding MemoBadge}" SortMemberPath="HasMemo" Width="52" />
-      <DataGridTextColumn Header="만든 날짜" Binding="{Binding CreatedDisplay}" SortMemberPath="CreatedAt" Width="145" />
+      <DataGridTextColumn Header="메모" Binding="{Binding MemoBadge}" SortMemberPath="HasMemo" Width="62" />
+      <DataGridTextColumn Header="만든 날짜" Binding="{Binding CreatedDisplay}" SortMemberPath="CreatedAt" Width="152" />
      </DataGrid.Columns>
     </DataGrid>
 
@@ -280,11 +284,11 @@
     </Border>
    </Grid>
 
-   <!-- Row 5: Windows Explorer Status Bar with Item Count, Selected Size & Drive Free Space -->
-   <Border Grid.Row="6" Background="{DynamicResource ThemeStatus}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0" Padding="10,5">
+   <!-- File Explorer Status Bar -->
+   <Border Grid.Row="5" Background="{DynamicResource ThemeStatus}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0" Padding="10,5">
     <Grid>
      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-     <TextBlock Grid.Column="0" x:Name="FooterText" Foreground="{DynamicResource TextMuted}" FontSize="11.5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+     <TextBlock Grid.Column="0" x:Name="FooterText" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" Foreground="{DynamicResource TextMuted}" FontSize="11.5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
      <TextBlock Grid.Column="1" x:Name="DriveSpaceText" Foreground="{DynamicResource TextMuted}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center"/>
     </Grid>
    </Border>

@@ -1,121 +1,9 @@
 {
   "product": "Sunrise File Manager",
   "edition": "Open Source",
-  "result": "PASS",
-  "count": 382,
+  "result": "FAIL",
+  "count": 337,
   "checks": [
-    {
-      "name": "XAML parses: App.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "unique names: App.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:AppBackground",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:AppWindow",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:Accent",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:Accent",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:Selected",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: App.xaml:TextPrimary",
-      "status": "PASS"
-    },
     {
       "name": "XAML parses: MainWindow.xaml",
       "status": "PASS"
@@ -134,34 +22,6 @@
     },
     {
       "name": "handler: MainWindow.xaml:Window_PreviewKeyDown",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:Brand",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:Accent",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:PanelBorder",
       "status": "PASS"
     },
     {
@@ -197,55 +57,7 @@
       "status": "PASS"
     },
     {
-      "name": "handler: MainWindow.xaml:SplitPresetSelector_SelectionChanged",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: MainWindow.xaml:CycleSplitPreset_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: MainWindow.xaml:InspectorToggle_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: MainWindow.xaml:MainPreview_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
       "name": "resource: MainWindow.xaml:PrimaryButton",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: MainWindow.xaml:AiConnect_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:ExplorerCommand",
       "status": "PASS"
     },
     {
@@ -253,7 +65,55 @@
       "status": "PASS"
     },
     {
-      "name": "resource: MainWindow.xaml:PanelBorder",
+      "name": "resource: MainWindow.xaml:SunrisePaneMenu",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:AiConnect_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:InspectorToggle_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:MainPreview_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:CycleSplitPreset_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:ThemeLight_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:ThemeDark_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:SplitPresetSelector_SelectionChanged",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:CycleSplitPreset_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:InspectorToggle_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:MainPreview_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:AiConnect_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: MainWindow.xaml:ThemeSelector_SelectionChanged",
       "status": "PASS"
     },
     {
@@ -273,27 +133,11 @@
       "status": "PASS"
     },
     {
-      "name": "resource: MainWindow.xaml:TextMuted",
+      "name": "resource: MainWindow.xaml:SunriseVerticalSplitter",
       "status": "PASS"
     },
     {
-      "name": "resource: MainWindow.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: MainWindow.xaml:TextMuted",
+      "name": "resource: MainWindow.xaml:SunriseVerticalSplitter",
       "status": "PASS"
     },
     {
@@ -301,195 +145,67 @@
       "status": "PASS"
     },
     {
-      "name": "XAML parses: AiCommandPanel.xaml",
+      "name": "XAML parses: App.xaml",
       "status": "PASS"
     },
     {
-      "name": "unique names: AiCommandPanel.xaml",
+      "name": "unique names: App.xaml",
+      "status": "FAIL"
+    },
+    {
+      "name": "resource: App.xaml:AppWindow",
       "status": "PASS"
     },
     {
-      "name": "resource: AiCommandPanel.xaml:TextPrimary",
+      "name": "resource: App.xaml:ExplorerCommand",
       "status": "PASS"
     },
     {
-      "name": "resource: AiCommandPanel.xaml:PanelBackground",
+      "name": "resource: App.xaml:SunrisePaneMenuItem",
       "status": "PASS"
     },
     {
-      "name": "resource: AiCommandPanel.xaml:PanelBorder",
+      "name": "XAML parses: PreviewWindow.xaml",
       "status": "PASS"
     },
     {
-      "name": "resource: AiCommandPanel.xaml:TextMuted",
+      "name": "unique names: PreviewWindow.xaml",
       "status": "PASS"
     },
     {
-      "name": "resource: AiCommandPanel.xaml:TextMuted",
+      "name": "resource: PreviewWindow.xaml:AppWindow",
       "status": "PASS"
     },
     {
-      "name": "resource: AiCommandPanel.xaml:PrimaryButton",
+      "name": "handler: PreviewWindow.xaml:Window_Closing",
       "status": "PASS"
     },
     {
-      "name": "handler: AiCommandPanel.xaml:OllamaConnect_Click",
+      "name": "handler: PreviewWindow.xaml:Window_KeyDown",
       "status": "PASS"
     },
     {
-      "name": "handler: AiCommandPanel.xaml:Input_Changed",
+      "name": "handler: PreviewWindow.xaml:Close_Click",
       "status": "PASS"
     },
     {
-      "name": "handler: AiCommandPanel.xaml:QuickAction_Changed",
+      "name": "handler: PreviewWindow.xaml:OpenOriginal_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: AiCommandPanel.xaml:TextMuted",
+      "name": "handler: PreviewWindow.xaml:TextFallback_Click",
       "status": "PASS"
     },
     {
-      "name": "handler: AiCommandPanel.xaml:Provider_Changed",
+      "name": "handler: PreviewWindow.xaml:Previous_Click",
       "status": "PASS"
     },
     {
-      "name": "handler: AiCommandPanel.xaml:Input_Changed",
+      "name": "handler: PreviewWindow.xaml:Next_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: AiCommandPanel.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Input_Changed",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Input_Changed",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Input_Changed",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiCommandPanel.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Destination_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiCommandPanel.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:UseOtherPane_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiCommandPanel.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:UseCurrentFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Input_Changed",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiCommandPanel.xaml:PrimaryButton",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Plan_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiCommandPanel.xaml:PrimaryButton",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Execute_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:AskOllama_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:SaveSummaryMemo_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:SaveSummaryMd_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Inspection_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:History_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:Cancel_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiCommandPanel.xaml:PlanGrid_MouseDoubleClick",
-      "status": "PASS"
-    },
-    {
-      "name": "XAML parses: AiHistoryWindow.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "unique names: AiHistoryWindow.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiHistoryWindow.xaml:AppWindow",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiHistoryWindow.xaml:AppBackground",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiHistoryWindow.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiHistoryWindow.xaml:Window_Closing",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiHistoryWindow.xaml:Jobs_SelectionChanged",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiHistoryWindow.xaml:Reload_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiHistoryWindow.xaml:Inspect_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiHistoryWindow.xaml:Preview_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiHistoryWindow.xaml:Undo_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: AiHistoryWindow.xaml:Cancel_Click",
+      "name": "handler: PreviewWindow.xaml:Zoom_ValueChanged",
       "status": "PASS"
     },
     {
@@ -502,14 +218,6 @@
     },
     {
       "name": "resource: AiInspectionWindow.xaml:AppWindow",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiInspectionWindow.xaml:AppBackground",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: AiInspectionWindow.xaml:TextPrimary",
       "status": "PASS"
     },
     {
@@ -553,6 +261,194 @@
       "status": "PASS"
     },
     {
+      "name": "XAML parses: FolderTree.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "unique names: FolderTree.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:NavigationScroll_PreviewMouseWheel",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:KnownFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:KnownFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:KnownFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:KnownFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:KnownFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:KnownFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:KnownFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:KnownFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:PinCurrent_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:Reload_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FolderTree.xaml:FolderItems_SelectedItemChanged",
+      "status": "PASS"
+    },
+    {
+      "name": "XAML parses: FileInspector.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "unique names: FileInspector.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:FolderSizeButton_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:HashButton_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:AttributeCheck_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:AttributeCheck_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: FileInspector.xaml:SunriseHorizontalSplitter",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:AiMemoButton_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:SaveButton_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: FileInspector.xaml:PrimaryButton",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:AcceptMemoChangeButton_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:MemoHistory_SelectionChanged",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:MemoBackupsEnabled_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:RestoreMemoButton_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FileInspector.xaml:MemoEditor_TextChanged",
+      "status": "PASS"
+    },
+    {
+      "name": "XAML parses: FilePreviewPanel.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "unique names: FilePreviewPanel.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FilePreviewPanel.xaml:ClosePreviewButton_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FilePreviewPanel.xaml:PreviousPage_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: FilePreviewPanel.xaml:NextPage_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "XAML parses: OllamaSetupDialog.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "unique names: OllamaSetupDialog.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: OllamaSetupDialog.xaml:AppWindow",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: OllamaSetupDialog.xaml:RefreshStatus_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: OllamaSetupDialog.xaml:ExplorerCommand",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: OllamaSetupDialog.xaml:OpenGitHub_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: OllamaSetupDialog.xaml:ExplorerCommand",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: OllamaSetupDialog.xaml:Decline_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: OllamaSetupDialog.xaml:ExplorerCommand",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: OllamaSetupDialog.xaml:Install_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: OllamaSetupDialog.xaml:PrimaryButton",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: OllamaSetupDialog.xaml:CloseSetup_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: OllamaSetupDialog.xaml:ExplorerCommand",
+      "status": "PASS"
+    },
+    {
       "name": "XAML parses: BatchRenameDialog.xaml",
       "status": "PASS"
     },
@@ -565,14 +461,6 @@
       "status": "PASS"
     },
     {
-      "name": "resource: BatchRenameDialog.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: BatchRenameDialog.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
       "name": "handler: BatchRenameDialog.xaml:Rule_Changed",
       "status": "PASS"
     },
@@ -598,10 +486,6 @@
     },
     {
       "name": "handler: BatchRenameDialog.xaml:Rule_Changed",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: BatchRenameDialog.xaml:TextMuted",
       "status": "PASS"
     },
     {
@@ -617,6 +501,46 @@
       "status": "PASS"
     },
     {
+      "name": "XAML parses: AiHistoryWindow.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "unique names: AiHistoryWindow.xaml",
+      "status": "PASS"
+    },
+    {
+      "name": "resource: AiHistoryWindow.xaml:AppWindow",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: AiHistoryWindow.xaml:Window_Closing",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: AiHistoryWindow.xaml:Jobs_SelectionChanged",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: AiHistoryWindow.xaml:Reload_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: AiHistoryWindow.xaml:Inspect_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: AiHistoryWindow.xaml:Preview_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: AiHistoryWindow.xaml:Undo_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: AiHistoryWindow.xaml:Cancel_Click",
+      "status": "PASS"
+    },
+    {
       "name": "XAML parses: ExplorerPane.xaml",
       "status": "PASS"
     },
@@ -625,31 +549,187 @@
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
       "name": "handler: ExplorerPane.xaml:ExplorerPane_PreviewKeyDown",
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
+      "name": "resource: ExplorerPane.xaml:SunrisePaneMenu",
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:Accent",
+      "name": "handler: ExplorerPane.xaml:NewTab_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
+      "name": "handler: ExplorerPane.xaml:NewFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:NewFile_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ContextOpen_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ContextOpenWith_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:OpenCmd_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:OpenWindowsExplorer_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:Undo_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:Redo_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ClipboardCut_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ClipboardCopy_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ClipboardPaste_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:Rename_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:Duplicate_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:Recycle_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:PermanentDelete_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:SelectAll_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:Refresh_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:TreeToggle_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:DetailsToggle_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:PreviewToggle_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ViewModeMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ViewModeMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ViewModeMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ViewModeMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ViewModeMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:CategoryMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:CategoryMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:CategoryMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:CategoryMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:CategoryMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:CategoryMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:CategoryMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:CategoryMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ToggleHiddenMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ToggleExtensionsMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ToggleCheckboxesMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ToggleColorCodingMenu_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ContextPinFolder_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ZipCompress_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ZipExtract_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ExportList_Click",
+      "status": "PASS"
+    },
+    {
+      "name": "handler: ExplorerPane.xaml:ContextProperties_Click",
       "status": "PASS"
     },
     {
       "name": "handler: ExplorerPane.xaml:Tabs_PreviewMouseWheel",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
       "status": "PASS"
     },
     {
@@ -666,10 +746,6 @@
     },
     {
       "name": "handler: ExplorerPane.xaml:NewTab_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
       "status": "PASS"
     },
     {
@@ -725,19 +801,7 @@
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
+      "name": "handler: ExplorerPane.xaml:Breadcrumb_PreviewMouseWheel",
       "status": "PASS"
     },
     {
@@ -770,14 +834,6 @@
     },
     {
       "name": "handler: ExplorerPane.xaml:ViewOption_Changed",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
       "status": "PASS"
     },
     {
@@ -858,10 +914,6 @@
     },
     {
       "name": "handler: ExplorerPane.xaml:PreviewToggle_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
       "status": "PASS"
     },
     {
@@ -1029,27 +1081,7 @@
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
       "name": "handler: ExplorerPane.xaml:ContextOpen_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
       "status": "PASS"
     },
     {
@@ -1057,211 +1089,127 @@
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
+      "name": "XAML parses: AiCommandPanel.xaml",
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:PanelBorder",
+      "name": "unique names: AiCommandPanel.xaml",
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
+      "name": "resource: AiCommandPanel.xaml:PrimaryButton",
       "status": "PASS"
     },
     {
-      "name": "resource: ExplorerPane.xaml:TextMuted",
+      "name": "handler: AiCommandPanel.xaml:OllamaConnect_Click",
       "status": "PASS"
     },
     {
-      "name": "XAML parses: FileInspector.xaml",
+      "name": "resource: AiCommandPanel.xaml:ExplorerCommand",
       "status": "PASS"
     },
     {
-      "name": "unique names: FileInspector.xaml",
+      "name": "handler: AiCommandPanel.xaml:CloseAiPanel_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:PanelBorder",
+      "name": "handler: AiCommandPanel.xaml:Input_Changed",
       "status": "PASS"
     },
     {
-      "name": "handler: FileInspector.xaml:FolderSizeButton_Click",
+      "name": "handler: AiCommandPanel.xaml:QuickAction_Changed",
       "status": "PASS"
     },
     {
-      "name": "handler: FileInspector.xaml:HashButton_Click",
+      "name": "handler: AiCommandPanel.xaml:Provider_Changed",
       "status": "PASS"
     },
     {
-      "name": "handler: FileInspector.xaml:AttributeCheck_Click",
+      "name": "handler: AiCommandPanel.xaml:Input_Changed",
       "status": "PASS"
     },
     {
-      "name": "handler: FileInspector.xaml:AttributeCheck_Click",
+      "name": "handler: AiCommandPanel.xaml:Input_Changed",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:TextMuted",
+      "name": "handler: AiCommandPanel.xaml:Input_Changed",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:TextMuted",
+      "name": "handler: AiCommandPanel.xaml:Input_Changed",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:TextMuted",
+      "name": "resource: AiCommandPanel.xaml:ExplorerCommand",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:TextMuted",
+      "name": "handler: AiCommandPanel.xaml:Destination_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:TextMuted",
+      "name": "resource: AiCommandPanel.xaml:ExplorerCommand",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:TextMuted",
+      "name": "handler: AiCommandPanel.xaml:UseOtherPane_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:PanelBorder",
+      "name": "resource: AiCommandPanel.xaml:ExplorerCommand",
       "status": "PASS"
     },
     {
-      "name": "handler: FileInspector.xaml:AiMemoButton_Click",
+      "name": "handler: AiCommandPanel.xaml:UseCurrentFolder_Click",
       "status": "PASS"
     },
     {
-      "name": "handler: FileInspector.xaml:SaveButton_Click",
+      "name": "handler: AiCommandPanel.xaml:Input_Changed",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:PrimaryButton",
+      "name": "resource: AiCommandPanel.xaml:PrimaryButton",
       "status": "PASS"
     },
     {
-      "name": "handler: FileInspector.xaml:MemoHistory_SelectionChanged",
+      "name": "handler: AiCommandPanel.xaml:Plan_Click",
       "status": "PASS"
     },
     {
-      "name": "handler: FileInspector.xaml:MemoEditor_TextChanged",
+      "name": "resource: AiCommandPanel.xaml:PrimaryButton",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:TextMuted",
+      "name": "handler: AiCommandPanel.xaml:Execute_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: FileInspector.xaml:TextMuted",
+      "name": "handler: AiCommandPanel.xaml:AskOllama_Click",
       "status": "PASS"
     },
     {
-      "name": "XAML parses: FilePreviewPanel.xaml",
+      "name": "handler: AiCommandPanel.xaml:SaveSummaryMemo_Click",
       "status": "PASS"
     },
     {
-      "name": "unique names: FilePreviewPanel.xaml",
+      "name": "handler: AiCommandPanel.xaml:SaveSummaryMd_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: FilePreviewPanel.xaml:PanelBorder",
+      "name": "handler: AiCommandPanel.xaml:Inspection_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: FilePreviewPanel.xaml:TextMuted",
+      "name": "handler: AiCommandPanel.xaml:History_Click",
       "status": "PASS"
     },
     {
-      "name": "handler: FilePreviewPanel.xaml:ClosePreviewButton_Click",
+      "name": "handler: AiCommandPanel.xaml:Cancel_Click",
       "status": "PASS"
     },
     {
-      "name": "resource: FilePreviewPanel.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FilePreviewPanel.xaml:PreviousPage_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FilePreviewPanel.xaml:NextPage_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "XAML parses: FolderTree.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "unique names: FolderTree.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: FolderTree.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: FolderTree.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: FolderTree.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:KnownFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:KnownFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:KnownFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:KnownFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:KnownFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:KnownFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:KnownFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:KnownFolder_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:PinCurrent_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: FolderTree.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:Reload_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: FolderTree.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: FolderTree.xaml:TextPrimary",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: FolderTree.xaml:FolderItems_SelectedItemChanged",
+      "name": "handler: AiCommandPanel.xaml:PlanGrid_MouseDoubleClick",
       "status": "PASS"
     },
     {
@@ -1281,136 +1229,8 @@
       "status": "PASS"
     },
     {
-      "name": "XAML parses: OllamaSetupDialog.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "unique names: OllamaSetupDialog.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:AppWindow",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:Brand",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: OllamaSetupDialog.xaml:RefreshStatus_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: OllamaSetupDialog.xaml:OpenGitHub_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: OllamaSetupDialog.xaml:Decline_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:ExplorerCommand",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: OllamaSetupDialog.xaml:Install_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: OllamaSetupDialog.xaml:PrimaryButton",
-      "status": "PASS"
-    },
-    {
-      "name": "XAML parses: PreviewWindow.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "unique names: PreviewWindow.xaml",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: PreviewWindow.xaml:AppWindow",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: PreviewWindow.xaml:Window_Closing",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: PreviewWindow.xaml:Window_KeyDown",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: PreviewWindow.xaml:Close_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: PreviewWindow.xaml:OpenOriginal_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: PreviewWindow.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: PreviewWindow.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: PreviewWindow.xaml:PanelBorder",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: PreviewWindow.xaml:TextFallback_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: PreviewWindow.xaml:Previous_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: PreviewWindow.xaml:Next_Click",
-      "status": "PASS"
-    },
-    {
-      "name": "resource: PreviewWindow.xaml:TextMuted",
-      "status": "PASS"
-    },
-    {
-      "name": "handler: PreviewWindow.xaml:Zoom_ValueChanged",
-      "status": "PASS"
-    },
-    {
       "name": "unversioned open source csproj",
-      "status": "PASS"
+      "status": "FAIL"
     },
     {
       "name": "retired browser dependency absent",

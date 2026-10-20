@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R19_INBUILD_SELF_SIGNING_R07",
+  "revision": "R19_UI_POPUP_PREVIEW_R14",
+  "baseline": "R19_VISIBLE_CAPTURE_STYLE_STAGES_R13",
   "company_policy": true,
-  "document_fixture_included": false,
   "official_distribution": "SETUP_EXE",
-  "status": "STATIC_PASS_WINDOWS_CERTREQ_SIGN_INSTALL_PENDING",
-  "file_count": 242,
+  "status": "SOURCE_STATIC_PASS_WINDOWS_WPF_BUILD_SIGN_UI_PENDING",
+  "file_count": 251,
   "files": [
     {
       "path": ".gitattributes",
@@ -18,14 +18,9 @@
       "bytes": 362
     },
     {
-      "path": "BUILD_AND_CAPTURE_WINDOWS.cmd",
-      "sha256": "cf88a493b75b4bf4a2de651f71cef9d25782bf6b39e81ecc27713a2073673f96",
-      "bytes": 1208
-    },
-    {
-      "path": "BUILD_DEV_FULL_SOURCE.cmd",
-      "sha256": "30d3125a7138e4015cc8d222ae2d489d679b052a6c8d41d88ca3da8e7c979915",
-      "bytes": 13332
+      "path": "BUILD_DEV_EXE.cmd",
+      "sha256": "1da199967ac50b5c12033fb8528ec580b1fd1b60d8f42159952278a91973af63",
+      "bytes": 6687
     },
     {
       "path": "BUILD_FIX_COMPANY_R04_NOTES.md",
@@ -43,14 +38,9 @@
       "bytes": 2462
     },
     {
-      "path": "BUILD_ON_WINDOWS.cmd",
-      "sha256": "1af59fe13189ff68854ae0e7c88e12b3e524cde1972942fe787f3a0299d914b4",
-      "bytes": 159
-    },
-    {
       "path": "BUILD_ON_WINDOWS_COMPANY.cmd",
-      "sha256": "fd2707b69675c65e3b82200e432451b067f42de2dfa1edaefa6b6bfb7a810bdc",
-      "bytes": 663
+      "sha256": "5c812abf4cc021473efaacdc28e45bb5d0a261800ea32aa68732136c7813c857",
+      "bytes": 1425
     },
     {
       "path": "BUILD_PIPELINE_R02_NOTES.md",
@@ -59,18 +49,13 @@
     },
     {
       "path": "BUILD_RELEASE_INSTALLER.cmd",
-      "sha256": "37aa9e488ce7ba52a347cad20be63c8e4d4c905618d36b5d76a5981e69126900",
-      "bytes": 11617
+      "sha256": "f972d77b9d4ab9b56807ae508619bc1f17f8ba13f24692bf2b67a1edd81128fe",
+      "bytes": 12976
     },
     {
       "path": "BUILD_RELEASE_ONEDIR.cmd",
-      "sha256": "d045671d63b0a968c1c41f55d61c36bce2930cbfa96ded5b7894f986450c85a7",
-      "bytes": 12896
-    },
-    {
-      "path": "BUILD_RELEASE_ONEFILE.cmd",
-      "sha256": "091cd3d22b6f7f81a5105d71e2830d8fc62e6fb335674e81c4a2d6ec098db7af",
-      "bytes": 10301
+      "sha256": "89f6a814815a8eb54d14b64eb79e50b9fd6469745a0d32cfef7d5e416e0d2047",
+      "bytes": 14199
     },
     {
       "path": "BUILD_TEST_ENVIRONMENT.txt",
@@ -78,24 +63,9 @@
       "bytes": 509
     },
     {
-      "path": "CAPTURE_UI_WINDOWS.cmd",
-      "sha256": "68acec7e62b07b182189066fa879d353395fe581ef47388dd8357cdb89fb4bdf",
-      "bytes": 76
-    },
-    {
       "path": "CHECK_INSTALLER_BUILD_ENV.cmd",
-      "sha256": "fa021206b5fcd9bbaeee8d09ad07be976b165be1b768b365eb2e7a58d446147f",
-      "bytes": 4204
-    },
-    {
-      "path": "CHECK_SDK.cmd",
-      "sha256": "5c638d38812d8f69b21b78069f26d2852d1f464249707508ef30111e401ccaa4",
-      "bytes": 671
-    },
-    {
-      "path": "CHECK_SIGNING_CERT.cmd",
-      "sha256": "adf47198539aa837196b848a1851f262ae7540e6c86e2e0472340731b1143b48",
-      "bytes": 623
+      "sha256": "1efbfe5d65f08d28a5a8241d1011482683b07253dce266aca9b495dd39743b47",
+      "bytes": 4227
     },
     {
       "path": "COMPANY_BUILD_R04_GUIDE.md",
@@ -203,14 +173,19 @@
       "bytes": 5755
     },
     {
+      "path": "R19_R12_AUTOMATIC_BUILD_HANDOVER.md",
+      "sha256": "d07816a89702555461dd1587c278343cbdd79dde9a7937eb6b0d22bd9780d2aa",
+      "bytes": 2524
+    },
+    {
       "path": "README.md",
-      "sha256": "4e12f91a673b0b740da27f0c41ff79e60d5584f9186d94a4229865587031810c",
-      "bytes": 9984
+      "sha256": "ef7193e5a03881c072c679f6f62393c6124c6a9fa08e6092b4e3f8b7d0c73ec1",
+      "bytes": 5284
     },
     {
       "path": "RELEASE_STATUS.json",
-      "sha256": "0a5fff9add7e1f0804264c2ee829b7613964d9656bc8d473e00558c982e47356",
-      "bytes": 3626
+      "sha256": "ce794fa866a612e1ea69fd6c2a9e052b4c6a3aee8862948d6d73888dc9115615",
+      "bytes": 3653
     },
     {
       "path": "RUN_FILE_MANAGER.cmd",
@@ -253,9 +228,39 @@
       "bytes": 98
     },
     {
+      "path": "audit/retired_build_contracts/README.txt",
+      "sha256": "1a57bd3b6160d765b47a18ffb37b1c3092d79e656618c42e8d99db893f38f36c",
+      "bytes": 153
+    },
+    {
+      "path": "audit/retired_build_contracts/historical_company_build_contract.py",
+      "sha256": "2fe6ed5fc6721df04e79c1a86028d25ba79089336a30b14aac81f6e05f823b67",
+      "bytes": 3895
+    },
+    {
+      "path": "audit/retired_build_contracts/historical_r09_onefile_contract.py",
+      "sha256": "c9856487b965eaab796e0aced5a138e1088d2928e08a8e5bad2f6fec9fcf6e9b",
+      "bytes": 2775
+    },
+    {
+      "path": "audit/retired_build_contracts/historical_r19_existing_group_signer_approval_r10.py",
+      "sha256": "514c6f69104d65478e452bb95b4958555db1a2a678903dd6bdeaac01c0f0775c",
+      "bytes": 3967
+    },
+    {
+      "path": "audit/retired_build_contracts/historical_r19_one_click_signing_r11.py",
+      "sha256": "85fed7dc5e92d6abccc5503b85a67f18ba93fac5eb102515cfd6a116cea0018a",
+      "bytes": 2569
+    },
+    {
+      "path": "audit/retired_build_contracts/historical_r19_signer_profile_preflight_r06.py",
+      "sha256": "2694525efd46c70e1b88708319c1b11a4c8564f511e23af790577dac42df5661",
+      "bytes": 3319
+    },
+    {
       "path": "build-tools/EnsureSunriseGroupSigning.cmd",
-      "sha256": "2583d2c0b7ea8d343fd4d4c839f4af9625f952d3a698d39f64ef63662e1c6bdd",
-      "bytes": 7298
+      "sha256": "086207f43d4f41ed222930c607ed44751165a2242b73e80d26d4fceed9f8681a",
+      "bytes": 10832
     },
     {
       "path": "build-tools/FindDotNet10.cmd",
@@ -313,9 +318,24 @@
       "bytes": 3282
     },
     {
+      "path": "docs/R19_CERT_THUMBPRINT_RECOVERY_R09.md",
+      "sha256": "350423496dc53ea3a950e9c08bc221af14c9af19f5a32b49b400dff1f3745ba8",
+      "bytes": 5643
+    },
+    {
+      "path": "docs/R19_DEV_BUILD_WITHOUT_SIGNTOOL_R08.md",
+      "sha256": "2cdde4110635be4020468561ec7c93c4b7ce5545dad7e5d24d4e90a7763ff0ba",
+      "bytes": 3583
+    },
+    {
       "path": "docs/R19_DOTNET_SDK_PATH_HOTFIX_R04.md",
       "sha256": "2749cdcdf7d381deee9735723a1eaf8e913f5ae53fae89e315b2848616251b00",
       "bytes": 3233
+    },
+    {
+      "path": "docs/R19_EXISTING_SIGNER_APPROVAL_R10.md",
+      "sha256": "f4abcdcc32a948af9257d9a0d35e77aee05ab656b95910fe5fdc945ad7a090e8",
+      "bytes": 4295
     },
     {
       "path": "docs/R19_INBUILD_SELF_SIGNING_R07.md",
@@ -331,6 +351,21 @@
       "path": "docs/R19_INSTALLER_VERSION_HOTFIX_R01.md",
       "sha256": "8fd24085b0259f142c9d127d169a4864555e530178daa97cad692bd72ddb8239",
       "bytes": 1979
+    },
+    {
+      "path": "docs/R19_ONE_CLICK_CAPTURE_STYLE_SIGNING_R11.md",
+      "sha256": "e3b9a8b15c066ef800af4aeb0c8fc66a10e5a69c51f79395593434039c7c49c7",
+      "bytes": 3590
+    },
+    {
+      "path": "docs/R19_R13_VISIBLE_BUILD_AND_CAPTURE_COMPARISON.md",
+      "sha256": "0799a7ece738dfc6b354315b624e621c79806805859734a1a64fe204ea25c4d8",
+      "bytes": 4167
+    },
+    {
+      "path": "docs/R19_R14_UI_POPUP_PREVIEW_HANDOVER.md",
+      "sha256": "2315f5cb0c702292e69311203d536c89a4f2353428d7c64b796a180e0b961503",
+      "bytes": 4642
     },
     {
       "path": "docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md",
@@ -379,8 +414,8 @@
     },
     {
       "path": "source/Sunrise.FileManager/App.xaml",
-      "sha256": "8835f1dd0aecde4c33d2d564e04642f5c36cf47c66314d2673fa7668af441939",
-      "bytes": 19632
+      "sha256": "729fd7791756e754477649abf805f8e53d58486952a156c2c6ca948ad28c2453",
+      "bytes": 19757
     },
     {
       "path": "source/Sunrise.FileManager/App.xaml.cs",
@@ -399,8 +434,8 @@
     },
     {
       "path": "source/Sunrise.FileManager/Controls/AiCommandPanel.xaml",
-      "sha256": "904850b50556258bdc034eaa353b897e7da6162762f7fa7df3c1a229f16be687",
-      "bytes": 9555
+      "sha256": "d878bc48a6f5a6ef81cba192a3bd8551902c1bfbcd81329faffcb2328548f8e5",
+      "bytes": 10196
     },
     {
       "path": "source/Sunrise.FileManager/Controls/AiCommandPanel.xaml.cs",
@@ -439,8 +474,8 @@
     },
     {
       "path": "source/Sunrise.FileManager/Controls/ExplorerPane.xaml",
-      "sha256": "3fcc5cf450841bc24e2df3816a351a4c0d1c9e0bb1a7991a18481e62aebb5ef6",
-      "bytes": 27963
+      "sha256": "2f071f99a11333791ea079dc9a3753553dd5f3a20aa431bb8e5d6cdc54b5daee",
+      "bytes": 28306
     },
     {
       "path": "source/Sunrise.FileManager/Controls/ExplorerPane.xaml.cs",
@@ -449,8 +484,8 @@
     },
     {
       "path": "source/Sunrise.FileManager/Controls/FileInspector.xaml",
-      "sha256": "5d0d0f8a622c0f229d0ee495d43c932f91d9d66563cfe15a25eb0fd8a0e9a109",
-      "bytes": 7089
+      "sha256": "548b9fb55aa9f2a196407f6ab8e2b2a7c68702b74e4f7af46c01e20852dae154",
+      "bytes": 7542
     },
     {
       "path": "source/Sunrise.FileManager/Controls/FileInspector.xaml.cs",
@@ -459,13 +494,13 @@
     },
     {
       "path": "source/Sunrise.FileManager/Controls/FilePreviewPanel.xaml",
-      "sha256": "bae48952765ea655414486c803ee806bb7fb72eeda15707826549fdb5e10f2e9",
-      "bytes": 2622
+      "sha256": "5d7bc198d394bbfa2cbfc74bbd67ebd3578f59edbdf214ba00df9e5276129e46",
+      "bytes": 3987
     },
     {
       "path": "source/Sunrise.FileManager/Controls/FilePreviewPanel.xaml.cs",
-      "sha256": "7b31fef2cc7879084d1a6bcbe5dea2cbe9bfbc505c100347fc66d312e67ec3ed",
-      "bytes": 6660
+      "sha256": "83ec7a2f4521e985fb896b14a7841b2d657add53cff80c87493d1063c968d138",
+      "bytes": 9586
     },
     {
       "path": "source/Sunrise.FileManager/Controls/FolderTree.xaml",
@@ -504,13 +539,13 @@
     },
     {
       "path": "source/Sunrise.FileManager/Controls/PreviewWindow.xaml",
-      "sha256": "03a8ab5460f47573919573445ed601f748d5a06d793626cc95e0991a9d59bbb7",
-      "bytes": 4072
+      "sha256": "08afc08deb01c85e0524b11c22d38beea2da5333ff68cf609ac983dca89e234a",
+      "bytes": 4848
     },
     {
       "path": "source/Sunrise.FileManager/Controls/PreviewWindow.xaml.cs",
-      "sha256": "e67750f69bc44a1b2d5e697f89f37d869908b751d0ee3d63c2827f0955d5cddb",
-      "bytes": 7350
+      "sha256": "0c29f5a469dceff2b4a0d622ee61f5b8d022277784945c03387bd43114af8ae9",
+      "bytes": 11094
     },
     {
       "path": "source/Sunrise.FileManager/Features/Explorer/ExplorerCommandRouter.cs",
@@ -569,13 +604,13 @@
     },
     {
       "path": "source/Sunrise.FileManager/MainWindow.xaml",
-      "sha256": "2e706ebefc10edc320dfe4e8814ff0b0cd534d5037adedb8ac59b9566b8866d8",
-      "bytes": 9424
+      "sha256": "0bc08b9ae6a61343cac5b9438a58e29fa82198fe09cd065051f3f24890c98cd2",
+      "bytes": 9035
     },
     {
       "path": "source/Sunrise.FileManager/MainWindow.xaml.cs",
-      "sha256": "f29259750a4b8a5ea635e3545683b5f1b080341fb03bf42f570d3d1522b0b09a",
-      "bytes": 32091
+      "sha256": "0118ff5076ab152b24e2ca57f73919b2ca7c141e3afd402e7d0be70e956c5a05",
+      "bytes": 32935
     },
     {
       "path": "source/Sunrise.FileManager/Models/ExplorerTab.cs",
@@ -939,8 +974,8 @@
     },
     {
       "path": "source/reports/STATIC_RESULT.json",
-      "sha256": "48164095be38ba4c146bb4f42e0fbba1df17df6a0ef6673d19fc4bb908399924",
-      "bytes": 36020
+      "sha256": "7fb949acb817662a8835b5d0f69dfae83466cebb3430247bf4387e983b0fad89",
+      "bytes": 32526
     },
     {
       "path": "source/reports/WPF_BUILD_FIX_FINAL_R01.json",
@@ -1088,13 +1123,8 @@
       "bytes": 6569
     },
     {
-      "path": "tests/test_company_build_contract.py",
-      "sha256": "2fe6ed5fc6721df04e79c1a86028d25ba79089336a30b14aac81f6e05f823b67",
-      "bytes": 3895
-    },
-    {
       "path": "tests/test_r07_ui_release_contract.py",
-      "sha256": "d4d74eda5196d53e163c91140a1f399ca29fa424814622db03d74cec0b5aa768",
+      "sha256": "e994322ecb32b7c78f9b12e0a24a01fe3b67a13aa2e79707a68c65efc56d0673",
       "bytes": 3490
     },
     {
@@ -1103,24 +1133,19 @@
       "bytes": 3024
     },
     {
-      "path": "tests/test_r09_onefile_contract.py",
-      "sha256": "c9856487b965eaab796e0aced5a138e1088d2928e08a8e5bad2f6fec9fcf6e9b",
-      "bytes": 2775
-    },
-    {
       "path": "tests/test_r13_ollama_onedir.py",
-      "sha256": "8e06fdf66c3410f301994af0a883e81375619c4225bb37ae135218e088543e51",
-      "bytes": 3406
+      "sha256": "6e26e342e92a1875b6b639616e351280b84383f85aba20dc112424b9309437ce",
+      "bytes": 3362
     },
     {
       "path": "tests/test_r14_signing_contract.py",
-      "sha256": "aee762e5a1be44975a5fc744c3ed738dfc79f2752ec2fa74b7553e1a7a45d0bd",
+      "sha256": "39380ddf6d780b421528d49cf72ed7d0b536ed0c363d09008879d60e8e1474f4",
       "bytes": 2354
     },
     {
       "path": "tests/test_r15_installer_contract.py",
-      "sha256": "6f97a0252b2aa35c02440ecfdef10645897e7efb1615db69b125d5cd804dcefe",
-      "bytes": 4942
+      "sha256": "33d6aea19ec1c84a805432c1bee429484758250ea505aa48c6b4c34431849785",
+      "bytes": 4913
     },
     {
       "path": "tests/test_r17_drive_merge_contract.py",
@@ -1133,14 +1158,24 @@
       "bytes": 2307
     },
     {
+      "path": "tests/test_r19_automatic_signing_and_builder_cleanup_r12.py",
+      "sha256": "7eacb9c5e430242445f0292a5bd80e1522529ac06078e5d0495f396b4da91402",
+      "bytes": 2844
+    },
+    {
+      "path": "tests/test_r19_cert_thumbprint_recovery_r09.py",
+      "sha256": "97716ac03ee4104f1e770684a3dd9acdc0bc3d59db7abec6c69e2ad508a1acd4",
+      "bytes": 4358
+    },
+    {
       "path": "tests/test_r19_dotnet_sdk_path_hotfix_r04.py",
       "sha256": "cafb7f72d64b29ea7a2b9f1b879978ffc1d139f95a3d091c0f3cbcf401fead8f",
       "bytes": 3601
     },
     {
       "path": "tests/test_r19_inbuild_self_sign_r07.py",
-      "sha256": "a0a5c89b17dd87e472079a73e7c37498be1b29d74a651ce127bc68af6da7d05b",
-      "bytes": 4046
+      "sha256": "c224d60a6bfda4ac45fed0712e40ecf3b2e87f283818cdbf48f4e4d8adad11c7",
+      "bytes": 4195
     },
     {
       "path": "tests/test_r19_installer_preflight_r03.py",
@@ -1158,9 +1193,14 @@
       "bytes": 2654
     },
     {
-      "path": "tests/test_r19_signer_profile_preflight_r06.py",
-      "sha256": "2694525efd46c70e1b88708319c1b11a4c8564f511e23af790577dac42df5661",
-      "bytes": 3319
+      "path": "tests/test_r19_r14_ui_popup_preview_contract.py",
+      "sha256": "15a622dd33cfa60d816e6cb1851fd57973620938282c8c180d013841af894703",
+      "bytes": 4475
+    },
+    {
+      "path": "tests/test_r19_unsigned_dev_build_r08.py",
+      "sha256": "5dbfc9b0fc278d2e6b054613e2cca6a5d0aa869541b37e56a48df7e7730bc03b",
+      "bytes": 3575
     },
     {
       "path": "tests/test_r19_v3_signing_runtime_contract.py",
@@ -1173,9 +1213,14 @@
       "bytes": 1924
     },
     {
+      "path": "tests/test_r19_visible_stage_pipeline_r13.py",
+      "sha256": "6f3409e2fa598c29328898431a56488e82c556c860a451157faf04e9c0251648",
+      "bytes": 3289
+    },
+    {
       "path": "tests/verify_packaging_contract.py",
-      "sha256": "e7a3abc19b7c108014d136773e0116d605c3ad7e0eb704b4dc79322c7fece62c",
-      "bytes": 2446
+      "sha256": "6dbc69f42eebbf9449735273b8e8357761389dec9eb5f13a7cdeda6c46768fbc",
+      "bytes": 2628
     },
     {
       "path": "ui-audit/R12_INTEGRITY_REPORT.json",

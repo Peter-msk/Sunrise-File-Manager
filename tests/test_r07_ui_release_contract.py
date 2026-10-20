@@ -56,7 +56,7 @@ class R07UiReleaseContract(unittest.TestCase):
         company=(ROOT/'BUILD_ON_WINDOWS_COMPANY.cmd').read_text('ascii')
         self.assertIn('BUILD_RELEASE_INSTALLER.cmd" --company',company)
         self.assertIn('BUILD_RELEASE_ONEDIR.cmd" --company', (ROOT/'BUILD_RELEASE_INSTALLER.cmd').read_text(encoding='ascii'))
-        self.assertTrue((ROOT/'BUILD_RELEASE_ONEFILE.cmd').is_file())
+        self.assertFalse((ROOT/'BUILD_RELEASE_ONEFILE.cmd').exists())
         self.assertTrue((ROOT/'COMPANY_SOURCE_ONLY.flag').is_file())
         self.assertFalse((ROOT/'source/tests/LogicTests/Fixtures/river_report.pdf').exists())
 

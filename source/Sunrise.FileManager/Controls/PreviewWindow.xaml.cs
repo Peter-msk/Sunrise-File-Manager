@@ -16,11 +16,16 @@ public partial class PreviewWindow : Window
     private int _totalPages = 1;
     private bool _closing;
     private bool _pdfTextFallback;
+    private enum FitMode { Actual, Width, Page }
+    private FitMode _fitMode = FitMode.Width;
+    private bool _changingZoomProgrammatically;
     private bool IsPdf => Path.GetExtension(_path).Equals(".pdf", StringComparison.OrdinalIgnoreCase);
 
     public PreviewWindow(string path)
     {
         InitializeComponent();
+        // XAML slider initialization can fire ValueChanged before content is loaded.
+        _fitMode = FitMode.Width;
         _path = path;
         DocumentName.Text = Path.GetFileName(path);
         bool hangul = Path.GetExtension(path).Equals(".hwp", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(".hwpx", StringComparison.OrdinalIgnoreCase);
@@ -55,10 +60,10 @@ public partial class PreviewWindow : Window
                 DocumentDetail.Text = rendered.Detail;
                 PageCounter.Text = $"{_page:N0} / {_totalPages:N0}";
                 PageImage.Source = rendered.Image;
-                PageImage.Width = 700 * ZoomSlider.Value / 100d;
                 PageImage.Visibility = Visibility.Visible;
                 PageText.Visibility = Visibility.Collapsed;
-                PageScroll.ScrollToTop();
+                ApplyCurrentZoom();
+            PageScroll.ScrollToTop();
                 return;
             }
             var result = await Task.Run(() => PagedPreviewService.Read(_path, requestedPage, current.Token), current.Token);
@@ -72,11 +77,11 @@ public partial class PreviewWindow : Window
                 var bitmap = await Task.Run(() => DecodeImage(_path, current.Token, result.ImageBytes), current.Token);
                 if (_closing || current.IsCancellationRequested || request != _requestId) return;
                 PageImage.Source = bitmap;
-                PageImage.Width = 700 * ZoomSlider.Value / 100d;
                 PageImage.Visibility = Visibility.Visible;
                 PageText.Visibility = Visibility.Collapsed;
             }
             else PageText.Text = result.Body;
+            ApplyCurrentZoom();
             PageScroll.ScrollToTop();
         }
         catch (OperationCanceledException) { /* Newer page request owns the window. */ }
@@ -125,20 +130,84 @@ public partial class PreviewWindow : Window
     {
         if (_page < _totalPages) _ = LoadPageAsync(_page + 1);
     }
+    private double PageContentWidth => PageImage.Visibility == Visibility.Visible && PageImage.Source is not null
+        ? Math.Max(1, PageImage.Source.Width) : 700d;
+    private double PageContentHeight => PageImage.Visibility == Visibility.Visible && PageImage.Source is not null
+        ? Math.Max(1, PageImage.Source.Height) : 900d;
+
+    private void ApplyCurrentZoom()
+    {
+        if (PageText is null || PageImage is null || ZoomLabel is null || PageSurface is null || PageScroll is null) return;
+        if (_fitMode != FitMode.Actual)
+        {
+            double viewportWidth = PageScroll.ViewportWidth > 0 ? PageScroll.ViewportWidth : PageScroll.ActualWidth;
+            double viewportHeight = PageScroll.ViewportHeight > 0 ? PageScroll.ViewportHeight : PageScroll.ActualHeight;
+            double widthFactor = Math.Max(0.1, (viewportWidth - 100) / PageContentWidth);
+            double heightFactor = Math.Max(0.1, (viewportHeight - 100) / PageContentHeight);
+            double fitFactor = _fitMode == FitMode.Page ? Math.Min(widthFactor, heightFactor) : widthFactor;
+            _changingZoomProgrammatically = true;
+            ZoomSlider.Value = Math.Clamp(fitFactor * 100, ZoomSlider.Minimum, ZoomSlider.Maximum);
+            _changingZoomProgrammatically = false;
+        }
+        double factor = ZoomSlider.Value / 100d;
+        PageText.FontSize = 14 * factor;
+        PageImage.Width = PageContentWidth * factor;
+        PageSurface.Width = PageContentWidth * factor + 68;
+        ZoomLabel.Text = $"{ZoomSlider.Value:F0}%";
+    }
+
     private void Zoom_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (PageText is null || PageImage is null || ZoomLabel is null || PageSurface is null) return;
-        double factor = e.NewValue / 100d;
+        if (!_changingZoomProgrammatically) _fitMode = FitMode.Actual;
+        ApplyCurrentZoomForManualChange();
+    }
+
+    private void ApplyCurrentZoomForManualChange()
+    {
+        if (PageText is null || PageImage is null || PageSurface is null || ZoomLabel is null) return;
+        double factor = ZoomSlider.Value / 100d;
         PageText.FontSize = 14 * factor;
-        PageImage.Width = 700 * factor;
-        PageSurface.Width = 700 * factor + 68;
-        ZoomLabel.Text = $"{e.NewValue:F0}%";
+        PageImage.Width = PageContentWidth * factor;
+        PageSurface.Width = PageContentWidth * factor + 68;
+        ZoomLabel.Text = $"{ZoomSlider.Value:F0}%";
+    }
+    private void SetManualZoom(double percent)
+    {
+        _fitMode = FitMode.Actual;
+        ZoomSlider.Value = Math.Clamp(percent, ZoomSlider.Minimum, ZoomSlider.Maximum);
+    }
+    private void ZoomIn_Click(object sender, RoutedEventArgs e) => SetManualZoom(ZoomSlider.Value + 10);
+    private void ZoomOut_Click(object sender, RoutedEventArgs e) => SetManualZoom(ZoomSlider.Value - 10);
+    private void ActualSize_Click(object sender, RoutedEventArgs e) => SetManualZoom(100);
+    private void FitWidth_Click(object sender, RoutedEventArgs e) { _fitMode = FitMode.Width; ApplyCurrentZoom(); }
+    private void FitPage_Click(object sender, RoutedEventArgs e) { _fitMode = FitMode.Page; ApplyCurrentZoom(); }
+    private void PageScroll_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (_fitMode != FitMode.Actual) ApplyCurrentZoom();
+    }
+    private void PageScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if ((Keyboard.Modifiers & ModifierKeys.Control) != 0)
+        {
+            SetManualZoom(ZoomSlider.Value + (e.Delta > 0 ? 10 : -10));
+            e.Handled = true;
+        }
     }
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.PageDown && _page < _totalPages) { _ = LoadPageAsync(_page + 1); e.Handled = true; }
+        if ((Keyboard.Modifiers & ModifierKeys.Control) != 0)
+        {
+            if (e.Key is Key.Add or Key.OemPlus) SetManualZoom(ZoomSlider.Value + 10);
+            else if (e.Key is Key.Subtract or Key.OemMinus) SetManualZoom(ZoomSlider.Value - 10);
+            else if (e.Key is Key.D0 or Key.NumPad0) SetManualZoom(100);
+            else if (e.Key is Key.D1 or Key.NumPad1) { _fitMode = FitMode.Width; ApplyCurrentZoom(); }
+            else if (e.Key is Key.D2 or Key.NumPad2) { _fitMode = FitMode.Page; ApplyCurrentZoom(); }
+            else return;
+            e.Handled = true;
+        }
+        else if (e.Key == Key.PageDown && _page < _totalPages) { _ = LoadPageAsync(_page + 1); e.Handled = true; }
         else if (e.Key == Key.PageUp && _page > 1) { _ = LoadPageAsync(_page - 1); e.Handled = true; }
-        else if (e.Key == Key.Escape) Close();
+        else if (e.Key == Key.Escape) { Close(); e.Handled = true; }
     }
     private void OpenOriginal_Click(object sender, RoutedEventArgs e)
     {

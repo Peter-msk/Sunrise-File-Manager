@@ -1,109 +1,52 @@
-# Sunrise File Manager
+# Sunrise File Manager 1.0.0 (R19 R13)
 
-Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NET 10 / WPF** 기반이며 1~4분할 탐색기, 파일 미리보기, 파일별 `#memo`, 선택형 로컬 Ollama 연동을 지원합니다.
+Sunrise Group의 Windows 10/11 x64용 .NET 10 WPF 파일 관리 프로그램입니다. 분할 탐색기, 탭, 폴더 검색, PDF/HWPX/DOCX·이미지 미리보기, 공유 메모 `#memo`, 선택형 Ollama 기능을 포함합니다.
 
-> **현재 소스 기준: 1.0.0 R19**  
-> **공식 배포 방식: 설치형 Setup EXE (Inno Setup)**  
-> **검증 상태: 소스·정적 검사 기준. Windows 실기 빌드, 그룹서명, 설치·업그레이드·제거 검증은 미완료(PENDING).**
+## 현행 빌드 실행 파일 — 2개
 
-## 주요 기능
+1. **`BUILD_ON_WINDOWS_COMPANY.cmd`**: 공식 서명 설치형 Setup EXE를 빌드합니다. Windows x64, .NET 10 SDK, Inno Setup, Windows SDK SignTool, Windows 기본 certutil/certreq가 필요합니다. 회사 정책에서는 문서 fixture·업무파일 로직 테스트를 실행하지 않습니다.
+2. **`BUILD_DEV_EXE.cmd`**: .NET 10 SDK를 이용한 **미서명 개발 확인용 EXE**를 게시합니다. 회사 정책에 따른 사용 여부를 판단해야 하며, 공식 배포물로 사용하지 않습니다.
 
-- 1~4개 탐색기 분할, 탭, 파일 검색·분류, 폴더 트리, 파일 복사·이동·이름변경·휴지통 삭제
-- 상세정보·미리보기 패널, PDF/HWPX/DOCX/이미지 등 미리보기 경로
-- 파일 옆 `#memo` 폴더에 공유 가능한 `.sunmemo` 저장
-- R19: 메모 작성자 직접 입력(비워두면 Windows PC 사용자명), 로컬 최초 관측 기준의 변경 경고
-- R19: 사용자 **선택 시에만** DPAPI로 보호되는 날짜별 메모 복원 이력 생성
-- 로컬 Ollama AI 연결은 선택 기능이며, AI 없이도 파일 관리 가능
-- 창·탭·분할 및 일부 탐색 상태 재실행 복원
+나머지 `BUILD_RELEASE_INSTALLER.cmd`, `BUILD_RELEASE_ONEDIR.cmd`, `CHECK_INSTALLER_BUILD_ENV.cmd`, `build-tools/*.cmd`는 공식 빌드가 내부에서 호출하는 보조 스크립트입니다. 수동 인증서 지문 선택 도구나 별도 인증서 사전검사 실행은 필요하지 않습니다.
 
-### R19 설치형 버전검사 핫픽스 R01
+### R13: 진행 화면과 단계별 로그 보완
 
-`VERSION_OR_INSTALLER_CONFIG` 오류를 세부 진단하도록 개선했습니다. 정상 `installer/RELEASE_VERSION.txt`는 `1.0.0`이며, 문제 발생 시 `build-logs/R15_version_preflight.log`와 `R15_INSTALLER_BUILD_RESULT.txt`를 확인합니다. 상세 내용은 `docs/R19_INSTALLER_VERSION_HOTFIX_R01.md`를 참조하세요. Windows 실빌드 결과는 아직 검증되지 않았습니다.
+`BUILD_ON_WINDOWS_COMPANY.cmd`를 실행하면 먼저 환경을 확인합니다. 이후 **WPF 게시 → Sunrise Group 서명 인증서 확인·최초 생성 → EXE/DLL 서명·검증 → Inno Setup 설치파일·Uninstaller 서명 → 검증·결과 저장** 순서로 작업합니다. 각 단계는 CMD 화면에 출력됩니다. 하위 OneDir 빌드 출력 전체를 로그로 숨기는 종전 R12 동작을 제거했습니다.
 
-### R19 V3 그룹서명 실행파일 경고 개선 R02
+빌드창이 멈춘 것처럼 보일 때는 **같은 소스 폴더의 `build-logs/R13_CURRENT_STAGE.txt`**를 먼저 확인하십시오. `STAGE=WPF_PUBLISH`라면 컴파일/패키지 복원 과정이고, `SIGNING_PREFLIGHT`라면 인증서 확인, `AUTHENTICODE_SIGN`이라면 서명 및 타임스탬프 통신, `INSTALLER_COMPILE`이라면 Inno Setup 컴파일 과정입니다. 자세한 오류는 `R14_BUILD_RESULT.txt`, `R15_INSTALLER_BUILD_RESULT.txt`와 단계별 `R14_*.log`, `R15_*.log`에 남습니다.
 
-과거 미서명 `Sunrise.Signing.exe`는 R02에서 제거했으며 R05에서는 V3 검사 대상으로 표시된 `Sunrise.GroupSigning.ps1`도 공식 빌드 경로와 전체 소스에서 제거했습니다. 현재는 **Sunrise Capture 방식**인 Windows `certutil.exe` 기반의 기존 인증서 지문 선택과 SDK `signtool.exe` 서명·검증을 사용합니다. V3 예외 등록이나 보안정책 변경은 하지 않으며, 실제 V3 재검증은 미완료입니다. `docs/R19_V3_SIGNING_EXECUTABLE_HOTFIX_R02.md`를 참조하십시오.
+**공식 설치파일 기대 위치:** `dist/Sunrise_File_Manager_1.0.0_Setup.exe` (실제 Windows 빌드 성공 시에만 존재).
 
-### R19 Sunrise Capture 방식 그룹서명 R05
+### Capture 참조 범위
 
-`build-tools/FindSunriseCertificate.cmd`는 기존 `CN=Sunrise Group`의 SHA-1 지문을 `certutil -user -store My` 출력에서 읽고 검증합니다. 동명이인 인증서가 여러 개면 자동 선택하지 않고 중단하며, IT가 승인한 지문만 `SUNRISE_CERT_SHA1`로 지정할 수 있습니다. 그룹서명용 PowerShell·자체 보조 EXE를 실행하지 않습니다. 최초 Windows 실기 검증 전입니다.
+GitHub `Peter-msk/Sunrise_capture`의 최신 릴리스 `v4.2.0`(2026-09-30)은 `SunriseCapture_Setup.exe`만 배포하며 해당 GitHub 태그의 소스 ZIP에는 `README.md`, `latest.json`, `notice.txt`만 들어 있습니다. 따라서 **Capture의 실제 `build_pipeline.py`를 문자 그대로 이식한 것이 아닙니다.** 검증된 v4.2.0 인수인계서에 기록된 단계별 CMD, 먼저 패키징 후 서명, `certreq/certutil`, SignTool, Inno의 운영 설계만 참조했습니다. 자세한 근거는 `docs/R19_R13_VISIBLE_BUILD_AND_CAPTURE_COMPARISON.md`입니다.
 
-### R19 설치형 빌드 사전점검 R03
+### 보안 및 검증 한계
 
-`INNO_SETUP_NOT_FOUND` 진단을 위해 회사용 빌드 전에 `CHECK_INSTALLER_BUILD_ENV.cmd`를 실행할 수 있습니다. Inno Setup이 없으면 설치/사용승인을 받은 후 설치해야 하며 빌드 스크립트는 자동 다운로드·설치를 하지 않습니다. 기본 위치/현재 사용자 위치/설치 레지스트리/PATH와 명시적인 `SUNRISE_ISCC` 경로를 탐색합니다. `build-logs/R15_inno_probe.log`에서 진단합니다. 실서명·Windows 설치 검증은 여전히 별도로 필요합니다.
+기존에 고정된 인증서는 계속 재사용하고, 다른 Sunrise 제품의 동명 CN 인증서는 자동 선택하지 않습니다. 서명자의 개인키를 내보내지 않으며 인증서 저장소 삭제, Trusted Root 등록, 백신 예외 설정을 하지 않습니다. 고정된 인증서가 유실되거나 프로젝트의 공식 서명 신원이 불명확하면 안전하게 실패합니다. 자체서명 인증서는 조직 신원 보증이나 SmartScreen/V3 허용을 의미하지 않습니다.
 
-### R19 .NET 10 SDK 공백 경로 핫픽스 R04
+**R13의 소스·회귀 검증과 Windows 실기 서명/설치 검증은 별도입니다.** 실제 Windows 컴파일/서명/설치/제거는 대상 PC에서 검증해야 하며, 실행하지 않은 단계를 PASS로 간주하지 않습니다. 과거 R07~R12의 사용 안내는 역사적 자료일 뿐 현행 명령을 대체하지 않습니다.
 
-사전점검에서 `Inno Setup`과 `SignTool`은 PASS인데 `'C:\Program'은(는) ...`와 `[FAIL] .NET 10 SDK not found`가 함께 발생하던 CMD 인용부호 오류를 수정했습니다. `build-tools/FindDotNet10.cmd`가 SDK 후보를 직접 실행해 `--version` 결과를 로그로 저장한 뒤 판독하며, 사전점검과 실제 WPF 게시 경로가 동일한 탐색기를 사용합니다. 실제 SDK 설치 여부가 확인되지 않으면 설치를 단정하지 않습니다. 자세한 내용은 `docs/R19_DOTNET_SDK_PATH_HOTFIX_R04.md`를 참조하세요.
+## 핵심 기능
 
-### R19 인증서 사전검사 진단 R06
+- 1~4분할 파일 탐색, 탭, 파일검색·분류 및 복사·이동·이름변경·휴지통 삭제·압축
+- PDF, HWPX, DOCX, 이미지 미리보기 및 다중 패널
+- 파일별 `#memo`의 공유 메모, 작성자 필드, 무결성 변경 경고
+- 사용자 선택형 로컬 DPAPI 메모 복원 이력
+- 선택형 로컬 Ollama, 프로그램 세션 복원
 
-Windows 실기 로그에서 SDK 10.0.301, Inno Setup, SignTool은 정상이었고 `SIGNING_PREFLIGHT`에서 중단되었습니다. R06부터 `CHECK_SIGNING_CERT.cmd`로 인증서만 먼저 검사할 수 있고, 빌드 로그에 `CERT_NOT_FOUND`, `SHA1_NOT_PARSED`, `MULTIPLE_CERTIFICATES`, `SUBJECT_MISMATCH` 등을 명시합니다. 기본 서명 주체는 계속 **CN=Sunrise Group**입니다.
+## 기타
 
-R06 이전에는 Capture 인증서를 선택할 수 있었으나, **R07 공식 배포에서는 이를 허용하지 않습니다.** Sunrise Group 자체서명 인증서는 최초 공식 빌드에서 생성되고 이후 고정 지문을 재사용합니다. 인증서 개인키의 실제 사용 가능 여부는 SignTool의 서명 결과로 확인합니다. `docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md`를 참조하십시오.
+- 프로젝트: `source/Sunrise.FileManager/Sunrise.FileManager.csproj`
+- 설치 정의: `installer/SunriseFileManager.iss`
+- 버전 단일 원천: `installer/RELEASE_VERSION.txt`
+- 기존 기능·메모·Ollama·UI 소스 변경 없음
+- 오프라인 정적 감사, 인수인계 이력과 보안정책은 `docs/` 참조
 
-### R19 빌드 과정의 Sunrise Group 자체서명 인증서 생성 R07
+## R19 R14 — UI 팝업·미리보기 개선
 
-공식 빌드 `BUILD_ON_WINDOWS_COMPANY.cmd`는 **프로그램의 첫 빌드 때 Windows 기본 `certreq.exe`로 자체서명 코드서명 인증서 `CN=Sunrise Group`을 생성**합니다. 인증서 생성만을 위한 사용자 정의 EXE/PS1는 만들거나 실행하지 않습니다. 생성되는 RSA 3072비트 개인키는 Windows `CurrentUser\My`에 비내보내기 형태로 보관되고, `SignTool`이 해당 인증서로 WPF EXE·DLL과 Inno Setup Setup·Uninstaller에 Authenticode 서명을 삽입합니다.
-
-첫 생성 인증서의 **공개 SHA-1 지문만** `%LOCALAPPDATA%\SunriseGroup\FileManager\Signing\group_signer.sha1`에 고정합니다. 다음 빌드에서는 같은 인증서를 재사용합니다. 삭제·만료되거나 개인키가 사라지면 묵시적으로 다시 만들지 않고 실패하며, IT 승인 하에 동일한 키를 복원하거나 게시자 변경 및 갱신 절차를 계획해야 합니다. `CHECK_SIGNING_CERT.cmd`는 읽기 전용으로 확인하고 인증서는 실제 공식 빌드에서만 생성합니다.
-
-**주의:** 이 인증서는 **자체서명이며, CN=Sunrise Group 이름만으로 법적 조직 신원이나 공인 게시자 신뢰가 증명되지 않습니다.** Windows SmartScreen/V3와 다른 PC의 인증서 신뢰는 여전히 보장되지 않습니다. 개인키/PFX는 소스·GitHub·설치파일에 넣지 않으며, 사용자의 Trusted Root 저장소도 자동으로 변경하지 않습니다. 경고를 없애기 위해 보안 기능을 변경하지 않습니다. 자세한 내용: `docs/R19_INBUILD_SELF_SIGNING_R07.md`.
-
-## 빌드 환경
-
-**Windows x64 빌드 PC**에서 다음 개발도구가 필요합니다.
-
-1. .NET 10 SDK (WPF Windows 타깃)
-2. Inno Setup 6/7 및 `ISCC.exe`
-3. Windows SDK `signtool.exe`
-4. Windows 기본 `certreq.exe`·`certutil.exe` (인증서 최초 생성 및 확인). PowerShell과 별도 서명 EXE는 필요하지 않습니다.
-
-명령 프롬프트에서 프로젝트 루트의 다음 파일을 실행합니다.
-
-```cmd
-CHECK_INSTALLER_BUILD_ENV.cmd
-CHECK_SIGNING_CERT.cmd
-BUILD_ON_WINDOWS_COMPANY.cmd
-```
-
-Inno Setup이 다른 위치에 설치된 경우 빌드를 실행하는 CMD 창에서 명시적으로 설정할 수 있습니다.
-
-```cmd
-set "SUNRISE_ISCC=C:\YourApprovedTools\Inno Setup 6\ISCC.exe"
-BUILD_ON_WINDOWS_COMPANY.cmd
-```
-
-
-빌드는 `BUILD_RELEASE_INSTALLER.cmd` → `BUILD_RELEASE_ONEDIR.cmd --installer-payload` → WPF 게시 → Authenticode 서명 → Inno Setup 설치파일 생성·서명 → 검증 순으로 진행됩니다. 빌드 성공 시 `dist\Sunrise_File_Manager_1.0.0_Setup.exe`를 기대합니다(버전은 `installer\RELEASE_VERSION.txt`를 기준으로 생성). 회사 빌드는 문서 내용 검사·문서 Fixture·UI 캡처를 실행하지 않습니다.
-
-**현재 저장소에 Windows 실행파일, 인증서, 설치 프로그램, 암호 또는 개인키는 포함하지 않습니다.** 이 저장소의 소스를 받은 것만으로 Windows 릴리즈가 검증되었다는 의미는 아닙니다.
-
-## 소스 구조
-
-| 경로 | 역할 |
-| --- | --- |
-| `source/` | WPF 애플리케이션, 파일 처리·메모·AI 서비스, 프로젝트 파일 및 계약 검사 |
-| `installer/` | 설치형 버전 및 Inno Setup 스크립트 |
-| `docs/` | R17 인수인계·개발계획, R18 빌드 감사, R14 서명 안내 |
-| `tests/` | 개발·배포 정적/계약 테스트 |
-| `ui-audit/` | HTML 기반 UI 검토 자료 (Windows 실행 검증과 별개) |
-| `BUILD_ON_WINDOWS_COMPANY.cmd` | 공식 회사용 설치형 빌드 진입점 |
-| `R19_MEMO_AUTHOR_INTEGRITY_HANDOFF.md` | 메모 작성자·변경 경고·이력 기능 설계와 보안 한계 |
-
-## 메모 보안 모델 주의
-
-- 메모 작성자 이름은 **신원 인증이 아닙니다**. 임의 입력이 가능합니다.
-- 공유 `.sunmemo` 파일은 암호화하지 않습니다. 원본 변경 경고는 **해당 PC에서 최초 관측한 기준**과 비교하며, 최초 관측 이전의 변경이나 동일 Windows 사용자 권한을 가진 공격자의 조작을 입증할 수 없습니다.
-- DPAPI 이력은 사용자가 활성화한 경우에만 사용자 계정의 로컬 AppData에 저장됩니다. 업무상 정책으로 메모 복제가 금지되는 PC에서는 활성화하면 안 됩니다.
-- `Ollama`는 기본적인 파일 관리 기능에 필수이지 않습니다.
-
-## 개발 및 릴리즈 상태
-
-현재 저장소는 **개발 소스 기준본**입니다. 다음 단계는 실제 Windows 환경에서 Setup 파일 생성, Sunrise Group 서명 확인, 최초 설치·업그레이드·제거, 파일 메모 공유·복원, 회사 보안 솔루션 연동에 대한 테스트입니다.
-
-참고 문서: `docs/R18_FINAL_BUILD_INSTALLER_AUDIT.md`, `R19_MEMO_AUTHOR_INTEGRITY_HANDOFF.md`, `docs/Sunrise_File_Manager_1.0.0_R17_작업인수인계서.md`, `docs/Sunrise_File_Manager_1.0.0_R17_개발계획서.md`.
-
-## 라이선스
-
-원본 프로젝트는 `LICENSE`에서 Apache License 2.0을 표기하고 있습니다. 공식 공개/재배포 전에는 포함된 외부 라이브러리의 라이선스와 고지 의무를 별도로 검토하십시오.
+- 폴더 목록 위의 빠른 명령 **표시 행 제거**(기존 명령은 메뉴·단축키로 제공), 열 폭/긴 이름 표시와 스마트 메모 패널 배치 개선.
+- `AI 파일 정리`는 F8 또는 상단 버튼으로 여는 독립 창이며 기존 검사·승인 절차와 파일 작업 로직은 유지됨.
+- 미리보기는 우측 패널의 확대·축소/너비 맞춤/독립 창 열기, 독립 창의 100%/너비·페이지 맞춤 및 Ctrl+휠 등 키보드·마우스 기본 조작을 지원하도록 소스 수정.
+- 상세 변경 및 PC 검증 항목: `docs/R19_R14_UI_POPUP_PREVIEW_HANDOVER.md`.
+- 현재 **소스 검증 완료, Windows 실제 WPF 컴파일·UI 실기 검증 및 공식 설치파일 생성은 별도 확인 필요**.

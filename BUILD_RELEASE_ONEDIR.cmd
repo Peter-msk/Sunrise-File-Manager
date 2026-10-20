@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
-REM R14: Company-safe OneDir build with Sunrise Group Authenticode signing.
+REM R13: Company-safe OneDir build with live stage output and native logs.
 REM It uses the normal .NET 10 WPF publish and keeps the runtime inside app\.
 REM No document inspection is executed. Signatures are applied on BUILD PC ONLY.
 set "NO_PAUSE=0"
@@ -28,6 +28,7 @@ set "PREVIOUS=%DIST%\_SFM_R14_onedir_previous"
 set "PREVIOUS_ZIP=%DIST%\_SFM_R14_onedir_previous.zip"
 set "RESULT=%LOG_DIR%\R14_BUILD_RESULT.txt"
 set "CERT_FILE=%LOG_DIR%\R14_signing_certificate.txt"
+set "LIVE_STAGE=%LOG_DIR%\R13_CURRENT_STAGE.txt"
 if not defined SUNRISE_RELEASE_VERSION set "SUNRISE_RELEASE_VERSION=1.0.0"
 set "TIMESTAMP_URL=http://timestamp.digicert.com"
 if defined SUNRISE_TIMESTAMP_URL set "TIMESTAMP_URL=%SUNRISE_TIMESTAMP_URL%"
@@ -60,16 +61,40 @@ echo [INFO] .NET 10 SDK: %FOUND_SDK_VER%
 echo [INFO] OneDir / win-x64 / self-contained / Sunrise Group Authenticode required
 echo [INFO] Company mode: %COMPANY_MODE%
 if "%COMPANY_MODE%"=="1" echo [COMPANY POLICY] LogicTests and document fixture access SKIPPED.
+set "FAILED_STAGE=WPF_PUBLISH"
+>> "%RESULT%" echo STAGE=WPF_PUBLISH
+> "%LIVE_STAGE%" echo STAGE=WPF_PUBLISH
+echo [R13][WPF] Publishing .NET 10 self-contained x64 payload. Restore/build output is visible.
+echo [R13][WPF] Detailed MSBuild log: build-logs\R14_wpf_publish.log
+if exist "%STAGE%" rmdir /s /q "%STAGE%"
+if exist "%STAGE%" goto :fail_release
+if exist "%ZIP_STAGE%" del /q /f "%ZIP_STAGE%"
+mkdir "%STAGE%\app"
+if errorlevel 1 goto :fail_release
+REM Publish compiles WPF itself. No second redundant dotnet build or document test run.
+REM MSBuild file logger retains detailed evidence while console progress remains live.
+"%DOTNET_EXE%" publish "%PROJECT%" --configuration Release --framework net10.0-windows10.0.19041.0 --runtime win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=%SUNRISE_RELEASE_VERSION% -p:SunriseCompanyBuild=%COMPANY_MODE% --output "%STAGE%\app" -v:minimal "-flp:logfile=%LOG_DIR%\R14_wpf_publish.log;verbosity=normal"
+if errorlevel 1 goto :fail_release
+if not exist "%STAGE%\app\Sunrise.FileManager.exe" goto :fail_release
+if not exist "%STAGE%\app\Sunrise.FileManager.dll" goto :fail_release
+if not exist "%STAGE%\app\hostfxr.dll" goto :fail_release
+if not exist "%STAGE%\app\coreclr.dll" goto :fail_release
+if not exist "%STAGE%\app\PresentationFramework.dll" goto :fail_release
+REM Capture-style stage contract: build Windows payload first, then obtain signer.
+REM An incomplete/blocked certificate operation cannot silently mask WPF compilation.
 REM Build-time only: discover SignTool. Never copy credentials or tools into user package.
 set "FAILED_STAGE=SIGNING_PREFLIGHT"
 >> "%RESULT%" echo STAGE=SIGNING_PREFLIGHT
+> "%LIVE_STAGE%" echo STAGE=SIGNING_PREFLIGHT
+echo [R13][SIGNING] Checking pinned certificate or provisioning first-release identity.
+echo [R13][SIGNING] Native certutil and certreq details are in build-logs\R14_cert_provision_console.log.
 if not exist "%ROOT%\build-tools\EnsureSunriseGroupSigning.cmd" goto :fail_signing
 set "SUNRISE_SIGNTOOL_RESOLVED="
 call "%ROOT%\build-tools\FindSignTool.cmd" > "%LOG_DIR%\R14_signtool_probe.log" 2>&1
 if errorlevel 1 goto :fail_signing
 if not defined SUNRISE_SIGNTOOL_RESOLVED goto :fail_signing
 set "SIGNTOOL=%SUNRISE_SIGNTOOL_RESOLVED%"
-REM Build time: certreq generates a self-signed GROUP cert on first build only.
+REM Signing stage: certreq generates the signer on the first official release only.
 REM A persistent pin in LocalAppData prevents silent identity rotation on updates.
 REM No project signing EXE, PS1, vendor-code re-sign or security bypass.
 set "SUNRISE_CERT_THUMBPRINT="
@@ -77,32 +102,23 @@ call "%ROOT%\build-tools\EnsureSunriseGroupSigning.cmd" > "%LOG_DIR%\R14_cert_pr
 if errorlevel 1 goto :fail_signing
 if not defined SUNRISE_CERT_THUMBPRINT goto :fail_signing
 set "CERT_THUMBPRINT=%SUNRISE_CERT_THUMBPRINT%"
+echo [R13][SIGNING] Certificate is pinned and validated.
 echo [SIGNING] Selected CN=%SUNRISE_CERT_SUBJECT_CN% from CurrentUser/My.
 echo [SIGNING] Timestamp: %TIMESTAMP_URL%
-set "FAILED_STAGE=WPF_PUBLISH"
->> "%RESULT%" echo STAGE=WPF_PUBLISH
-if exist "%STAGE%" rmdir /s /q "%STAGE%"
-if exist "%STAGE%" goto :fail_release
-if exist "%ZIP_STAGE%" del /q /f "%ZIP_STAGE%"
-mkdir "%STAGE%\app"
-if errorlevel 1 goto :fail_release
-REM Publish compiles WPF itself. No second redundant dotnet build or document test run.
-"%DOTNET_EXE%" publish "%PROJECT%" --configuration Release --framework net10.0-windows10.0.19041.0 --runtime win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=%SUNRISE_RELEASE_VERSION% -p:SunriseCompanyBuild=%COMPANY_MODE% --output "%STAGE%\app" > "%LOG_DIR%\R14_wpf_publish.log" 2>&1
-if errorlevel 1 goto :fail_release
-if not exist "%STAGE%\app\Sunrise.FileManager.exe" goto :fail_release
-if not exist "%STAGE%\app\Sunrise.FileManager.dll" goto :fail_release
-if not exist "%STAGE%\app\hostfxr.dll" goto :fail_release
-if not exist "%STAGE%\app\coreclr.dll" goto :fail_release
-if not exist "%STAGE%\app\PresentationFramework.dll" goto :fail_release
 REM Sign only Sunrise-owned PE files. Microsoft/.NET/PdfPig files remain untouched.
 set "FAILED_STAGE=AUTHENTICODE_SIGN"
 >> "%RESULT%" echo STAGE=AUTHENTICODE_SIGN
+> "%LIVE_STAGE%" echo STAGE=AUTHENTICODE_SIGN
+echo [R13][SIGN] Signing Sunrise-owned WPF EXE and DLL with the pinned certificate.
+echo [R13][SIGN] Timestamp network may be required. See R14_sign_exe.log and R14_sign_dll.log.
 "%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "%SUNRISE_CERT_SUBJECT_CN%" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.exe" > "%LOG_DIR%\R14_sign_exe.log" 2>&1
 if errorlevel 1 goto :fail_signing
 "%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "%SUNRISE_CERT_SUBJECT_CN%" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.dll" > "%LOG_DIR%\R14_sign_dll.log" 2>&1
 if errorlevel 1 goto :fail_signing
 set "FAILED_STAGE=SIGNATURE_CHECK"
 >> "%RESULT%" echo STAGE=SIGNATURE_CHECK
+> "%LIVE_STAGE%" echo STAGE=SIGNATURE_CHECK
+echo [R13][VERIFY] Checking EXE and DLL Authenticode signatures.
 REM SignTool verifies embedded Authenticode signatures and Windows trust.
 REM The signing certificate is pinned via /sha1; a bad signature fails closed.
 REM Untrusted self-signed certs can fail Windows trust-chain validation. Keep report honest.
@@ -197,6 +213,7 @@ exit /b 0
 REM Official installer consumes the signed app directory directly; no tar.exe dependency.
 if not exist "%STAGE%\app\Sunrise.FileManager.exe" goto :fail_release
 if not exist "%STAGE%\app\Sunrise.FileManager.dll" goto :fail_release
+> "%LIVE_STAGE%" echo STAGE=INSTALLER_PAYLOAD_READY
 > "%RESULT%" echo STATUS=SUCCESS
 >> "%RESULT%" echo STAGE=INSTALLER_PAYLOAD_READY
 >> "%RESULT%" echo FORMAT=SIGNED_INSTALLER_PAYLOAD
@@ -217,7 +234,7 @@ goto :fail
 :fail_signing
 echo [ERROR] Certificate preflight or Authenticode signing failed. Existing release preserved.
 echo [ERROR] Check R14_signing_preflight.log, R14_sign_exe.log, R14_sign_dll.log or R14_verify*.log.
-echo [ERROR] Required signer: GROUP (default) or explicitly approved CAPTURE profile.
+echo [ERROR] Required signer: pinned File Manager GROUP certificate.
 echo [ERROR] Build certificate status: build-logs\R14_cert_provision.log.
 if exist "%LOG_DIR%\R14_cert_provision.log" type "%LOG_DIR%\R14_cert_provision.log"
 echo [ERROR] Certutil diagnostics: build-logs\R14_signing_preflight.log.
@@ -239,5 +256,6 @@ exit /b 1
 >> "%RESULT%" echo FORMAT=ONEDIR_SELF_CONTAINED
 >> "%RESULT%" echo COMPANY_MODE=%COMPANY_MODE%
 echo [ERROR] Stage %FAILED_STAGE% failed. See build-logs for details.
+if defined LIVE_STAGE > "%LIVE_STAGE%" echo STAGE=FAILED_%FAILED_STAGE%
 if "%NO_PAUSE%"=="0" pause
 exit /b 1

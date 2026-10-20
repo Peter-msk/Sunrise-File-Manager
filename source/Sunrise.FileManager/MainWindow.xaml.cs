@@ -10,7 +10,7 @@ using Sunrise.FileManager.Services;
 namespace Sunrise.FileManager;
 
 /// <summary>
-/// Core MainWindow shell: 3-column workspace layout, F8 Onboard AI dock, and file transfer orchestration.
+/// Core MainWindow shell: 3-column workspace layout, F8 AI popup, and file transfer orchestration.
 /// Multi-pane host helpers and cross-pane coordination are modularized in
 /// Features/Workspace/MainWindow.PanelCoordination.cs.
 /// </summary>
@@ -33,6 +33,9 @@ public partial class MainWindow : Window
     private int _activePane;
     private bool _aiBusy;
     private bool _aiOpen;
+    private readonly AiCommandPanel AiPanel;
+    private Window? _aiWindow;
+    private bool _mainWindowClosing;
     private bool _inspectorOpen = true;
     private bool _dockPreviewOpen;
     private double _inspectorPreferredWidth = 330;
@@ -57,6 +60,7 @@ public partial class MainWindow : Window
     {
         _persistSession = initialSession is null;
         InitializeComponent();
+        AiPanel = new AiCommandPanel();
         _sessionSaveTimer.Tick += (_, _) =>
         {
             _sessionSaveTimer.Stop();
@@ -95,7 +99,7 @@ public partial class MainWindow : Window
         _inspectorOpen = session.LayoutVersion < 18 || session.InspectorVisible;
         _dockPreviewOpen = session.LayoutVersion >= 18 && session.DockPreviewVisible;
         PreviewPane.CloseRequested += () => SetDockPreview(false);
-        AiPanel.CloseRequested += () => { if (_aiOpen) AiToggle_Click(this, new RoutedEventArgs()); };
+        AiPanel.CloseRequested += HideAiWindow;
         Inspector.MemoSaved += () => { if (_activePane < _panes.Length) _panes[_activePane]?.RefreshCurrent(); };
         Inspector.RequestOllamaSetup = () => AiPanel.PromptAndConnectOllamaAsync();
         for (int i = 0; i < _panes.Length; i++)
@@ -113,8 +117,7 @@ public partial class MainWindow : Window
             pane.AiRequested += source =>
             {
                 ActivatePane(source);
-                if (!_aiOpen) AiToggle_Click(this, new RoutedEventArgs());
-                else AiPanel.FocusCommand();
+                OpenAiWindow();
             };
             pane.PinnedFoldersChanged += updated => PropagatePinnedFolders(pane, updated);
             pane.SelectionContextChanged += source =>
@@ -254,23 +257,60 @@ public partial class MainWindow : Window
     private async void AiConnect_Click(object sender, RoutedEventArgs e)
     {
         if (_aiBusy || _working) return;
-        if (!_aiOpen)
-        {
-            _aiOpen = true;
-            AiToggleButton.Background = (Brush)FindResource("Selected");
-            AiPanel.Visibility = AiViewport.Visibility = Visibility.Visible;
-            UpdateWorkspaceLayout();
-        }
+        OpenAiWindow();
         await AiPanel.PromptAndConnectOllamaAsync();
+    }
+
+    private void OpenAiWindow()
+    {
+        if (_aiWindow is null)
+        {
+            var window = new Window
+            {
+                Title = "Sunrise File Manager · AI 파일 검색 및 정리",
+                Owner = this,
+                Style = (Style)FindResource("AppWindow"),
+                Width = 1060,
+                Height = 790,
+                MinWidth = 790,
+                MinHeight = 620,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                ShowInTaskbar = false,
+                Content = AiPanel
+            };
+            window.Closing += (_, args) =>
+            {
+                if (_mainWindowClosing) return;
+                args.Cancel = true;
+                HideAiWindow();
+            };
+            window.PreviewKeyDown += (_, args) =>
+            {
+                if (args.Key == Key.F8 && !_aiBusy) { HideAiWindow(); args.Handled = true; }
+            };
+            _aiWindow = window;
+        }
+        _aiOpen = true;
+        AiToggleButton.Background = (Brush)FindResource("Selected");
+        AiPanel.UpdateSelectionSummary(_panes[_activePane].ActiveFolder, _panes[_activePane].SelectedPaths);
+        _aiWindow.Show();
+        _aiWindow.Activate();
+        AiPanel.FocusCommand();
+    }
+
+    private void HideAiWindow()
+    {
+        if (_aiBusy) return;  // Never hide an active file-changing workflow.
+        _aiOpen = false;
+        _aiWindow?.Hide();
+        AiToggleButton.Background = (Brush)FindResource("ControlBackground");
+        if (IsActive && _panes[_activePane] is not null) _panes[_activePane].FocusFiles();
     }
 
     private void AiToggle_Click(object sender, RoutedEventArgs e)
     {
-        _aiOpen = !_aiOpen;
-        AiToggleButton.Background = (Brush)FindResource(_aiOpen ? "Selected" : "ControlBackground");
-        AiPanel.Visibility = AiViewport.Visibility = _aiOpen ? Visibility.Visible : Visibility.Collapsed;
-        UpdateWorkspaceLayout();
-        if (_aiOpen) AiPanel.FocusCommand(); else _panes[_activePane].FocusFiles();
+        if (_aiOpen) HideAiWindow();
+        else OpenAiWindow();
     }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -290,11 +330,6 @@ public partial class MainWindow : Window
     private void UpdateWorkspaceLayout()
     {
         if (WorkspaceShell.ActualWidth <= 0 || WorkspaceShell.ActualHeight <= 0) return;
-        double aiHeight = WorkspaceSplitLayoutEngine.CalculateAiDockHeight(_aiOpen, FileAreaShell.ActualHeight);
-        var aiRowHeight = new GridLength(aiHeight);
-        if (Math.Abs(AiRow.Height.Value - aiHeight) > 1) AiRow.Height = aiRowHeight;
-        if (_aiOpen) AiPanel.Height = Math.Max(440, aiHeight - 14);
-
         double inspectorPixels = _inspectorOpen
             ? Math.Max(295, InspectorColumn.ActualWidth) + 11 : 0;
         double previewPixels = _dockPreviewOpen
@@ -302,7 +337,7 @@ public partial class MainWindow : Window
         double fallbackWidth = Math.Max(1, WorkspaceShell.ActualWidth - inspectorPixels - previewPixels - 12);
         double viewportWidth = WorkspaceViewport.ActualWidth > 1 ? WorkspaceViewport.ActualWidth : fallbackWidth;
         double viewportHeight = WorkspaceViewport.ActualHeight > 1
-            ? WorkspaceViewport.ActualHeight : Math.Max(1, WorkspaceShell.ActualHeight - aiHeight - 12);
+            ? WorkspaceViewport.ActualHeight : Math.Max(1, WorkspaceShell.ActualHeight - 12);
         var layout = UiLayoutPolicy.Workspace(Math.Max(1, viewportWidth),
             Math.Max(1, viewportHeight), _visiblePanels, aiOpen: false);
         double targetWidth = Math.Max(layout.MinimumWidth, viewportWidth - 2);
@@ -572,6 +607,8 @@ public partial class MainWindow : Window
         if (_persistSession) TrySaveSession(showError: true);
         foreach (var pane in _panes) pane.CancelPendingOperations();
         AiPanel.Cancel();
+        _mainWindowClosing = true;
+        _aiWindow?.Close();
         PreviewPane.DisposePending();
     }
     private void ScheduleSessionSave()

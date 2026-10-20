@@ -2,19 +2,19 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Sunrise · 문서 미리보기" Width="1030" Height="770" MinWidth="620" MinHeight="460"
-        WindowStartupLocation="CenterOwner" Closing="Window_Closing" KeyDown="Window_KeyDown">
+        WindowStartupLocation="CenterOwner" Closing="Window_Closing" PreviewKeyDown="Window_KeyDown">
     <Grid Margin="16">
         <Grid.RowDefinitions><RowDefinition Height="46"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <DockPanel Grid.Row="0" LastChildFill="True">
             <Button DockPanel.Dock="Right" Content="닫기" Click="Close_Click" Width="66" Margin="10,0,0,4"/>
             <Button DockPanel.Dock="Right" Content="연결 앱에서 열기" Click="OpenOriginal_Click" BorderBrush="{DynamicResource PanelBorder}" Margin="8,0,0,4"/>
-            <TextBlock x:Name="DocumentName" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+            <TextBlock x:Name="DocumentName" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
         </DockPanel>
-        <StackPanel Grid.Row="1"><TextBlock x:Name="HangulNotice" Visibility="Collapsed" Text="HWPX는 저장된 첫 쪽 이미지 또는 텍스트를 표시합니다. 전체 문서와 편집은 연결 앱에서 확인하세요." Background="{DynamicResource ThemeNotice}" Foreground="{DynamicResource ThemeNoticeText}" Padding="10,8" TextWrapping="Wrap" Margin="0,0,0,8"/><TextBlock x:Name="DocumentDetail" FontSize="11" TextTrimming="CharacterEllipsis"
+        <StackPanel Grid.Row="1"><TextBlock x:Name="HangulNotice" Visibility="Collapsed" Text="HWPX는 저장된 첫 쪽 이미지 또는 텍스트를 표시합니다. 전체 문서와 편집은 연결 앱에서 확인하세요." Background="{DynamicResource ThemeNotice}" Foreground="{DynamicResource ThemeNoticeText}" Padding="10,8" TextWrapping="Wrap" Margin="0,0,0,8"/><TextBlock x:Name="DocumentDetail" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" FontSize="11" TextTrimming="CharacterEllipsis"
                    Foreground="{DynamicResource TextMuted}" Margin="0,0,0,10"/></StackPanel>
         <Border Grid.Row="2" Padding="15" Background="{DynamicResource ThemePreviewCanvas}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="7">
-            <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                <Border x:Name="PageSurface" Background="{DynamicResource ThemeSoft}" Padding="34" HorizontalAlignment="Center" Width="740" MinHeight="550">
+            <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" PreviewMouseWheel="PageScroll_PreviewMouseWheel" SizeChanged="PageScroll_SizeChanged">
+                <Border x:Name="PageSurface" Background="{DynamicResource ThemeSoft}" Padding="34" HorizontalAlignment="Center" Width="740" MinHeight="300">
                     <Grid>
                         <TextBox x:Name="PageText" TextWrapping="Wrap" IsReadOnly="True" IsReadOnlyCaretVisible="False"
                                  BorderThickness="0" Background="Transparent" Foreground="{DynamicResource TextPrimary}"
@@ -25,17 +25,21 @@
                 </Border>
             </ScrollViewer>
         </Border>
-        <Grid Grid.Row="3" Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <Grid Grid.Row="3" Margin="0,10,0,0"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <WrapPanel>
                 <Button x:Name="TextFallbackButton" Content="PDF 텍스트 보기" Click="TextFallback_Click" Margin="0,0,8,0" Visibility="Collapsed"/>
                 <Button x:Name="PreviousButton" Content="이전" Click="Previous_Click" Width="64"/>
                 <TextBlock x:Name="PageCounter" Text="1 / 1" VerticalAlignment="Center" Margin="12,0" MinWidth="52" TextAlignment="Center"/>
                 <Button x:Name="NextButton" Content="다음" Click="Next_Click" Width="64"/>
             </WrapPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="확대" VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}" Margin="8,0"/>
-                <Slider x:Name="ZoomSlider" Minimum="75" Maximum="175" Value="100" Width="90" TickFrequency="25" IsSnapToTickEnabled="True" ValueChanged="Zoom_ValueChanged"/>
-                <TextBlock x:Name="ZoomLabel" Text="100%" Width="42" Margin="6,0,0,0" VerticalAlignment="Center"/>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,5,0,0">
+                <Button Content="−" Click="ZoomOut_Click" Width="30" ToolTip="축소 (Ctrl+-)"/>
+                <Slider x:Name="ZoomSlider" Minimum="10" Maximum="400" Value="100" Width="98" SmallChange="10" LargeChange="25" ValueChanged="Zoom_ValueChanged" ToolTip="확대율 10~400% · Ctrl+마우스 휠"/>
+                <Button Content="+" Click="ZoomIn_Click" Width="30" ToolTip="확대 (Ctrl++)"/>
+                <TextBlock x:Name="ZoomLabel" Text="100%" Width="48" TextAlignment="Center" Margin="3,0" VerticalAlignment="Center"/>
+                <Button Content="100%" Click="ActualSize_Click" Padding="7,3" Margin="4,0" ToolTip="실제 크기 (Ctrl+0)"/>
+                <Button Content="너비 맞춤" Click="FitWidth_Click" Padding="7,3" Margin="3,0" ToolTip="가로폭 맞춤 (Ctrl+1)"/>
+                <Button Content="페이지 맞춤" Click="FitPage_Click" Padding="7,3" ToolTip="전체 페이지 맞춤 (Ctrl+2)"/>
             </StackPanel>
         </Grid>
     </Grid>

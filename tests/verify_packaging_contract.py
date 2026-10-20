@@ -1,31 +1,30 @@
+"""R12 current product packaging contract; no Windows commands executed."""
 from pathlib import Path
 import json
-import re
-
 root = Path(__file__).resolve().parents[1]
-src = root / "source"
-cmd_data = (root / "BUILD_DEV_FULL_SOURCE.cmd").read_bytes()
-cmd = cmd_data.decode("ascii")
-sdk_root = json.loads((root / "global.json").read_text(encoding="utf-8"))
-sdk_src = json.loads((src / "global.json").read_text(encoding="utf-8"))
+src = root / 'source'
+main = (root/'BUILD_ON_WINDOWS_COMPANY.cmd').read_text('ascii')
+installer = (root/'BUILD_RELEASE_INSTALLER.cmd').read_text('ascii')
+payload = (root/'BUILD_RELEASE_ONEDIR.cmd').read_text('ascii')
+unsigned = (root/'BUILD_DEV_EXE.cmd').read_text('ascii')
+signer = (root/'build-tools/EnsureSunriseGroupSigning.cmd').read_text('ascii')
 checks = {
-    "native_signing_no_powershell_or_security_bypass": ((root / "build-tools/FindSunriseCertificate.cmd").is_file() and not (root / "build-tools/Sunrise.GroupSigning.ps1").exists() and not any(x in (root / "BUILD_RELEASE_ONEDIR.cmd").read_text("ascii") for x in ("powershell.exe", "-ExecutionPolicy Bypass", "Set-ExecutionPolicy", "Invoke-WebRequest", "Add-MpPreference"))),
-    "ascii_crlf_cmd": b"\r\n" in cmd_data and b"\n" not in cmd_data.replace(b"\r\n", b""),
-    "sdk_10_consistent": sdk_root == sdk_src and sdk_root["sdk"] == {"version": "10.0.100", "rollForward": "latestFeature", "allowPrerelease": False},
-    "recognizes_dotnet_10": '/C:"10\\."' in cmd,
-    "no_downgrade_sdk_8_9": "SDK_MAJOR" not in cmd and "TFM_CONSOLE=" not in cmd,
-    "no_framework_dependent_fallback": "--self-contained false" not in cmd and "--self-contained true" in cmd,
-    "verified_wpf_runtime": all(x in cmd for x in ('hostfxr.dll', 'coreclr.dll', 'PresentationFramework.dll')),
-    "stage_then_publish": 'STAGE_DIR=' in cmd and 'FINAL_DIR=' in cmd,
-    "full_source_copy": r'robocopy "%ROOT%\source"' in cmd and 'Sunrise.FileManager.csproj" goto :fail_package' in cmd,
-    "zip_validation": 'tar.exe -t -f' in cmd and '04_zip_contents.log' in cmd,
-    "error_status": 'STATUS=FAILED' in cmd and 'STATUS=SUCCESS' in cmd,
-    "runner_exists": (root / 'BUILD_AND_CAPTURE_WINDOWS.cmd').is_file(),
-    "current_installer_company": 'BUILD_RELEASE_INSTALLER.cmd' in (root / 'BUILD_ON_WINDOWS_COMPANY.cmd').read_text(encoding='ascii') and 'BUILD_RELEASE_ONEDIR.cmd' in (root / 'BUILD_RELEASE_INSTALLER.cmd').read_text(encoding='ascii'),
-    "source_complete": (src / 'Sunrise.FileManager/MainWindow.xaml').is_file() and (src / 'Sunrise.FileManager/Services/AiOllamaService.cs').is_file(),
-    "install_ollama_separate": (root / 'INSTALL_OLLAMA.cmd').is_file() and 'INSTALL_OLLAMA.cmd"' in cmd,
+    'single_official_installer_entry': 'BUILD_RELEASE_INSTALLER.cmd' in main and 'BUILD_RELEASE_ONEDIR.cmd' in installer,
+    'signed_setup_and_uninstaller': '/SSunriseGroup=' in installer and 'SignedUninstaller=yes' in (root/'installer/SunriseFileManager.iss').read_text(),
+    'no_manual_signing_input': 'APPROVE_EXISTING_GROUP_SIGNER.cmd' not in main and 'choice /C' not in main and 'set /p' not in main,
+    'automatic_first_signer': 'certreq.exe -new -user -q' in signer and 'pending_group_public.cer' in signer,
+    'stable_pin': 'group_signer.sha1' in signer and 'STATUS=REUSED_PINNED' in signer,
+    'fail_closed_pin_missing': 'STATUS=PINNED_CERT_MISSING_OR_INVALID' in signer,
+    'fail_closed_prior_release': 'STATUS=EXISTING_RELEASE_WITHOUT_PIN' in signer,
+    'no_powershell_or_v3_bypass': not any(x in main+installer+payload+signer for x in ('powershell.exe','-ExecutionPolicy Bypass','Add-MpPreference','certutil.exe -addstore Root')),
+    'source_and_sdk_consistent': json.loads((root/'global.json').read_text()) == json.loads((src/'global.json').read_text()),
+    'dotnet_10_requirement': 'FindDotNet10.cmd' in (root/'CHECK_INSTALLER_BUILD_ENV.cmd').read_text('ascii'),
+    'signed_wpf_is_self_contained': '--self-contained true' in payload and '-p:PublishSingleFile=false' in payload,
+    'unsigned_dev_independent': 'SignTool / certificate / Inno Setup are NOT needed' in unsigned,
+    'staging_and_rollback': 'STAGE' in installer and 'BACKUP_SETUP' in installer and 'fail_restore' in installer,
+    'no_deprecated_builders': all(not (root/name).exists() for name in ('BUILD_DEV_FULL_SOURCE.cmd','BUILD_RELEASE_ONEFILE.cmd','BUILD_ON_WINDOWS.cmd','BUILD_AND_CAPTURE_WINDOWS.cmd','CAPTURE_UI_WINDOWS.cmd','APPROVE_EXISTING_GROUP_SIGNER.cmd')),
+    'app_src_present': (src/'Sunrise.FileManager/MainWindow.xaml').is_file() and (src/'Sunrise.FileManager/Services/AiOllamaService.cs').is_file(),
 }
-for k,v in checks.items():
-    print(("PASS" if v else "FAIL") + ": " + k)
-assert all(checks.values()), [k for k,v in checks.items() if not v]
-print(f"PASS: {len(checks)} CMD packaging contract checks")
+for k,v in checks.items():print(('PASS' if v else 'FAIL') + ': ' + k)
+assert all(checks.values()),[k for k,v in checks.items() if not v]
+print(f'PASS: {len(checks)} R12 packaging contract checks')

@@ -6,7 +6,7 @@ ENSURE=(ROOT/'build-tools/EnsureSunriseGroupSigning.cmd').read_text('ascii')
 INF=(ROOT/'build-tools/Sunrise.GroupCodeSigning.inf').read_text('ascii')
 BUILD=(ROOT/'BUILD_RELEASE_ONEDIR.cmd').read_text('ascii')
 INSTALL=(ROOT/'BUILD_RELEASE_INSTALLER.cmd').read_text('ascii')
-CHECK=(ROOT/'CHECK_SIGNING_CERT.cmd').read_text('ascii')
+CHECK=(ROOT/'BUILD_ON_WINDOWS_COMPANY.cmd').read_text('ascii')
 class InBuildSelfSigningR07(unittest.TestCase):
     def test_native_self_signed_certificate_generation_with_code_signing_eku(self):
         for token in ('RequestType = Cert','Subject = "CN=Sunrise Group"','KeyAlgorithm = RSA',
@@ -17,9 +17,10 @@ class InBuildSelfSigningR07(unittest.TestCase):
         self.assertIn('certreq.exe -new -user -q',ENSURE)
         self.assertIn('certutil.exe -dump',ENSURE)
         self.assertIn('FindSunriseCertificate.cmd',ENSURE)
-    def test_first_build_provisions_then_signs_both_payload_and_installer(self):
+    def test_publish_then_provision_and_sign_both_payload_and_installer(self):
         self.assertIn('EnsureSunriseGroupSigning.cmd',BUILD)
-        self.assertLess(BUILD.index('call "%ROOT%\\build-tools\\EnsureSunriseGroupSigning.cmd"'),BUILD.index('"%DOTNET_EXE%" publish'))
+        self.assertLess(BUILD.index('"%DOTNET_EXE%" publish'), BUILD.index('call "%ROOT%\\build-tools\\EnsureSunriseGroupSigning.cmd"'))
+        self.assertLess(BUILD.index('call "%ROOT%\\build-tools\\EnsureSunriseGroupSigning.cmd"'), BUILD.index('"%SIGNTOOL%" sign /fd SHA256'))
         self.assertEqual(BUILD.count('"%SIGNTOOL%" sign /fd SHA256'),2)
         self.assertIn('/sha1 "%CERT_THUMBPRINT%"',BUILD)
         self.assertIn('/SSunriseGroup=',INSTALL)
@@ -35,7 +36,7 @@ class InBuildSelfSigningR07(unittest.TestCase):
         self.assertIn('STATUS=CREATED_AND_PINNED',ENSURE)
         self.assertIn('move /y "%CERT_PIN%.tmp" "%CERT_PIN%"',ENSURE)
     def test_readonly_probe_does_not_create(self):
-        self.assertIn('EnsureSunriseGroupSigning.cmd" --check-only',CHECK)
+        self.assertIn('BUILD_RELEASE_INSTALLER.cmd" --company',CHECK)
         self.assertIn('if "%CERT_CHECK_ONLY%"=="1"',ENSURE)
         self.assertLess(ENSURE.index('if "%CERT_CHECK_ONLY%"=="1"'),ENSURE.index('certreq.exe -new'))
     def test_no_untrusted_signer_replacement_or_security_bypass(self):
@@ -53,7 +54,7 @@ class InBuildSelfSigningR07(unittest.TestCase):
         self.assertNotIn('UiSmokeTests',BUILD)
         self.assertNotIn('Sunrise.GroupCodeSigning.inf',(ROOT/'installer/SunriseFileManager.iss').read_text())
         for file in ('build-tools/EnsureSunriseGroupSigning.cmd','build-tools/Sunrise.GroupCodeSigning.inf',
-                     'CHECK_SIGNING_CERT.cmd','BUILD_RELEASE_ONEDIR.cmd'):
+                     'BUILD_ON_WINDOWS_COMPANY.cmd','BUILD_RELEASE_ONEDIR.cmd'):
             b=(ROOT/file).read_bytes()
             self.assertIn(b'\r\n',b)
             self.assertNotIn(b'\n',b.replace(b'\r\n',b''))

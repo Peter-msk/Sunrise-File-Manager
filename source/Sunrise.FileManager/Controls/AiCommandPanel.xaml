@@ -1,20 +1,27 @@
 <UserControl x:Class="Sunrise.FileManager.Controls.AiCommandPanel"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Foreground="{DynamicResource TextPrimary}" MinHeight="560">
+ <UserControl.Resources>
+  <Style x:Key="PlanTextStyle" TargetType="TextBlock">
+   <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+   <Setter Property="VerticalAlignment" Value="Center"/>
+   <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+  </Style>
+ </UserControl.Resources>
  <Border Background="{DynamicResource PanelBackground}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="4" Padding="14">
   <Grid>
-   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="70"/><RowDefinition Height="Auto"/><RowDefinition Height="2*" MinHeight="80"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="2*" MinHeight="245"/><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="175"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <Grid Grid.Row="0">
     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <StackPanel Grid.Column="0">
-     <TextBlock Text="AI 파일 검색 · 정리" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+     <TextBlock Text="AI 파일 검색 · 정리" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
      <TextBlock Text="탐색 범위 지정 → 명령 입력 → 결과 검토 → 승인 후 실행" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
      <TextBlock x:Name="ScopeLabel" Text="탐색기에서 항목을 선택하세요." TextWrapping="Wrap" FontSize="12"/>
     </StackPanel>
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-     <TextBlock x:Name="OllamaBadgeText" Text="AI 상태 확인 전" MaxWidth="88" TextTrimming="CharacterEllipsis" FontSize="11.5" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+     <TextBlock x:Name="OllamaBadgeText" Text="AI 상태 확인 전" MaxWidth="160" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" TextTrimming="CharacterEllipsis" FontSize="11.5" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
      <Button x:Name="OllamaConnectButton" Style="{StaticResource PrimaryButton}" Content="AI 연결" Click="OllamaConnect_Click" Padding="10,5" FontWeight="SemiBold" ToolTip="Ollama 연결 및 설치"/>
-     <Button x:Name="CloseAiPanelButton" Content="✕ 닫기" Style="{StaticResource ExplorerCommand}" Click="CloseAiPanel_Click" Padding="10,5" Margin="7,0,0,0" ToolTip="AI 파일 정리 영역 닫기 (F8)"/>
+     <Button x:Name="CloseAiPanelButton" Content="✕ 닫기" Style="{StaticResource ExplorerCommand}" Click="CloseAiPanel_Click" Padding="10,5" Margin="7,0,0,0" ToolTip="AI 파일 정리 팝업 닫기 (F8)"/>
     </StackPanel>
    </Grid>
    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -53,7 +60,7 @@
     <CheckBox x:Name="ContentReadApproval" Content="문서 본문 읽기 허용 (선택한 검색 범위 내 PDF·HWPX·DOCX·TXT·MD, 외부 전송 없음)"
               IsChecked="False" Checked="Input_Changed" Unchecked="Input_Changed" Margin="0,6,0,3"
               ToolTip="본문 검색 및 온보드 AI 문서 요약에서 사용됩니다. PDF 앞 4쪽, DOCX/HWPX 본문 앞부분 최대 16,000자까지 로컬 읽기"/>
-    <TextBlock Text="② 결과 파일을 저장할 폴더" FontWeight="SemiBold" Margin="0,8,0,2"/>
+    <TextBlock Text="③ 결과 파일을 저장할 폴더" FontWeight="SemiBold" Margin="0,8,0,2"/>
     <WrapPanel Margin="0,4">
      <Button x:Name="DestinationButton" Content="📁 대상 폴더 지정…" Style="{StaticResource ExplorerCommand}" Click="Destination_Click" Margin="0,0,6,0"/>
      <Button x:Name="UseOtherPaneButton" Content="⇄ 반대쪽 분할 패널 폴더 사용" Style="{StaticResource ExplorerCommand}" Click="UseOtherPane_Click" Margin="0,0,6,0" ToolTip="2~4분할 화면에서 다른 탐색기 패널에 열려 있는 폴더를 즉시 대상 폴더로 지정합니다."/>
@@ -73,12 +80,12 @@
     <Button x:Name="HistoryButton" Content="작업 기록 / 되돌리기" Click="History_Click" Margin="0,0,4,4"/>
     <Button x:Name="CancelButton" Content="계획 해제" Click="Cancel_Click" Margin="0,0,0,4"/>
    </WrapPanel>
-   <DataGrid Grid.Row="3" x:Name="PlanGrid" MouseDoubleClick="PlanGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" EnableRowVirtualization="True" HorizontalScrollBarVisibility="Auto">
+   <DataGrid Grid.Row="3" x:Name="PlanGrid" MinColumnWidth="70" MouseDoubleClick="PlanGrid_MouseDoubleClick" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" EnableRowVirtualization="True" HorizontalScrollBarVisibility="Auto">
     <DataGrid.Columns>
-     <DataGridTextColumn Header="작업" Binding="{Binding Action}" Width="70"/>
-     <DataGridTextColumn Header="변경 전" Binding="{Binding Before}" Width="200"/>
-     <DataGridTextColumn Header="변경 후" Binding="{Binding After}" Width="200"/>
-     <DataGridTextColumn Header="상태" Binding="{Binding Status}" Width="240"/>
+     <DataGridTextColumn ElementStyle="{StaticResource PlanTextStyle}" Header="작업" Binding="{Binding Action}" Width="95"/>
+     <DataGridTextColumn ElementStyle="{StaticResource PlanTextStyle}" Header="변경 전" Binding="{Binding Before}" Width="2*" MinWidth="180"/>
+     <DataGridTextColumn ElementStyle="{StaticResource PlanTextStyle}" Header="변경 후" Binding="{Binding After}" Width="2*" MinWidth="180"/>
+     <DataGridTextColumn ElementStyle="{StaticResource PlanTextStyle}" Header="상태" Binding="{Binding Status}" Width="*" MinWidth="155"/>
     </DataGrid.Columns>
    </DataGrid>
    <ScrollViewer Grid.Row="4" MaxHeight="105" VerticalScrollBarVisibility="Auto">

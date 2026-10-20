@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
-REM Sunrise File Manager R15 - official installer release. Run on Windows x64 only.
+REM Sunrise File Manager R13 - official installer release with visible nested stage. Run on Windows x64 only.
 REM Compiles a signed WPF OneDir payload, wraps it in an Inno Setup installer,
 REM signs the installer, verifies signer identity, then commits the final artifact.
 REM No document inspection, GUI capture, silent installation or network updater.
@@ -21,6 +21,8 @@ if /I "%~2"=="--no-pause" set "NO_PAUSE=1"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 if not exist "%DIST%" mkdir "%DIST%"
 set "FAILED_STAGE=PREFLIGHT"
+set "LIVE_STAGE=%LOG_DIR%\R13_CURRENT_STAGE.txt"
+> "%LIVE_STAGE%" echo STAGE=PREFLIGHT
 > "%RESULT%" echo STATUS=RUNNING
 >> "%RESULT%" echo STAGE=PREFLIGHT
 >> "%RESULT%" echo FORMAT=INSTALLER_SETUP_EXE
@@ -81,14 +83,24 @@ if errorlevel 1 goto :fail_signtool
 if not defined SUNRISE_SIGNTOOL_RESOLVED goto :fail_signtool
 set "SIGNTOOL=%SUNRISE_SIGNTOOL_RESOLVED%"
 echo [SIGNTOOL] Using: "%SIGNTOOL%"
+echo [R13][PAYLOAD] Preparing clean temporary output. Previous signed installer is preserved.
+> "%LIVE_STAGE%" echo STAGE=PAYLOAD_PREPARE
 if exist "%INSTALLER_STAGE%" rmdir /s /q "%INSTALLER_STAGE%"
 if exist "%INSTALLER_STAGE%" goto :fail_stage
 mkdir "%INSTALLER_STAGE%"
 if errorlevel 1 goto :fail_stage
 set "FAILED_STAGE=PAYLOAD_BUILD"
 >> "%RESULT%" echo STAGE=PAYLOAD_BUILD
-call "%ROOT%\BUILD_RELEASE_ONEDIR.cmd" --company --no-pause --installer-payload > "%LOG_DIR%\R15_payload_build.log" 2>&1
+> "%LIVE_STAGE%" echo STAGE=PAYLOAD_BUILD
+> "%LOG_DIR%\R15_payload_build.log" echo STATUS=STARTED
+>> "%LOG_DIR%\R15_payload_build.log" echo DETAIL=See_R14_BUILD_RESULT_and_R14_diagnostics
+echo [R13][PAYLOAD] Starting .NET build and signing. Child progress is NOT hidden.
+echo [R13][PAYLOAD] Follow build-logs\R14_BUILD_RESULT.txt if a native tool pauses.
+REM R12 suppressed all child stdout, making the installer appear frozen here.
+REM R13 keeps child console live; each native tool also writes its own detail log.
+call "%ROOT%\BUILD_RELEASE_ONEDIR.cmd" --company --no-pause --installer-payload
 if errorlevel 1 goto :fail_payload
+>> "%LOG_DIR%\R15_payload_build.log" echo STATUS=SUCCESS
 findstr /X /C:"STATUS=SUCCESS" "%LOG_DIR%\R14_BUILD_RESULT.txt" >nul 2>&1
 if errorlevel 1 goto :fail_payload
 for %%F in ("%APP_DIR%\Sunrise.FileManager.exe" "%APP_DIR%\Sunrise.FileManager.dll" "%APP_DIR%\hostfxr.dll" "%APP_DIR%\coreclr.dll") do if not exist "%%~F" goto :fail_payload
@@ -103,6 +115,9 @@ REM The .NET SDK was already selected and verified by the signed payload stage.
 REM Do not reject successful WPF output by re-probing an unused dotnet.exe path.
 set "FAILED_STAGE=INSTALLER_COMPILE"
 >> "%RESULT%" echo STAGE=INSTALLER_COMPILE
+> "%LIVE_STAGE%" echo STAGE=INSTALLER_COMPILE
+echo [R13][INNO] Compiling and signing Setup and Uninstaller with the pinned signer.
+echo [R13][INNO] Details: build-logs\R15_inno_compile.log
 set "SUNRISE_INSTALLER_PAYLOAD=%APP_DIR%"
 set "SUNRISE_INSTALLER_OUTPUT=%INSTALLER_STAGE%"
 set "SUNRISE_INSTALLER_VERSION=%SFM_APP_VERSION%"
@@ -113,6 +128,8 @@ for %%F in ("%UNSIGNED_SETUP%") do if %%~zF LSS 1000000 goto :fail_compile
 REM ISCC has already signed both Setup and the embedded Uninstaller.
 set "FAILED_STAGE=INSTALLER_VERIFY"
 >> "%RESULT%" echo STAGE=INSTALLER_VERIFY
+> "%LIVE_STAGE%" echo STAGE=INSTALLER_VERIFY
+echo [R13][VERIFY] Checking Authenticode signature on Setup.
 REM Setup was signed with the same pinned SHA1 as the payload via Inno /S.
 REM Verify its embedded signature and trust directly using Windows SDK SignTool.
 "%SIGNTOOL%" verify /pa /v "%UNSIGNED_SETUP%" > "%LOG_DIR%\R15_verify_setup.log" 2>&1
@@ -125,6 +142,8 @@ if errorlevel 1 (
 )
 set "FAILED_STAGE=COMMIT"
 >> "%RESULT%" echo STAGE=COMMIT
+> "%LIVE_STAGE%" echo STAGE=COMMIT
+echo [R13][COMMIT] Moving verified Setup into final output.
 if exist "%BACKUP_SETUP%" del /q /f "%BACKUP_SETUP%"
 if exist "%FINAL_SETUP%" (
  move /y "%FINAL_SETUP%" "%BACKUP_SETUP%" >nul
@@ -138,6 +157,7 @@ if errorlevel 1 goto :fail_restore
 if exist "%BACKUP_SETUP%" del /q /f "%BACKUP_SETUP%"
 if exist "%INSTALLER_STAGE%" rmdir /s /q "%INSTALLER_STAGE%"
 if exist "%DIST%\_R18_installer_payload" rmdir /s /q "%DIST%\_R18_installer_payload"
+> "%LIVE_STAGE%" echo STAGE=COMPLETE
 > "%RESULT%" echo STATUS=SUCCESS
 >> "%RESULT%" echo STAGE=COMPLETE
 >> "%RESULT%" echo FORMAT=INSTALLER_SETUP_EXE
@@ -218,7 +238,8 @@ set "FAILED_STAGE=STAGING"
 goto :fail
 :fail_payload
 set "FAILED_STAGE=PAYLOAD_BUILD"
-echo [ERROR] OneDir signed payload build failed. See R15_payload_build.log and R14 logs.
+echo [ERROR] OneDir signed payload build failed. See R14_BUILD_RESULT.txt and R14 logs.
+>> "%LOG_DIR%\R15_payload_build.log" echo STATUS=FAILED
 if exist "%LOG_DIR%\R14_BUILD_RESULT.txt" type "%LOG_DIR%\R14_BUILD_RESULT.txt"
 if exist "%LOG_DIR%\R14_cert_provision.log" type "%LOG_DIR%\R14_cert_provision.log"
 if exist "%LOG_DIR%\R14_signing_preflight.log" type "%LOG_DIR%\R14_signing_preflight.log"
@@ -240,6 +261,7 @@ if exist "%BACKUP_SETUP%" move /y "%BACKUP_SETUP%" "%FINAL_SETUP%" >nul
 set "FAILED_STAGE=COMMIT_RESTORE"
 :fail
 echo [ERROR] Installer build stopped at %FAILED_STAGE%.
+if defined LIVE_STAGE > "%LIVE_STAGE%" echo STAGE=FAILED_%FAILED_STAGE%
 > "%RESULT%" echo STATUS=FAILED
 >> "%RESULT%" echo STAGE=%FAILED_STAGE%
 if defined VERSION_PROBLEM >> "%RESULT%" echo DETAIL=%VERSION_PROBLEM%

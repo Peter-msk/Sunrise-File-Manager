@@ -21,7 +21,7 @@
     "Open CMD Here (cmd.exe), Open in Windows Explorer, Copy Path (Ctrl+Shift+C), Copy Name, Windows Properties (Alt+Enter), SHA-256 hash inspector"
   ],
   "build_pipeline": {
-    "revision": "R16_INSTALLER_AUDIT",
+    "revision": "R19_R12_AUTO_PROJECT_PINNED_SIGNER",
     "target_sdk": "10.0.x",
     "framework": "net10.0-windows10.0.19041.0",
     "distribution": "Windows x64 signed installer Setup EXE",
@@ -39,7 +39,7 @@
     "signing_verified_on_windows": false
   },
   "distribution_policy": {
-    "revision": "R16_INSTALLER_AUDIT",
+    "revision": "R19_R12_MINIMAL_BUILDER_SURFACE",
     "official_format": "installer",
     "setup_engine": "Inno Setup",
     "initial_installer_version": "1.0.0",

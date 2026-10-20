@@ -62,7 +62,7 @@ if "%MISSING%"=="0" (
   > "%REPORT%" echo STATUS=TOOLS_PRESENT
   >> "%REPORT%" echo WINDOWS_CERTIFICATE_AND_SIGNING=NOT_TESTED
   echo [READY] Required tools detected. First official build creates the group certificate if no pin exists.
-  echo [NEXT] Run CHECK_SIGNING_CERT.cmd before BUILD_ON_WINDOWS_COMPANY.cmd.
+  echo [NEXT] Run BUILD_ON_WINDOWS_COMPANY.cmd. Certificate selection is performed inside the build.
   if "%NO_PAUSE%"=="0" pause
   exit /b 0
 )

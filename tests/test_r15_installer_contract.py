@@ -14,7 +14,8 @@ class InstallerContractTests(unittest.TestCase):
     def test_default_entry_uses_installer(self):
         self.assertIn('BUILD_RELEASE_INSTALLER.cmd', ENTRY)
         self.assertNotIn('BUILD_RELEASE_ONEFILE.cmd', ENTRY)
-        self.assertIn('BUILD_ON_WINDOWS_COMPANY.cmd', (ROOT / 'BUILD_ON_WINDOWS.cmd').read_text())
+        self.assertTrue((ROOT / 'BUILD_ON_WINDOWS_COMPANY.cmd').is_file())
+        self.assertFalse((ROOT / 'BUILD_ON_WINDOWS.cmd').exists())
 
     def test_stable_app_id_and_version(self):
         self.assertRegex(ISS, r'(?m)^AppId=\{\{[0-9A-F-]{36}\}$')
@@ -80,8 +81,7 @@ class InstallerContractTests(unittest.TestCase):
         self.assertIn(r'Local\SunriseFileManagerCEF', app)
 
     def test_active_installer_entry_is_consistent(self):
-        active = (ROOT / 'BUILD_ON_WINDOWS.cmd').read_text(encoding='ascii')
-        self.assertIn('BUILD_ON_WINDOWS_COMPANY.cmd', active)
+        self.assertFalse((ROOT / 'BUILD_ON_WINDOWS.cmd').exists())
         self.assertIn('BUILD_RELEASE_INSTALLER.cmd', ENTRY)
         self.assertIn('BUILD_RELEASE_ONEDIR.cmd', BUILD)
 

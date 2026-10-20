@@ -236,7 +236,9 @@
   <Setter Property="BorderThickness" Value="0,0,2,1"/>
   <Setter Property="SeparatorBrush" Value="{DynamicResource ThemeColumnDivider}"/>
   <Setter Property="SeparatorVisibility" Value="Visible"/>
-  <Setter Property="Padding" Value="10,6"/>
+  <Setter Property="Padding" Value="8,6"/>
+  <Setter Property="HorizontalContentAlignment" Value="Left"/>
+  <Setter Property="VerticalContentAlignment" Value="Center"/>
   <Setter Property="FontWeight" Value="SemiBold"/>
   <Style.Triggers>
    <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>

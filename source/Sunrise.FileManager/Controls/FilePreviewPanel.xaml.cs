@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Sunrise.FileManager.Models;
 using Sunrise.FileManager.Services;
@@ -17,6 +18,8 @@ public partial class FilePreviewPanel : UserControl
     private int _page = 1;
     private int _pageTotal = 1;
     private string? _previewPath;
+    private bool _fitWidth = true;
+    private double _zoom = 1d;
     public event Action? CloseRequested;
     public string? CurrentFilePath => _selected?.FullPath;
 
@@ -91,6 +94,7 @@ public partial class FilePreviewPanel : UserControl
                     PreviewText.Visibility = Visibility.Collapsed;
                     PreviewInfo.Text = "PDF 원본 페이지";
                     UpdatePreviewPages();
+                    ApplyZoom();
                     return;
                 }
                 catch (OperationCanceledException) { throw; }
@@ -114,6 +118,7 @@ public partial class FilePreviewPanel : UserControl
             }
             else PreviewText.Text = page.Body;
             UpdatePreviewPages();
+            ApplyZoom();
         }
         catch (OperationCanceledException) { /* A newer selection owns the inspector. */ }
         catch (Exception ex)
@@ -146,4 +151,60 @@ public partial class FilePreviewPanel : UserControl
     }
     private void PreviousPage_Click(object sender, RoutedEventArgs e) { if (_page > 1) BeginPreview(_selected, _page - 1); }
     private void NextPage_Click(object sender, RoutedEventArgs e) { if (_page < _pageTotal) BeginPreview(_selected, _page + 1); }
+
+    private void ApplyZoom()
+    {
+        if (PreviewImage is null || PreviewText is null || PreviewScroll is null || ZoomLabel is null) return;
+        if (_fitWidth)
+        {
+            if (PreviewImage.Visibility == Visibility.Visible && PreviewImage.Source is not null)
+            {
+                double viewport = PreviewScroll.ViewportWidth > 0 ? PreviewScroll.ViewportWidth : PreviewScroll.ActualWidth;
+                _zoom = Math.Clamp((viewport - 32) / Math.Max(1, PreviewImage.Source.Width), 0.1, 4.0);
+            }
+            else _zoom = 1d;  // Text wraps at readable 100% instead of shrinking its font to fit.
+        }
+        if (PreviewImage.Source is not null) PreviewImage.Width = PreviewImage.Source.Width * _zoom;
+        PreviewText.FontSize = 12 * _zoom;
+        PreviewText.Width = _fitWidth ? Math.Max(140, PreviewScroll.ActualWidth - 30) : 650 * _zoom;
+        ZoomLabel.Text = $"{_zoom * 100:F0}%";
+    }
+    private void SetManualZoom(double zoom)
+    {
+        _fitWidth = false;
+        _zoom = Math.Clamp(zoom, .1, 4);
+        ApplyZoom();
+    }
+    private void ZoomIn_Click(object sender, RoutedEventArgs e) => SetManualZoom(_zoom + .1);
+    private void ZoomOut_Click(object sender, RoutedEventArgs e) => SetManualZoom(_zoom - .1);
+    private void FitWidth_Click(object sender, RoutedEventArgs e) { _fitWidth = true; ApplyZoom(); }
+    private void PreviewScroll_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (_fitWidth) ApplyZoom();
+    }
+    private void PreviewScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0) return;
+        SetManualZoom(_zoom + (e.Delta > 0 ? .1 : -.1));
+        e.Handled = true;
+    }
+    private void PreviewPanel_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if ((Keyboard.Modifiers & ModifierKeys.Control) != 0)
+        {
+            if (e.Key is Key.Add or Key.OemPlus) SetManualZoom(_zoom + .1);
+            else if (e.Key is Key.Subtract or Key.OemMinus) SetManualZoom(_zoom - .1);
+            else if (e.Key is Key.D0 or Key.NumPad0) SetManualZoom(1);
+            else if (e.Key is Key.D1 or Key.NumPad1) { _fitWidth = true; ApplyZoom(); }
+            else return;
+            e.Handled = true;
+        }
+        else if (e.Key == Key.PageDown && _page < _pageTotal) { BeginPreview(_selected, _page + 1); e.Handled = true; }
+        else if (e.Key == Key.PageUp && _page > 1) { BeginPreview(_selected, _page - 1); e.Handled = true; }
+    }
+    private void OpenLargePreview_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is null || _selected.IsDirectory) return;
+        new PreviewWindow(_selected.FullPath) { Owner = Window.GetWindow(this) }.Show();
+    }
 }
