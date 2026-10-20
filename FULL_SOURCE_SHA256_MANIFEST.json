@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R19_DOTNET_SDK_PATH_QUOTING_HOTFIX_R04",
+  "revision": "R19_CAPTURE_NATIVE_SIGNING_R05",
   "company_policy": true,
   "document_fixture_included": false,
   "official_distribution": "SETUP_EXE",
-  "status": "STATIC_PASS_WINDOWS_DOTNET_10_RETEST_PENDING",
-  "file_count": 233,
+  "status": "STATIC_PASS_WINDOWS_AUTHENTICODE_RETEST_PENDING",
+  "file_count": 235,
   "files": [
     {
       "path": ".gitattributes",
@@ -59,13 +59,13 @@
     },
     {
       "path": "BUILD_RELEASE_INSTALLER.cmd",
-      "sha256": "ff6947a15d9b724ba13fb945ab04e99c5d8d23713fe0e12270af71d9dec5e01f",
-      "bytes": 11448
+      "sha256": "bd2cc50f59ab96210d5f585cd45c92339227da2b30a5ee20ad19f6cfe98ac329",
+      "bytes": 11192
     },
     {
       "path": "BUILD_RELEASE_ONEDIR.cmd",
-      "sha256": "d985a7c2ffdd430b8146de1050b3ee185d13b79a732ae5fb45ef51bcd389847b",
-      "bytes": 13364
+      "sha256": "1c023811779bb986cbf26acdf623efbe91454624eb5c34730765d4b6b75cb5f6",
+      "bytes": 12445
     },
     {
       "path": "BUILD_RELEASE_ONEFILE.cmd",
@@ -84,8 +84,8 @@
     },
     {
       "path": "CHECK_INSTALLER_BUILD_ENV.cmd",
-      "sha256": "1c6171ecd1f28a60bc9331de558cce9551e95b8150b43bc85c215632f14b9a17",
-      "bytes": 3566
+      "sha256": "0b19a05e821521debfdf46df99e2c926a19c60bda8bc7ebab32abc3c57ad018e",
+      "bytes": 3564
     },
     {
       "path": "CHECK_SDK.cmd",
@@ -199,8 +199,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "d5c905589ac31bf386cf4263691584eb0d5d33a6319176d7234ff9f6895a3250",
-      "bytes": 6937
+      "sha256": "122527fb067ebe0a0fef6059aa9c4a3467013336b5cb3b477d7e260922635f7a",
+      "bytes": 7427
     },
     {
       "path": "RELEASE_STATUS.json",
@@ -263,9 +263,9 @@
       "bytes": 1327
     },
     {
-      "path": "build-tools/Sunrise.GroupSigning.ps1",
-      "sha256": "9602eb3acaeebd1cbf2fc2d824b1a73a930de60617358b5fd42777b5727c1f5e",
-      "bytes": 4883
+      "path": "build-tools/FindSunriseCertificate.cmd",
+      "sha256": "7909bee95659b388c8bea564d42def8db33c0e033f3e3b61ab84c4c2959effbc",
+      "bytes": 4437
     },
     {
       "path": "docs/R17_DRIVE_COMPARE.json",
@@ -293,6 +293,11 @@
       "bytes": 8465
     },
     {
+      "path": "docs/R19_CAPTURE_NATIVE_SIGNING_R05.md",
+      "sha256": "b0c72a225d49f0658aaaf2fe440eaaddfd5447030bdf70fa82e324985f5ec4ee",
+      "bytes": 3282
+    },
+    {
       "path": "docs/R19_DOTNET_SDK_PATH_HOTFIX_R04.md",
       "sha256": "2749cdcdf7d381deee9735723a1eaf8e913f5ae53fae89e315b2848616251b00",
       "bytes": 3233
@@ -314,8 +319,8 @@
     },
     {
       "path": "docs/SIGNING_R14.md",
-      "sha256": "4d759de158cb68b1c208e26b58bcd3a630f24376f3f735d708cc49dfeef63a6d",
-      "bytes": 5224
+      "sha256": "808176984171e3411ae36f1b3367e832cd3185bb50fa65ba7bb5a93748a0b83b",
+      "bytes": 5289
     },
     {
       "path": "docs/Sunrise_File_Manager_1.0.0_R17_개발계획서.md",
@@ -734,8 +739,8 @@
     },
     {
       "path": "source/build-tools/Sunrise.Signing/Program.cs",
-      "sha256": "a194b1aeeb107b7929e282fbb256c1f6a082c83fccfcf9c3b8522dfab1832553",
-      "bytes": 6925
+      "sha256": "2ff49bb94f1b08b1aead322beed395114b895c7092704989773daaf7bf1be4f8",
+      "bytes": 6918
     },
     {
       "path": "source/build-tools/Sunrise.Signing/Sunrise.Signing.csproj",
@@ -1084,12 +1089,12 @@
     },
     {
       "path": "tests/test_r14_signing_contract.py",
-      "sha256": "cbe58a9b5bdb1932938612916009d4eca7e16a0c59b71c476d61c38db0e45b62",
-      "bytes": 2292
+      "sha256": "e5cb697b1a872a5f2cf9471ef53711ef6cf0e2ceb017df3f7a937f5b49cc837c",
+      "bytes": 2330
     },
     {
       "path": "tests/test_r15_installer_contract.py",
-      "sha256": "9ebbaec743ad518ab4b617932c83d4a293143c7e2e57ce8ec67d11c01ac5c0cd",
+      "sha256": "33f9f259d347817f7d6f3ac61112c4b617a2284e647b54ecaefe48d36b2f24c5",
       "bytes": 4939
     },
     {
@@ -1099,8 +1104,8 @@
     },
     {
       "path": "tests/test_r18_installer_audit_contract.py",
-      "sha256": "d072f432614c7c15b2604ae159312d22d48ef10fe904117b0901304dd0c47d52",
-      "bytes": 2309
+      "sha256": "6d667e3dab1bc776c214ac859066f5307d0fb8d79812fcf2344dfac07e69a58f",
+      "bytes": 2307
     },
     {
       "path": "tests/test_r19_dotnet_sdk_path_hotfix_r04.py",
@@ -1118,9 +1123,14 @@
       "bytes": 3016
     },
     {
+      "path": "tests/test_r19_native_capture_signing_r05.py",
+      "sha256": "e3993b2e6a96e9d33a4cb3fc44924a2af898c24c46e1d9bdfd2cf01e5d4ad8d6",
+      "bytes": 2595
+    },
+    {
       "path": "tests/test_r19_v3_signing_runtime_contract.py",
-      "sha256": "639f26e5ade83fd273369ae59c0d877634264abf821b56114dfdbf5d264e23a3",
-      "bytes": 2377
+      "sha256": "c5ef5aa8c796259135268ecbd80b85d87512950d55ebfe3633eb11e4bbd8e27c",
+      "bytes": 1716
     },
     {
       "path": "tests/test_r19_version_hotfix_contract.py",
@@ -1129,8 +1139,8 @@
     },
     {
       "path": "tests/verify_packaging_contract.py",
-      "sha256": "ae72d274ee4f9872aeb6ac73f6f71b9b39b4ef8891e1687b7ace5bed9be9a8f5",
-      "bytes": 2334
+      "sha256": "e7a3abc19b7c108014d136773e0116d605c3ad7e0eb704b4dc79322c7fece62c",
+      "bytes": 2446
     },
     {
       "path": "ui-audit/R12_INTEGRITY_REPORT.json",

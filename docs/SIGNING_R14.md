@@ -50,7 +50,7 @@
 
 ## R19 V3 Internet Security 경고 대응
 - 기존 R14~R19 R01은 `dotnet run --project source/build-tools/Sunrise.Signing/...`를 실행하여 빌드 PC에서 `Sunrise.Signing.exe`를 새로 생성·실행하였다. V3 화면에서 이 이름을 직접 차단 대상으로 표시했다.
-- 현재 기본 빌드 경로는 **새 보조 EXE 컴파일·실행을 제거**하고 `build-tools/Sunrise.GroupSigning.ps1`에서 Windows 기본 인증서 API로 인증서 선별/서명자 동일성을 확인한다. 실서명·Windows 신뢰 검증은 Windows SDK SignTool이 그대로 수행한다.
+- R19 R05 공식 빌드는 **보조 EXE 및 PowerShell PS1 모두 실행하지 않음**. `FindSunriseCertificate.cmd`가 Windows `certutil.exe`로 SHA-1 인증서 지문을 조회하고 Windows SDK SignTool이 앱·Setup 서명 및 Windows 신뢰 검증을 수행함. 인증서가 없거나 복수이면 실패하며, 그룹 인증서 자동생성은 하지 않음.
 - PowerShell은 `-NoProfile -NonInteractive -File`로 호출하며 ExecutionPolicy를 우회하지 않는다. 조직에서 스크립트 실행 자체를 제한하면 빌드가 실패한다. 회사 보안정책 변경·V3 예외 등록은 개발 도구가 자동으로 수행하지 않는다.
 - R14 당시의 C# 보조 코드가 있더라도 역사적 참고용 Library 프로젝트로만 남겨 `Sunrise.Signing.exe`가 생성되지 않도록 했다.
 - 자체서명 인증서의 평판 문제는 별개이며 V3 경고 재발이 없다는 보장은 없다. 보안 담당자의 승인을 받은 후만 배포한다.

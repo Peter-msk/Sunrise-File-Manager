@@ -9,12 +9,12 @@ class SigningContract(unittest.TestCase):
   self.assertEqual(sorted(s.index(t) for t in steps),[s.index(t) for t in steps]); self.assertIn('SignTool',s)
  def test_signing_targets_and_no_vendor_resign(self):
   s=(ROOT/'BUILD_RELEASE_ONEDIR.cmd').read_text('ascii')
-  self.assertIn('/fd SHA256 /sha1 "%CERT_THUMBPRINT%" /s My',s)
+  self.assertIn('/fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "Sunrise Group" /s My',s)
   self.assertEqual(s.count('"%SIGNTOOL%" sign /fd SHA256'),2)
   self.assertIn('Sunrise.FileManager.exe',s)
   self.assertIn('Sunrise.FileManager.dll',s)
   for d in ('hostfxr.dll','coreclr.dll','PresentationFramework.dll'):
-   self.assertNotIn('sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\\app\\'+d+'"',s)
+   self.assertNotIn('sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "Sunrise Group" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\\app\\'+d+'"',s)
  def test_certificate_store_and_no_key_export(self):
   p=(ROOT/'source/build-tools/Sunrise.Signing/Program.cs').read_text()
   self.assertIn('StoreLocation.CurrentUser',p)

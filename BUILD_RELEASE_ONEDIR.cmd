@@ -27,8 +27,6 @@ set "FINAL_ZIP=%DIST%\SunriseFileManager_OneDir_Windows_x64_R14.zip"
 set "PREVIOUS=%DIST%\_SFM_R14_onedir_previous"
 set "PREVIOUS_ZIP=%DIST%\_SFM_R14_onedir_previous.zip"
 set "RESULT=%LOG_DIR%\R14_BUILD_RESULT.txt"
-set "SIGNING_SCRIPT=%ROOT%\build-tools\Sunrise.GroupSigning.ps1"
-set "POWERSHELL_EXE=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 set "CERT_FILE=%LOG_DIR%\R14_signing_certificate.txt"
 if not defined SUNRISE_RELEASE_VERSION set "SUNRISE_RELEASE_VERSION=1.0.0"
 set "TIMESTAMP_URL=http://timestamp.digicert.com"
@@ -65,25 +63,19 @@ if "%COMPANY_MODE%"=="1" echo [COMPANY POLICY] LogicTests and document fixture a
 REM Build-time only: discover SignTool. Never copy credentials or tools into user package.
 set "FAILED_STAGE=SIGNING_PREFLIGHT"
 >> "%RESULT%" echo STAGE=SIGNING_PREFLIGHT
-if not exist "%SIGNING_SCRIPT%" goto :fail_signing
-if not exist "%POWERSHELL_EXE%" goto :fail_signing
+if not exist "%ROOT%\build-tools\FindSunriseCertificate.cmd" goto :fail_signing
 set "SUNRISE_SIGNTOOL_RESOLVED="
 call "%ROOT%\build-tools\FindSignTool.cmd" > "%LOG_DIR%\R14_signtool_probe.log" 2>&1
 if errorlevel 1 goto :fail_signing
 if not defined SUNRISE_SIGNTOOL_RESOLVED goto :fail_signing
 set "SIGNTOOL=%SUNRISE_SIGNTOOL_RESOLVED%"
-REM Security suite may flag a newly generated, unsigned Sunrise.Signing.exe.
-REM Use Windows PowerShell certificate APIs for preflight, not a custom generated EXE.
-REM Respect corporate script policies: do NOT override ExecutionPolicy or V3 settings.
-if "%SUNRISE_ALLOW_CERT_CREATE%"=="1" (
-  echo [ERROR] Build-time certificate generation is disabled. Ask IT to provision the existing group certificate.
-  goto :fail_signing
-)
-if exist "%CERT_FILE%" del /f /q "%CERT_FILE%"
-"%POWERSHELL_EXE%" -NoLogo -NoProfile -NonInteractive -File "%SIGNING_SCRIPT%" -Action Prepare -Path "%CERT_FILE%" > "%LOG_DIR%\R14_signing_preflight.log" 2>&1
+REM Sunrise Capture signing pattern: native certutil lookup, pinned SHA1, native SignTool.
+REM No PS1, generated signer EXE, V3 exceptions, or security policy changes.
+set "SUNRISE_CERT_THUMBPRINT="
+call "%ROOT%\build-tools\FindSunriseCertificate.cmd" > "%LOG_DIR%\R14_signing_discovery.log" 2>&1
 if errorlevel 1 goto :fail_signing
-for /f "usebackq tokens=1,2 delims==" %%A in ("%CERT_FILE%") do if /I "%%A"=="THUMBPRINT" set "CERT_THUMBPRINT=%%B"
-if not defined CERT_THUMBPRINT goto :fail_signing
+if not defined SUNRISE_CERT_THUMBPRINT goto :fail_signing
+set "CERT_THUMBPRINT=%SUNRISE_CERT_THUMBPRINT%"
 echo [SIGNING] Reusing CN=Sunrise Group certificate from CurrentUser/My.
 echo [SIGNING] Timestamp: %TIMESTAMP_URL%
 set "FAILED_STAGE=WPF_PUBLISH"
@@ -104,28 +96,26 @@ if not exist "%STAGE%\app\PresentationFramework.dll" goto :fail_release
 REM Sign only Sunrise-owned PE files. Microsoft/.NET/PdfPig files remain untouched.
 set "FAILED_STAGE=AUTHENTICODE_SIGN"
 >> "%RESULT%" echo STAGE=AUTHENTICODE_SIGN
-"%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.exe" > "%LOG_DIR%\R14_sign_exe.log" 2>&1
+"%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "Sunrise Group" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.exe" > "%LOG_DIR%\R14_sign_exe.log" 2>&1
 if errorlevel 1 goto :fail_signing
-"%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.dll" > "%LOG_DIR%\R14_sign_dll.log" 2>&1
+"%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "Sunrise Group" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.dll" > "%LOG_DIR%\R14_sign_dll.log" 2>&1
 if errorlevel 1 goto :fail_signing
 set "FAILED_STAGE=SIGNATURE_CHECK"
 >> "%RESULT%" echo STAGE=SIGNATURE_CHECK
-"%POWERSHELL_EXE%" -NoLogo -NoProfile -NonInteractive -File "%SIGNING_SCRIPT%" -Action VerifyEmbedded -Path "%STAGE%\app\Sunrise.FileManager.exe" -Thumbprint "%CERT_THUMBPRINT%" > "%LOG_DIR%\R14_verify_exe.log" 2>&1
-if errorlevel 1 goto :fail_signing
-"%POWERSHELL_EXE%" -NoLogo -NoProfile -NonInteractive -File "%SIGNING_SCRIPT%" -Action VerifyEmbedded -Path "%STAGE%\app\Sunrise.FileManager.dll" -Thumbprint "%CERT_THUMBPRINT%" > "%LOG_DIR%\R14_verify_dll.log" 2>&1
-if errorlevel 1 goto :fail_signing
+REM SignTool verifies embedded Authenticode signatures and Windows trust.
+REM The signing certificate is pinned via /sha1; a bad signature fails closed.
 REM Untrusted self-signed certs can fail Windows trust-chain validation. Keep report honest.
-"%SIGNTOOL%" verify /pa /v "%STAGE%\app\Sunrise.FileManager.exe" > "%LOG_DIR%\R14_wintrust_exe.log" 2>&1
+"%SIGNTOOL%" verify /pa /v "%STAGE%\app\Sunrise.FileManager.exe" > "%LOG_DIR%\R14_verify_exe.log" 2>&1
 if errorlevel 1 (
-  findstr /I /C:"0x800B0109" /C:"0x800B010A" /C:"not trusted" /C:"untrusted root" "%LOG_DIR%\R14_wintrust_exe.log" >nul
+  findstr /I /C:"0x800B0109" /C:"0x800B010A" /C:"not trusted" /C:"untrusted root" "%LOG_DIR%\R14_verify_exe.log" >nul
   if errorlevel 1 goto :fail_signing
   >> "%RESULT%" echo WINTRUST=UNTRUSTED_SELF_SIGNED
 ) else (
   >> "%RESULT%" echo WINTRUST=PASS
 )
-"%SIGNTOOL%" verify /pa /v "%STAGE%\app\Sunrise.FileManager.dll" > "%LOG_DIR%\R14_wintrust_dll.log" 2>&1
+"%SIGNTOOL%" verify /pa /v "%STAGE%\app\Sunrise.FileManager.dll" > "%LOG_DIR%\R14_verify_dll.log" 2>&1
 if errorlevel 1 (
-  findstr /I /C:"0x800B0109" /C:"0x800B010A" /C:"not trusted" /C:"untrusted root" "%LOG_DIR%\R14_wintrust_dll.log" >nul
+  findstr /I /C:"0x800B0109" /C:"0x800B010A" /C:"not trusted" /C:"untrusted root" "%LOG_DIR%\R14_verify_dll.log" >nul
   if errorlevel 1 goto :fail_signing
   >> "%RESULT%" echo DLL_WINTRUST=UNTRUSTED_SELF_SIGNED
 ) else (
@@ -226,8 +216,8 @@ goto :fail
 :fail_signing
 echo [ERROR] Sunrise Group signing failed. Existing OneDir release was preserved.
 echo [ERROR] Check R14_signing_preflight.log, R14_sign_exe.log, R14_sign_dll.log or R14_verify*.log.
-echo [ERROR] SignTool, a valid CN=Sunrise Group certificate and permitted PowerShell script execution are required.
-echo [ERROR] Do not change V3 exclusions or bypass PowerShell ExecutionPolicy; contact IT if blocked.
+echo [ERROR] Existing CN=Sunrise Group certificate, certutil.exe and SDK SignTool are required.
+echo [ERROR] No PS1/EXE helper is executed. Do not alter antivirus policy; contact IT if blocked.
 goto :fail_release
 :fail_project
 echo [ERROR] Missing WPF project: %PROJECT%

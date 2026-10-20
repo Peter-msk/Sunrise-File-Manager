@@ -13,8 +13,6 @@ set "RESULT=%LOG_DIR%\R15_INSTALLER_BUILD_RESULT.txt"
 set "VERSION_FILE=%ROOT%\installer\RELEASE_VERSION.txt"
 set "ISS=%ROOT%\installer\SunriseFileManager.iss"
 set "APP_DIR=%DIST%\_R18_installer_payload\app"
-set "SIGNING_SCRIPT=%ROOT%\build-tools\Sunrise.GroupSigning.ps1"
-set "POWERSHELL_EXE=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 set "CERT_FILE=%LOG_DIR%\R14_signing_certificate.txt"
 set "INSTALLER_STAGE=%DIST%\_R15_installer_stage"
 set "NO_PAUSE=0"
@@ -75,8 +73,7 @@ if errorlevel 1 goto :fail_inno
 if not defined SUNRISE_ISCC_RESOLVED goto :fail_inno
 set "ISCC=%SUNRISE_ISCC_RESOLVED%"
 echo [INNO] Using: "%ISCC%"
-if not exist "%SIGNING_SCRIPT%" goto :fail_signing_script
-if not exist "%POWERSHELL_EXE%" goto :fail_signing_script
+if not exist "%ROOT%\build-tools\FindSunriseCertificate.cmd" goto :fail_signing_script
 REM Reuse the same Windows SDK SignTool detection in installer and payload builds.
 set "SUNRISE_SIGNTOOL_RESOLVED="
 call "%ROOT%\build-tools\FindSignTool.cmd" > "%LOG_DIR%\R15_signtool_probe.log" 2>&1
@@ -113,11 +110,11 @@ for %%F in ("%UNSIGNED_SETUP%") do if %%~zF LSS 1000000 goto :fail_compile
 REM ISCC has already signed both Setup and the embedded Uninstaller.
 set "FAILED_STAGE=INSTALLER_VERIFY"
 >> "%RESULT%" echo STAGE=INSTALLER_VERIFY
-"%POWERSHELL_EXE%" -NoLogo -NoProfile -NonInteractive -File "%SIGNING_SCRIPT%" -Action VerifyEmbedded -Path "%UNSIGNED_SETUP%" -Thumbprint "%CERT_THUMBPRINT%" > "%LOG_DIR%\R15_verify_setup.log" 2>&1
-if errorlevel 1 goto :fail_sign
-"%SIGNTOOL%" verify /pa /v "%UNSIGNED_SETUP%" > "%LOG_DIR%\R15_wintrust_setup.log" 2>&1
+REM Setup was signed with the same pinned SHA1 as the payload via Inno /S.
+REM Verify its embedded signature and trust directly using Windows SDK SignTool.
+"%SIGNTOOL%" verify /pa /v "%UNSIGNED_SETUP%" > "%LOG_DIR%\R15_verify_setup.log" 2>&1
 if errorlevel 1 (
- findstr /I /C:"0x800B0109" /C:"0x800B010A" /C:"not trusted" /C:"untrusted root" "%LOG_DIR%\R15_wintrust_setup.log" >nul 2>&1
+ findstr /I /C:"0x800B0109" /C:"0x800B010A" /C:"not trusted" /C:"untrusted root" "%LOG_DIR%\R15_verify_setup.log" >nul 2>&1
  if errorlevel 1 goto :fail_sign
  >> "%RESULT%" echo WINTRUST=UNTRUSTED_SELF_SIGNED
 ) else (
@@ -207,7 +204,7 @@ echo [ERROR] If absent, install Inno Setup with IT approval. No automatic instal
 goto :fail
 :fail_signing_script
 set "FAILED_STAGE=SIGNING_SCRIPT_UNAVAILABLE"
-echo [ERROR] Group-signing verification requires Windows PowerShell and the source signing script.
+echo [ERROR] Native certutil certificate discovery requires build-tools\FindSunriseCertificate.cmd.
 goto :fail
 :fail_signtool
 set "FAILED_STAGE=SIGNTOOL_NOT_FOUND"

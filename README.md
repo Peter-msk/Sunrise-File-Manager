@@ -22,7 +22,11 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 
 ### R19 V3 그룹서명 실행파일 경고 개선 R02
 
-과거 빌드 시 컴파일·실행하던 미서명 `Sunrise.Signing.exe`를 공식 빌드 흐름에서 제거했습니다. 기존 그룹 인증서 선별은 Windows PowerShell 인증서 API, 서명 및 검증은 Windows SDK SignTool을 사용합니다. 보안 솔루션 예외 등록/PowerShell ExecutionPolicy 우회 없이 동작하도록 설계했으며, 정책이 허용하지 않으면 빌드가 중단됩니다. Windows에서의 실제 V3 재검증은 미완료입니다. `docs/R19_V3_SIGNING_EXECUTABLE_HOTFIX_R02.md`를 참조하십시오.
+과거 미서명 `Sunrise.Signing.exe`는 R02에서 제거했으며 R05에서는 V3 검사 대상으로 표시된 `Sunrise.GroupSigning.ps1`도 공식 빌드 경로와 전체 소스에서 제거했습니다. 현재는 **Sunrise Capture 방식**인 Windows `certutil.exe` 기반의 기존 인증서 지문 선택과 SDK `signtool.exe` 서명·검증을 사용합니다. V3 예외 등록이나 보안정책 변경은 하지 않으며, 실제 V3 재검증은 미완료입니다. `docs/R19_V3_SIGNING_EXECUTABLE_HOTFIX_R02.md`를 참조하십시오.
+
+### R19 Sunrise Capture 방식 그룹서명 R05
+
+`build-tools/FindSunriseCertificate.cmd`는 기존 `CN=Sunrise Group`의 SHA-1 지문을 `certutil -user -store My` 출력에서 읽고 검증합니다. 동명이인 인증서가 여러 개면 자동 선택하지 않고 중단하며, IT가 승인한 지문만 `SUNRISE_CERT_SHA1`로 지정할 수 있습니다. 그룹서명용 PowerShell·자체 보조 EXE를 실행하지 않습니다. 최초 Windows 실기 검증 전입니다.
 
 ### R19 설치형 빌드 사전점검 R03
 
@@ -39,7 +43,7 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 1. .NET 10 SDK (WPF Windows 타깃)
 2. Inno Setup 6/7 및 `ISCC.exe`
 3. Windows SDK `signtool.exe`
-4. Windows PowerShell 5.1 (기업 스크립트 정책 준수) 및 빌드 PC의 코드서명 인증서 (`CN=Sunrise Group`, 개인키 포함)
+4. Windows `certutil.exe` 및 빌드 PC의 기존 코드서명 인증서 (`CN=Sunrise Group`, 개인키 포함). PowerShell은 필요하지 않습니다.
 
 명령 프롬프트에서 프로젝트 루트의 다음 파일을 실행합니다.
 

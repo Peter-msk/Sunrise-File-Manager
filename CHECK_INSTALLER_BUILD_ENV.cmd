@@ -17,8 +17,9 @@ if exist "%ROOT%\COMPANY_SOURCE_ONLY.flag" (echo [PASS] Company source policy ma
 if exist "%ROOT%\installer\SunriseFileManager.iss" (echo [PASS] Inno source configuration) else (echo [FAIL] Inno source configuration missing & set /a MISSING+=1 >nul)
 if exist "%ROOT%\installer\RELEASE_VERSION.txt" (echo [PASS] Installer release version file) else (echo [FAIL] Release version missing & set /a MISSING+=1 >nul)
 if exist "%ROOT%\source\Sunrise.FileManager\Sunrise.FileManager.csproj" (echo [PASS] WPF project) else (echo [FAIL] WPF project missing & set /a MISSING+=1 >nul)
-if exist "%ROOT%\build-tools\Sunrise.GroupSigning.ps1" (echo [PASS] Group-signing script) else (echo [FAIL] Group-signing script missing & set /a MISSING+=1 >nul)
-if exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" (echo [PASS] Windows PowerShell executable) else (echo [FAIL] Windows PowerShell executable missing & set /a MISSING+=1 >nul)
+if exist "%ROOT%\build-tools\FindSunriseCertificate.cmd" (echo [PASS] Native certutil certificate discovery) else (echo [FAIL] Native certificate discovery missing & set /a MISSING+=1 >nul)
+where.exe certutil.exe >nul 2>&1
+if errorlevel 1 (echo [FAIL] Windows certutil.exe missing & set /a MISSING+=1 >nul) else (echo [PASS] Windows certutil.exe available)
 set "SUNRISE_ISCC_RESOLVED="
 call "%ROOT%\build-tools\FindInnoSetup.cmd" > "%LOG%\R15_inno_probe.log" 2>&1
 if errorlevel 1 (

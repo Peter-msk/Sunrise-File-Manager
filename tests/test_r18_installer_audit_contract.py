@@ -33,7 +33,7 @@ class R18ReleaseGate(unittest.TestCase):
     def test_installer_signed_and_fails_closed(self):
         self.assertIn('SignTool=SunriseGroup',ISS)
         self.assertIn('SignedUninstaller=yes',ISS)
-        self.assertIn('-Action VerifyEmbedded',BUILD)
+        self.assertIn('R15_verify_setup.log',BUILD)
         self.assertIn('STATUS=FAILED',BUILD)
         self.assertIn('STATUS=SUCCESS',BUILD)
 if __name__=='__main__': unittest.main()
