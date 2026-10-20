@@ -17,8 +17,9 @@ class CaptureSigningR05(unittest.TestCase):
  def test_sha1_label_does_not_poison_hash(self):
   self.assertIn('tokens=1,* delims=:',CERT)
   self.assertIn('call :consider_hash "%%B"',CERT)
-  self.assertIn('if not defined SUNRISE_CERT_SHA1 if not "%CERT_MATCH_COUNT%"=="1"',CERT)
-  self.assertNotIn('  if not "%CERT_MATCH_COUNT%"=="1" goto :ambiguous_cert',CERT)
+  self.assertIn('if defined SUNRISE_CERT_SHA1 goto :explicit_thumbprint',CERT)
+  self.assertIn('if not "%CERT_MATCH_COUNT%"=="1" goto :ambiguous_cert',CERT)
+  self.assertIn('if "%CERT_MATCH_COUNT%"=="0" goto :missing_sha1',CERT)
   self.assertNotIn('tokens=* delims=0123456789abcdef',CERT)
  def test_both_signing_targets_and_uninstaller(self):
   self.assertEqual(PAYLOAD.count('"%SIGNTOOL%" sign /fd SHA256'),2)

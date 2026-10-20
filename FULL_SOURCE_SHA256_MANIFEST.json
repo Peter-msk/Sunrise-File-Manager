@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R19_CAPTURE_NATIVE_SIGNING_R05",
+  "revision": "R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06",
   "company_policy": true,
   "document_fixture_included": false,
   "official_distribution": "SETUP_EXE",
-  "status": "STATIC_PASS_WINDOWS_AUTHENTICODE_RETEST_PENDING",
-  "file_count": 235,
+  "status": "STATIC_PASS_WINDOWS_CERTIFICATE_SIGNING_RETEST_PENDING",
+  "file_count": 238,
   "files": [
     {
       "path": ".gitattributes",
@@ -59,13 +59,13 @@
     },
     {
       "path": "BUILD_RELEASE_INSTALLER.cmd",
-      "sha256": "bd2cc50f59ab96210d5f585cd45c92339227da2b30a5ee20ad19f6cfe98ac329",
-      "bytes": 11192
+      "sha256": "db3f9c49123f23a3e862fa9a91a65e0f4a487f3bd93f3b1344409f18fee7f5a3",
+      "bytes": 11536
     },
     {
       "path": "BUILD_RELEASE_ONEDIR.cmd",
-      "sha256": "1c023811779bb986cbf26acdf623efbe91454624eb5c34730765d4b6b75cb5f6",
-      "bytes": 12445
+      "sha256": "2db707e8cb1496424eb60d70ac6c484de3966f7ce8626c3375aede6bd14dccee",
+      "bytes": 12661
     },
     {
       "path": "BUILD_RELEASE_ONEFILE.cmd",
@@ -84,13 +84,18 @@
     },
     {
       "path": "CHECK_INSTALLER_BUILD_ENV.cmd",
-      "sha256": "0b19a05e821521debfdf46df99e2c926a19c60bda8bc7ebab32abc3c57ad018e",
-      "bytes": 3564
+      "sha256": "f63b539f36c035bf42d03d14a80b441727c5f275883ebfd481e64e7b8c11e963",
+      "bytes": 3641
     },
     {
       "path": "CHECK_SDK.cmd",
       "sha256": "5c638d38812d8f69b21b78069f26d2852d1f464249707508ef30111e401ccaa4",
       "bytes": 671
+    },
+    {
+      "path": "CHECK_SIGNING_CERT.cmd",
+      "sha256": "c2fa6cc6d98e235b5073d6775c816a0ec4bfcd1074ec363aef5401cbdd77d65f",
+      "bytes": 943
     },
     {
       "path": "COMPANY_BUILD_R04_GUIDE.md",
@@ -199,8 +204,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "122527fb067ebe0a0fef6059aa9c4a3467013336b5cb3b477d7e260922635f7a",
-      "bytes": 7427
+      "sha256": "cccfc886cf29fcfb8e6f9e2742c9a6e602d767a85dfdecbea3fc563588323174",
+      "bytes": 8463
     },
     {
       "path": "RELEASE_STATUS.json",
@@ -264,8 +269,8 @@
     },
     {
       "path": "build-tools/FindSunriseCertificate.cmd",
-      "sha256": "7909bee95659b388c8bea564d42def8db33c0e033f3e3b61ab84c4c2959effbc",
-      "bytes": 4437
+      "sha256": "d3051325bd5b0688093c638e5baafbb78cf0d345112b62f9ed523a39146483fe",
+      "bytes": 6464
     },
     {
       "path": "docs/R17_DRIVE_COMPARE.json",
@@ -313,14 +318,19 @@
       "bytes": 1979
     },
     {
+      "path": "docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md",
+      "sha256": "c6e3b7a12c473029fdca4244bac0fe33a90b81c8766a47612585948c19ff5396",
+      "bytes": 3404
+    },
+    {
       "path": "docs/R19_V3_SIGNING_EXECUTABLE_HOTFIX_R02.md",
       "sha256": "cbcd77bcbfebf325a71fa8ecc4ed11323a86dbb9674ecf6cf6cf53c49adaf68e",
       "bytes": 2766
     },
     {
       "path": "docs/SIGNING_R14.md",
-      "sha256": "808176984171e3411ae36f1b3367e832cd3185bb50fa65ba7bb5a93748a0b83b",
-      "bytes": 5289
+      "sha256": "cced62248ddac25199cecf1e8f424d8fdebcc7bd60376d9c91bf95d86928a59e",
+      "bytes": 5539
     },
     {
       "path": "docs/Sunrise_File_Manager_1.0.0_R17_개발계획서.md",
@@ -1089,8 +1099,8 @@
     },
     {
       "path": "tests/test_r14_signing_contract.py",
-      "sha256": "e5cb697b1a872a5f2cf9471ef53711ef6cf0e2ceb017df3f7a937f5b49cc837c",
-      "bytes": 2330
+      "sha256": "aee762e5a1be44975a5fc744c3ed738dfc79f2752ec2fa74b7553e1a7a45d0bd",
+      "bytes": 2354
     },
     {
       "path": "tests/test_r15_installer_contract.py",
@@ -1124,13 +1134,18 @@
     },
     {
       "path": "tests/test_r19_native_capture_signing_r05.py",
-      "sha256": "e3993b2e6a96e9d33a4cb3fc44924a2af898c24c46e1d9bdfd2cf01e5d4ad8d6",
-      "bytes": 2595
+      "sha256": "48418049b0bbf2dd1363b7f57c90953b5dada9cf80f6b83ba8c3f3e4f9c04f9a",
+      "bytes": 2651
+    },
+    {
+      "path": "tests/test_r19_signer_profile_preflight_r06.py",
+      "sha256": "c6e4f6862c531a1e75fa277f2a09436c615d3af7b9922392cc571c89fadb611f",
+      "bytes": 3297
     },
     {
       "path": "tests/test_r19_v3_signing_runtime_contract.py",
-      "sha256": "c5ef5aa8c796259135268ecbd80b85d87512950d55ebfe3633eb11e4bbd8e27c",
-      "bytes": 1716
+      "sha256": "7976a2eae8092a67c861d33dd1ee11a1b78a80ba6bd9b7db7c076c0b3cc03c8b",
+      "bytes": 1728
     },
     {
       "path": "tests/test_r19_version_hotfix_contract.py",

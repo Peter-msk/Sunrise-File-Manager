@@ -57,7 +57,8 @@ if errorlevel 1 (
 if "%MISSING%"=="0" (
   > "%REPORT%" echo STATUS=TOOLS_PRESENT
   >> "%REPORT%" echo WINDOWS_CERTIFICATE_AND_SIGNING=NOT_TESTED
-  echo [READY] Required tools detected. Certificate and actual signing are checked during build.
+  echo [READY] Required tools detected. Certificate and actual signing are checked separately.
+  echo [NEXT] Run CHECK_SIGNING_CERT.cmd before BUILD_ON_WINDOWS_COMPANY.cmd.
   if "%NO_PAUSE%"=="0" pause
   exit /b 0
 )

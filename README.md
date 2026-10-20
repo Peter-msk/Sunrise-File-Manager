@@ -36,6 +36,12 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 
 사전점검에서 `Inno Setup`과 `SignTool`은 PASS인데 `'C:\Program'은(는) ...`와 `[FAIL] .NET 10 SDK not found`가 함께 발생하던 CMD 인용부호 오류를 수정했습니다. `build-tools/FindDotNet10.cmd`가 SDK 후보를 직접 실행해 `--version` 결과를 로그로 저장한 뒤 판독하며, 사전점검과 실제 WPF 게시 경로가 동일한 탐색기를 사용합니다. 실제 SDK 설치 여부가 확인되지 않으면 설치를 단정하지 않습니다. 자세한 내용은 `docs/R19_DOTNET_SDK_PATH_HOTFIX_R04.md`를 참조하세요.
 
+### R19 인증서 사전검사 진단 R06
+
+Windows 실기 로그에서 SDK 10.0.301, Inno Setup, SignTool은 정상이었고 `SIGNING_PREFLIGHT`에서 중단되었습니다. R06부터 `CHECK_SIGNING_CERT.cmd`로 인증서만 먼저 검사할 수 있고, 빌드 로그에 `CERT_NOT_FOUND`, `SHA1_NOT_PARSED`, `MULTIPLE_CERTIFICATES`, `SUBJECT_MISMATCH` 등을 명시합니다. 기본 서명 주체는 계속 **CN=Sunrise Group**입니다.
+
+Sunrise Capture 인증서 `CN=Sunrise Capture Self-Signed Code Signing`를 회사에서 File Manager에도 사용하도록 승인한 경우에만 같은 CMD 세션에서 `set "SUNRISE_CERT_PROFILE=CAPTURE"`를 설정하세요. 이 경우 **Windows 게시자 표시도 Capture 인증서 이름으로 달라짐**을 유의해야 합니다. 자동 대체·인증서 생성·서명 생략은 없습니다. 인증서 개인키의 실제 사용 가능 여부는 SignTool의 서명 결과로 확인합니다. `docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md`를 참조하십시오.
+
 ## 빌드 환경
 
 **Windows x64 빌드 PC**에서 다음 개발도구가 필요합니다.
@@ -49,6 +55,7 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 
 ```cmd
 CHECK_INSTALLER_BUILD_ENV.cmd
+CHECK_SIGNING_CERT.cmd
 BUILD_ON_WINDOWS_COMPANY.cmd
 ```
 

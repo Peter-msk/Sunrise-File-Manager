@@ -38,7 +38,7 @@
 - `R14_signed_package_sha256.txt`: 최종 ZIP 해시
 
 ## 빌드 오류시
-- `SIGNING_PREFLIGHT`: Windows SDK SignTool 미설치, 인증서 부재, 인증서 개인키·EKU·기간·RSA 키크기 조건 불충족 또는 조직의 PowerShell 스크립트 실행 정책에 의한 거부.
+- `SIGNING_PREFLIGHT`: Windows SDK SignTool 미설치, 인증서 부재, 인증서 개인키·EKU·기간·RSA 키크기 조건 불충족 또는 인증서 조회/서명에 대한 조직 보안정책 제한.
 - `AUTHENTICODE_SIGN`: SignTool 오류, 인증서 개인키 접근 제한, RFC3161 TSA 접속 불가.
 - `SIGNATURE_CHECK`: 서명자 불일치 또는 신뢰/서명 검증 실패.
 - `WPF_PUBLISH`: 기존 .NET 프로젝트 컴파일 오류.
@@ -46,11 +46,14 @@
 - 이전 정상 배포본은 새 릴리즈가 검증되지 않는 한 교체하지 않는다.
 
 ## 검증 수준
-정적 Python 계약검사만 완료. **실제 Windows SDK 기반 서명과 사용자 PC 실기 서명 인증은 아직 미실행**. 새로 컴파일한 서명 보조 EXE는 더 이상 실행하지 않는다. PowerShell 스크립트와 SignTool의 실제 서명·검증은 Windows에서 확인해야 한다.
+정적 Python 계약검사만 완료. **실제 Windows SDK 기반 서명과 사용자 PC 실기 서명 인증은 아직 미실행**. 새로 컴파일한 서명 보조 EXE는 더 이상 실행하지 않는다. certutil과 SignTool의 실제 서명·검증은 Windows에서 확인해야 한다.
 
 ## R19 V3 Internet Security 경고 대응
 - 기존 R14~R19 R01은 `dotnet run --project source/build-tools/Sunrise.Signing/...`를 실행하여 빌드 PC에서 `Sunrise.Signing.exe`를 새로 생성·실행하였다. V3 화면에서 이 이름을 직접 차단 대상으로 표시했다.
 - R19 R05 공식 빌드는 **보조 EXE 및 PowerShell PS1 모두 실행하지 않음**. `FindSunriseCertificate.cmd`가 Windows `certutil.exe`로 SHA-1 인증서 지문을 조회하고 Windows SDK SignTool이 앱·Setup 서명 및 Windows 신뢰 검증을 수행함. 인증서가 없거나 복수이면 실패하며, 그룹 인증서 자동생성은 하지 않음.
-- PowerShell은 `-NoProfile -NonInteractive -File`로 호출하며 ExecutionPolicy를 우회하지 않는다. 조직에서 스크립트 실행 자체를 제한하면 빌드가 실패한다. 회사 보안정책 변경·V3 예외 등록은 개발 도구가 자동으로 수행하지 않는다.
+- R19 R05부터 그룹서명용 PowerShell 스크립트는 실행하지 않는다. R06부터 인증서 검사 전용 CHECK_SIGNING_CERT.cmd를 제공하며, 서명 인증서 PROFILE은 GROUP을 기본으로 한다. 회사 보안정책 변경·V3 예외 등록은 개발 도구가 자동으로 수행하지 않는다.
 - R14 당시의 C# 보조 코드가 있더라도 역사적 참고용 Library 프로젝트로만 남겨 `Sunrise.Signing.exe`가 생성되지 않도록 했다.
 - 자체서명 인증서의 평판 문제는 별개이며 V3 경고 재발이 없다는 보장은 없다. 보안 담당자의 승인을 받은 후만 배포한다.
+
+## R19 R06 인증서 진단
+`CHECK_SIGNING_CERT.cmd`와 `docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md`를 참조한다. Capture 인증서 사용은 명시적 프로필 및 조직 승인 조건이며, 게시자 이름이 Capture로 바뀐다.

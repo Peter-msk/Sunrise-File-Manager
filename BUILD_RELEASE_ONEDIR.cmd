@@ -76,7 +76,7 @@ call "%ROOT%\build-tools\FindSunriseCertificate.cmd" > "%LOG_DIR%\R14_signing_di
 if errorlevel 1 goto :fail_signing
 if not defined SUNRISE_CERT_THUMBPRINT goto :fail_signing
 set "CERT_THUMBPRINT=%SUNRISE_CERT_THUMBPRINT%"
-echo [SIGNING] Reusing CN=Sunrise Group certificate from CurrentUser/My.
+echo [SIGNING] Selected CN=%SUNRISE_CERT_SUBJECT_CN% from CurrentUser/My.
 echo [SIGNING] Timestamp: %TIMESTAMP_URL%
 set "FAILED_STAGE=WPF_PUBLISH"
 >> "%RESULT%" echo STAGE=WPF_PUBLISH
@@ -96,9 +96,9 @@ if not exist "%STAGE%\app\PresentationFramework.dll" goto :fail_release
 REM Sign only Sunrise-owned PE files. Microsoft/.NET/PdfPig files remain untouched.
 set "FAILED_STAGE=AUTHENTICODE_SIGN"
 >> "%RESULT%" echo STAGE=AUTHENTICODE_SIGN
-"%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "Sunrise Group" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.exe" > "%LOG_DIR%\R14_sign_exe.log" 2>&1
+"%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "%SUNRISE_CERT_SUBJECT_CN%" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.exe" > "%LOG_DIR%\R14_sign_exe.log" 2>&1
 if errorlevel 1 goto :fail_signing
-"%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "Sunrise Group" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.dll" > "%LOG_DIR%\R14_sign_dll.log" 2>&1
+"%SIGNTOOL%" sign /fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "%SUNRISE_CERT_SUBJECT_CN%" /s My /tr "%TIMESTAMP_URL%" /td SHA256 /v "%STAGE%\app\Sunrise.FileManager.dll" > "%LOG_DIR%\R14_sign_dll.log" 2>&1
 if errorlevel 1 goto :fail_signing
 set "FAILED_STAGE=SIGNATURE_CHECK"
 >> "%RESULT%" echo STAGE=SIGNATURE_CHECK
@@ -182,7 +182,7 @@ if exist "%PREVIOUS_ZIP%" del /f /q "%PREVIOUS_ZIP%"
 >> "%RESULT%" echo FORMAT=ONEDIR_SELF_CONTAINED
 >> "%RESULT%" echo COMPANY_MODE=%COMPANY_MODE%
 >> "%RESULT%" echo SDK=%FOUND_SDK_VER%
->> "%RESULT%" echo CERTIFICATE_SUBJECT=CN=Sunrise Group
+>> "%RESULT%" echo CERTIFICATE_SUBJECT=CN=%SUNRISE_CERT_SUBJECT_CN%
 >> "%RESULT%" echo SIGNED_EXECUTABLE=app\Sunrise.FileManager.exe
 >> "%RESULT%" echo SIGNED_LIBRARY=app\Sunrise.FileManager.dll
 >> "%RESULT%" echo START=%FINAL%\Sunrise File Manager.cmd
@@ -201,7 +201,7 @@ if not exist "%STAGE%\app\Sunrise.FileManager.dll" goto :fail_release
 >> "%RESULT%" echo FORMAT=SIGNED_INSTALLER_PAYLOAD
 >> "%RESULT%" echo COMPANY_MODE=%COMPANY_MODE%
 >> "%RESULT%" echo APP=%STAGE%\app\Sunrise.FileManager.exe
->> "%RESULT%" echo GROUP_SIGNER=CN=Sunrise Group
+>> "%RESULT%" echo SIGNER=CN=%SUNRISE_CERT_SUBJECT_CN%
 echo [SUCCESS] Signed installer payload ready: "%STAGE%\app"
 exit /b 0
 :fail_restore
@@ -214,9 +214,11 @@ if exist "%STAGE%" rmdir /s /q "%STAGE%"
 if exist "%ZIP_STAGE%" del /f /q "%ZIP_STAGE%"
 goto :fail
 :fail_signing
-echo [ERROR] Sunrise Group signing failed. Existing OneDir release was preserved.
+echo [ERROR] Certificate preflight or Authenticode signing failed. Existing release preserved.
 echo [ERROR] Check R14_signing_preflight.log, R14_sign_exe.log, R14_sign_dll.log or R14_verify*.log.
-echo [ERROR] Existing CN=Sunrise Group certificate, certutil.exe and SDK SignTool are required.
+echo [ERROR] Required signer: GROUP (default) or explicitly approved CAPTURE profile.
+echo [ERROR] The detailed certificate STATUS is in R14_signing_preflight.log.
+if exist "%LOG_DIR%\R14_signing_preflight.log" type "%LOG_DIR%\R14_signing_preflight.log"
 echo [ERROR] No PS1/EXE helper is executed. Do not alter antivirus policy; contact IT if blocked.
 goto :fail_release
 :fail_project

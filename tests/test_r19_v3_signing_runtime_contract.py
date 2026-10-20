@@ -15,7 +15,7 @@ class SigningRegression(unittest.TestCase):
   self.assertIn('<OutputType>Library</OutputType>',CS)
  def test_signatures_required(self):
   self.assertIn('FindSunriseCertificate.cmd',ONEDIR)
-  self.assertIn('/fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "Sunrise Group" /s My',ONEDIR)
+  self.assertIn('/fd SHA256 /sha1 "%CERT_THUMBPRINT%" /n "%SUNRISE_CERT_SUBJECT_CN%" /s My',ONEDIR)
   self.assertIn('/SSunriseGroup=',INSTALL)
   self.assertIn('SignedUninstaller=yes',(ROOT/'installer/SunriseFileManager.iss').read_text())
   self.assertIn('verify /pa /v',ONEDIR)

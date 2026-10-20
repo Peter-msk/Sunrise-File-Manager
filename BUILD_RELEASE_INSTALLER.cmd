@@ -96,6 +96,9 @@ if not exist "%CERT_FILE%" goto :fail_payload
 set "CERT_THUMBPRINT="
 for /f "usebackq tokens=1,2 delims==" %%A in ("%CERT_FILE%") do if /I "%%A"=="THUMBPRINT" set "CERT_THUMBPRINT=%%B"
 if not defined CERT_THUMBPRINT goto :fail_payload
+set "CERT_SUBJECT="
+for /f "usebackq tokens=1,* delims==" %%A in ("%CERT_FILE%") do if /I "%%A"=="SUBJECT" set "CERT_SUBJECT=%%B"
+if not defined CERT_SUBJECT goto :fail_payload
 REM The .NET SDK was already selected and verified by the signed payload stage.
 REM Do not reject successful WPF output by re-probing an unused dotnet.exe path.
 set "FAILED_STAGE=INSTALLER_COMPILE"
@@ -139,7 +142,7 @@ if exist "%DIST%\_R18_installer_payload" rmdir /s /q "%DIST%\_R18_installer_payl
 >> "%RESULT%" echo STAGE=COMPLETE
 >> "%RESULT%" echo FORMAT=INSTALLER_SETUP_EXE
 >> "%RESULT%" echo APP_VERSION=%SFM_APP_VERSION%
->> "%RESULT%" echo GROUP_SIGNER=CN=Sunrise Group
+>> "%RESULT%" echo SIGNER=%CERT_SUBJECT%
 >> "%RESULT%" echo SETUP=%FINAL_SETUP%
 >> "%RESULT%" echo COMPANY_LOGIC_TESTS=SKIPPED
 >> "%RESULT%" echo SIGNED_SHA256_LOG=%LOG_DIR%\R15_SIGNED_SETUP_SHA256.txt
@@ -216,6 +219,8 @@ goto :fail
 :fail_payload
 set "FAILED_STAGE=PAYLOAD_BUILD"
 echo [ERROR] OneDir signed payload build failed. See R15_payload_build.log and R14 logs.
+if exist "%LOG_DIR%\R14_BUILD_RESULT.txt" type "%LOG_DIR%\R14_BUILD_RESULT.txt"
+if exist "%LOG_DIR%\R14_signing_preflight.log" type "%LOG_DIR%\R14_signing_preflight.log"
 goto :fail
 :fail_compile
 set "FAILED_STAGE=INSTALLER_COMPILE"
