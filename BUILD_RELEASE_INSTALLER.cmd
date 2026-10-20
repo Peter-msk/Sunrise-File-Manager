@@ -154,6 +154,21 @@ if errorlevel 1 goto :fail_restore
 if not exist "%FINAL_SETUP%" goto :fail_restore
 certutil -hashfile "%FINAL_SETUP%" SHA256 > "%LOG_DIR%\R15_SIGNED_SETUP_SHA256.txt" 2>&1
 if errorlevel 1 goto :fail_restore
+REM Generate product-owned notice.txt and latest.json only from the final signed Setup.
+REM Control.txt is CENTRAL POLICY ONLY; do not write release metadata to Sunrise_Control.
+set "FAILED_STAGE=RELEASE_METADATA"
+>> "%RESULT%" echo STAGE=RELEASE_METADATA
+> "%LIVE_STAGE%" echo STAGE=RELEASE_METADATA
+echo [RELEASE] Generating own-product latest.json and notice.txt from verified Setup.
+set "SUNRISE_DOTNET_RESOLVED="
+call "%ROOT%\build-tools\FindDotNet10.cmd" > "%LOG_DIR%\R16_dotnet_metadata_discovery.log" 2>&1
+if errorlevel 1 goto :fail_metadata
+if not defined SUNRISE_DOTNET_RESOLVED goto :fail_metadata
+"%SUNRISE_DOTNET_RESOLVED%" run --project "%ROOT%\build-tools\Sunrise.FileManager.ReleaseMetadata\Sunrise.FileManager.ReleaseMetadata.csproj" --configuration Release --no-launch-profile -- "%ROOT%" "%FINAL_SETUP%" "%SFM_APP_VERSION%" > "%LOG_DIR%\R16_release_metadata.log" 2>&1
+if errorlevel 1 goto :fail_metadata
+if not exist "%ROOT%\latest.json" goto :fail_metadata
+if not exist "%ROOT%\notice.txt" goto :fail_metadata
+echo [RELEASE] latest.json / notice.txt generated in product source and dist\release-metadata.
 if exist "%BACKUP_SETUP%" del /q /f "%BACKUP_SETUP%"
 if exist "%INSTALLER_STAGE%" rmdir /s /q "%INSTALLER_STAGE%"
 if exist "%DIST%\_R18_installer_payload" rmdir /s /q "%DIST%\_R18_installer_payload"
@@ -166,7 +181,7 @@ if exist "%DIST%\_R18_installer_payload" rmdir /s /q "%DIST%\_R18_installer_payl
 >> "%RESULT%" echo SETUP=%FINAL_SETUP%
 >> "%RESULT%" echo COMPANY_LOGIC_TESTS=SKIPPED
 >> "%RESULT%" echo SIGNED_SHA256_LOG=%LOG_DIR%\R15_SIGNED_SETUP_SHA256.txt
-echo [SUCCESS] Installer available:
+echo [SUCCESS] Installer and own-product release metadata available:
 echo "%FINAL_SETUP%"
 if "%NO_PAUSE%"=="0" start "" explorer.exe /select,"%FINAL_SETUP%"
 if "%NO_PAUSE%"=="0" pause
@@ -243,6 +258,20 @@ echo [ERROR] OneDir signed payload build failed. See R14_BUILD_RESULT.txt and R1
 if exist "%LOG_DIR%\R14_BUILD_RESULT.txt" type "%LOG_DIR%\R14_BUILD_RESULT.txt"
 if exist "%LOG_DIR%\R14_cert_provision.log" type "%LOG_DIR%\R14_cert_provision.log"
 if exist "%LOG_DIR%\R14_signing_preflight.log" type "%LOG_DIR%\R14_signing_preflight.log"
+goto :fail
+:fail_metadata
+set "FAILED_STAGE=RELEASE_METADATA"
+echo [ERROR] Product release metadata generation failed. See R16_release_metadata.log.
+echo [ERROR] The new Setup was built, but the release is NOT marked complete.
+echo [ERROR] Preserve build-logs and verify metadata before publishing.
+REM Roll back the installer artifact when metadata generation failed.
+REM Product latest.json / notice.txt remain publication-gated; do not auto-push them.
+if exist "%BACKUP_SETUP%" (
+ if exist "%FINAL_SETUP%" del /q /f "%FINAL_SETUP%"
+ move /y "%BACKUP_SETUP%" "%FINAL_SETUP%" >nul
+) else (
+ if exist "%FINAL_SETUP%" del /q /f "%FINAL_SETUP%"
+)
 goto :fail
 :fail_compile
 set "FAILED_STAGE=INSTALLER_COMPILE"

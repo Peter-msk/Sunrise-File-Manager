@@ -1,3 +1,5 @@
+> **대체됨:** 제품별 `latest.json`/`notice.txt`의 Sunrise Control 미러 사용 부분은 R16에서 폐기함. 현행 계약은 `docs/R19_R16_PRODUCT_OWNED_RELEASE_METADATA_HANDOVER.md` 참조.
+
 # Sunrise File Manager 1.0.0 — Sunrise Control · 공지 · 업데이트 (R15)
 
 ## 기준 및 범위

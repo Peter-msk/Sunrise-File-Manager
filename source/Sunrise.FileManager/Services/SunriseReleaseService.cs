@@ -10,8 +10,12 @@ namespace Sunrise.FileManager.Services;
 /// <summary>Product-owned latest.json / notice.txt. No automatic installer execution.</summary>
 public static class SunriseReleaseService
 {
-    public const string FeedUrl = "https://raw.githubusercontent.com/Peter-msk/Sunrise_Control/main/products/sunrise_file_manager/latest.json";
-    public const string NoticeUrl = "https://raw.githubusercontent.com/Peter-msk/Sunrise_Control/main/products/sunrise_file_manager/notice.txt";
+    // Product-owned metadata. Sunrise Control is ONLY the central operation/update policy.
+    // IMPORTANT: This repository is currently private. These anonymous raw URLs return 404
+    // until product metadata is published through an explicitly authorized read-only endpoint.
+    // Do not embed a GitHub token or silently fall back to the Control repository.
+    public const string FeedUrl = "https://raw.githubusercontent.com/Peter-msk/Sunrise-File-Manager/main/latest.json";
+    public const string NoticeUrl = "https://raw.githubusercontent.com/Peter-msk/Sunrise-File-Manager/main/notice.txt";
     private static readonly HttpClient Client = new(new HttpClientHandler { AllowAutoRedirect = false })
         { Timeout = TimeSpan.FromSeconds(12) };
     private static readonly HttpClient Downloader = new(new HttpClientHandler { AllowAutoRedirect = false })

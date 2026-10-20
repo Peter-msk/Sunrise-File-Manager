@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R19_CONTROL_NOTICE_UPDATE_R15",
-  "baseline": "R19_UI_POPUP_PREVIEW_R14",
+  "revision": "R19_PRODUCT_OWNED_RELEASE_METADATA_R16",
+  "baseline": "R19_CONTROL_NOTICE_UPDATE_R15",
   "company_policy": true,
   "official_distribution": "SETUP_EXE",
-  "status": "SOURCE_STATIC_PASS_WINDOWS_BUILD_AND_UI_PENDING",
-  "file_count": 258,
+  "status": "SOURCE_STATIC_PASS_WINDOWS_BUILD_AND_NETWORK_PENDING",
+  "file_count": 263,
   "files": [
     {
       "path": ".gitattributes",
@@ -49,8 +49,8 @@
     },
     {
       "path": "BUILD_RELEASE_INSTALLER.cmd",
-      "sha256": "f972d77b9d4ab9b56807ae508619bc1f17f8ba13f24692bf2b67a1edd81128fe",
-      "bytes": 12976
+      "sha256": "611559d210e4827deb390dcbf5e3fd9fb39b78a586460b1de94749a60b5f789d",
+      "bytes": 14808
     },
     {
       "path": "BUILD_RELEASE_ONEDIR.cmd",
@@ -179,8 +179,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "40febf5ffd520e063dabdd40b865fb8a7adaec33e5b4203f6f3bf004e9c99dd1",
-      "bytes": 6786
+      "sha256": "7d0c4bb06e88b42b50cbb7d940f163bdc943f81b160c87d5de8ea35e47167f47",
+      "bytes": 7774
     },
     {
       "path": "RELEASE_STATUS.json",
@@ -283,6 +283,16 @@
       "bytes": 6464
     },
     {
+      "path": "build-tools/Sunrise.FileManager.ReleaseMetadata/Program.cs",
+      "sha256": "6f9af2d310a5c3eed11b2c593ce2f0e6123ed9d820c4d30ddbcad1484c9f821d",
+      "bytes": 4523
+    },
+    {
+      "path": "build-tools/Sunrise.FileManager.ReleaseMetadata/Sunrise.FileManager.ReleaseMetadata.csproj",
+      "sha256": "cbda77be076f6ff67d1a510c950892ab127591d8dec1e78eb4f9a23d48b41661",
+      "bytes": 294
+    },
+    {
       "path": "build-tools/Sunrise.GroupCodeSigning.inf",
       "sha256": "b246d79356f21924698691dee0bd40936929a0b0e917b616e86b2606e8bcd7e9",
       "bytes": 703
@@ -369,8 +379,13 @@
     },
     {
       "path": "docs/R19_R15_SUNRISE_CONTROL_RELEASE_HANDOVER.md",
-      "sha256": "4c6b82216031ef3f5bdd83c375d1ceb7df2b8a7924d68b4ec42cc947e6066d3b",
-      "bytes": 3807
+      "sha256": "5a3c9d7b96b4e27d3c83916b689546af4ccd38f8d2623910762c6c523f08c50f",
+      "bytes": 4009
+    },
+    {
+      "path": "docs/R19_R16_PRODUCT_OWNED_RELEASE_METADATA_HANDOVER.md",
+      "sha256": "25015c76f842394a95cc5555a5b8c3e46fa967f627d42c1aabb8ce2bf56f338a",
+      "bytes": 3491
     },
     {
       "path": "docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md",
@@ -414,13 +429,18 @@
     },
     {
       "path": "latest.json",
-      "sha256": "d33fa6d89e230751151536656174bac68dbb11e99b730161ec5c778450d575fc",
-      "bytes": 1051
+      "sha256": "93a708ea60bc506262f156637fc6bb6b01e15095ffc6163dd7b2b9020ac6d151",
+      "bytes": 1000
     },
     {
       "path": "notice.txt",
       "sha256": "ede8f8f31222e8060ceebe29d4adda086628f9d690e8cd2680af3e9ea0ffa8b9",
       "bytes": 822
+    },
+    {
+      "path": "release/NOTICE_BODY.txt",
+      "sha256": "45ec6557d9743d56704e5f2a56d9a9d6734c65caaef350ae55b74304a53022ba",
+      "bytes": 794
     },
     {
       "path": "source/README.md",
@@ -779,8 +799,8 @@
     },
     {
       "path": "source/Sunrise.FileManager/Services/SunriseReleaseService.cs",
-      "sha256": "9f8e7c589615b9987b45e09a79a84f1f492395b0c38612d4d25b4cb7340de160",
-      "bytes": 8158
+      "sha256": "e333372577b8bacaef15c81468a387964aab93e2a9bed9a5f62cd88b99a5619f",
+      "bytes": 8472
     },
     {
       "path": "source/Sunrise.FileManager/Services/ThemeManager.cs",
@@ -1229,8 +1249,13 @@
     },
     {
       "path": "tests/test_r19_r15_control_update_contract.py",
-      "sha256": "3e406201a73804fd7ae252734a594e03dc97f62591f574f27b5acb9fac9f767c",
-      "bytes": 3253
+      "sha256": "36efad64020ba5d1e738e75befe7fbbd083fe853e754a859131a051968770880",
+      "bytes": 3216
+    },
+    {
+      "path": "tests/test_r19_r16_product_release_contract.py",
+      "sha256": "3c6efba5819c56f25a595be84fb5e6f4cd520ceddead8c9ba0f4415ad24c6f6e",
+      "bytes": 3846
     },
     {
       "path": "tests/test_r19_unsigned_dev_build_r08.py",

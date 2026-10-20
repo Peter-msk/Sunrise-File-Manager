@@ -61,3 +61,12 @@ GitHub `Peter-msk/Sunrise_capture`의 최신 릴리스 `v4.2.0`(2026-09-30)은 `
 - 새 Setup 파일이 **실제로** 서명·검증·배포되어 `download_url`, SHA256, 크기가 제공된 경우에만 사용자 승인 후 다운로드·해시 검증·실행할 수 있습니다. 검증된 설치파일이 아직 없으므로 R15에서는 다운로드 기능을 비활성화합니다.
 - Control v2 서명 정책/리스 설계는 미구현이며, v1 정책은 인증된 원격 라이선스 서버가 아닙니다.
 - 구현 및 검증 게이트: `docs/R19_R15_SUNRISE_CONTROL_RELEASE_HANDOVER.md`.
+
+## R19 R16 — 제품별 업데이트·공지 메타데이터 (현행)
+
+- **중앙 Sunrise Control**은 실행·점검·차단·업데이트 허용/필수 정책만 운영합니다.
+- `latest.json`, `notice.txt`는 **Sunrise File Manager 저장소 최상위**에 생성·관리합니다.
+- 공식 Windows 빌드가 완료되면 서명된 Setup의 실제 SHA-256/크기를 바탕으로 제품 메타데이터를 생성합니다. 입력 공지 원문은 `release/NOTICE_BODY.txt`입니다.
+- 현재 저장소는 **비공개**이므로 익명 PC가 직접 raw 파일을 읽을 수 없습니다. 인증 토큰을 앱에 내장하지 않으며, 별도 공개 읽기 채널 검증 전에는 원격 공지·업데이트 조회가 불가할 수 있습니다.
+- R15의 중앙 Control 미러 방식은 폐기되었습니다. 상세: `docs/R19_R16_PRODUCT_OWNED_RELEASE_METADATA_HANDOVER.md`.
+- **실제 Windows 빌드·서명·설치 및 외부 네트워크 접근 검증은 미완료**입니다.

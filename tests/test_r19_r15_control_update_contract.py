@@ -24,11 +24,11 @@ class SunriseControlReleaseContract(unittest.TestCase):
         self.assertEqual(feed['file_size_bytes'], 0)
         self.assertFalse(feed['update_endpoint_configured'])
 
-    def test_public_control_metadata_urls(self):
+    def test_product_owned_metadata_urls(self):
         source = (APP/'Services/SunriseReleaseService.cs').read_text('utf-8')
-        self.assertIn('Sunrise_Control/main/products/sunrise_file_manager/latest.json', source)
-        self.assertIn('Sunrise_Control/main/products/sunrise_file_manager/notice.txt', source)
-        self.assertNotIn('Sunrise-File-Manager/main/latest.json', source)
+        self.assertIn('Sunrise-File-Manager/main/latest.json', source)
+        self.assertIn('Sunrise-File-Manager/main/notice.txt', source)
+        self.assertNotIn('Sunrise_Control/main/products/sunrise_file_manager/', source)
 
     def test_control_gate_and_fallback(self):
         s = (APP/'Services/SunriseControlService.cs').read_text('utf-8')
