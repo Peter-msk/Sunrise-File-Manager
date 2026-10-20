@@ -1,11 +1,9 @@
-# Sunrise File Manager 1.0.0 — R19 R16 제품별 메타데이터
+# Sunrise File Manager 1.0.0 — R19 R17
 
-본체 소스의 현재 기준: **R19 R16_PRODUCT_OWNED_RELEASE_METADATA**.
+Google Drive `Sunrise_Capture_v4.2.0_FINAL.zip`의 실제 `build_scripts/build_pipeline.py`·`build_artifact_contract.json`을 확인하여 릴리스 산출물 계약을 File Manager에 적용했습니다.
 
-- [전체 소스 ZIP](./releases/source/Sunrise_File_Manager_1.0.0_R19_PRODUCT_OWNED_RELEASE_METADATA_R16_FULL_SOURCE.zip)
-- [R16 인수인계](docs/R19_R16_PRODUCT_OWNED_RELEASE_METADATA_HANDOVER.md)
-- 제품 버전/공지: `Sunrise-File-Manager` 루트의 `latest.json` / `notice.txt`
-- 중앙 정책: `Sunrise_Control/control.txt`만 사용(운영·점검·차단, 업데이트 허용/필수).
-- 공식 Windows 서명 빌드 성공 후 빌드 스크립트가 **실제 서명 Setup 파일**로 제품별 latest.json/notice.txt를 생성합니다.
-- 현재 File Manager 저장소는 **private**입니다. 로그인하지 않은 PC의 raw URL 조회는 실패할 수 있으므로 읽기 전용 공개 배포 경로는 별도 승인 후 연결해야 합니다.
-- Source pytest 131/131 및 추가 26 subtests, 패키징 15/15 PASS. Windows 빌드·서명·온라인 공지·업데이트 실기는 PENDING.
+- [R17 전체 소스](./releases/source/Sunrise_File_Manager_1.0.0_R19_CAPTURE_SOURCE_RELEASE_R17_FULL_SOURCE.zip)
+- [Capture 원본 빌드 비교 보고서](docs/R19_R17_CAPTURE_SOURCE_ALIGNED_RELEASE.md)
+- 공식 Setup 서명/검증 후 제품별 `latest.json`·`notice.txt`와 `release_info.json`, 매니페스트, 서명 기록, 게시 안내 생성 및 필수 산출물 검사.
+- 중앙 Control은 실행·점검·업데이트 정책만 관리합니다.
+- 정적 검사 134건과 패키징 계약검사 15건 통과. Windows 실기 빌드·서명·설치 및 비공개 GitHub 익명 조회는 미검증/제약 상태.

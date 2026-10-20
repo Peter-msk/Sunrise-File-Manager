@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R19_PRODUCT_OWNED_RELEASE_METADATA_R16",
-  "baseline": "R19_CONTROL_NOTICE_UPDATE_R15",
+  "revision": "R19_CAPTURE_SOURCE_RELEASE_R17",
+  "baseline": "R19_PRODUCT_OWNED_RELEASE_METADATA_R16",
   "company_policy": true,
   "official_distribution": "SETUP_EXE",
   "status": "SOURCE_STATIC_PASS_WINDOWS_BUILD_AND_NETWORK_PENDING",
-  "file_count": 263,
+  "file_count": 265,
   "files": [
     {
       "path": ".gitattributes",
@@ -49,8 +49,8 @@
     },
     {
       "path": "BUILD_RELEASE_INSTALLER.cmd",
-      "sha256": "611559d210e4827deb390dcbf5e3fd9fb39b78a586460b1de94749a60b5f789d",
-      "bytes": 14808
+      "sha256": "053735a6df05481da97c8254684f10346e2ec2cbdb093720f063bfc6493d1de6",
+      "bytes": 15799
     },
     {
       "path": "BUILD_RELEASE_ONEDIR.cmd",
@@ -179,8 +179,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "7d0c4bb06e88b42b50cbb7d940f163bdc943f81b160c87d5de8ea35e47167f47",
-      "bytes": 7774
+      "sha256": "6dc4597c0e80f7847d303b57c07de7868386cb184285f4c4317a46a968303d90",
+      "bytes": 8757
     },
     {
       "path": "RELEASE_STATUS.json",
@@ -284,8 +284,8 @@
     },
     {
       "path": "build-tools/Sunrise.FileManager.ReleaseMetadata/Program.cs",
-      "sha256": "6f9af2d310a5c3eed11b2c593ce2f0e6123ed9d820c4d30ddbcad1484c9f821d",
-      "bytes": 4523
+      "sha256": "7bf0816c60efd3310111f8e8e59e51e7287632a27a047966623d764b49c0718d",
+      "bytes": 10612
     },
     {
       "path": "build-tools/Sunrise.FileManager.ReleaseMetadata/Sunrise.FileManager.ReleaseMetadata.csproj",
@@ -386,6 +386,11 @@
       "path": "docs/R19_R16_PRODUCT_OWNED_RELEASE_METADATA_HANDOVER.md",
       "sha256": "25015c76f842394a95cc5555a5b8c3e46fa967f627d42c1aabb8ce2bf56f338a",
       "bytes": 3491
+    },
+    {
+      "path": "docs/R19_R17_CAPTURE_SOURCE_ALIGNED_RELEASE.md",
+      "sha256": "850f44acea4c38328dbc2c552b0e3632c86ce3628ff7503db9775679503e86a5",
+      "bytes": 3057
     },
     {
       "path": "docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md",
@@ -1256,6 +1261,11 @@
       "path": "tests/test_r19_r16_product_release_contract.py",
       "sha256": "3c6efba5819c56f25a595be84fb5e6f4cd520ceddead8c9ba0f4415ad24c6f6e",
       "bytes": 3846
+    },
+    {
+      "path": "tests/test_r19_r17_capture_source_alignment.py",
+      "sha256": "4a5ce0cd726c932308319c5c87aec4b5b3a981f54cfb1acf0bbd1ef7a44ecc91",
+      "bytes": 2264
     },
     {
       "path": "tests/test_r19_unsigned_dev_build_r08.py",

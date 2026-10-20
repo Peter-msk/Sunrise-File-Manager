@@ -168,7 +168,21 @@ if not defined SUNRISE_DOTNET_RESOLVED goto :fail_metadata
 if errorlevel 1 goto :fail_metadata
 if not exist "%ROOT%\latest.json" goto :fail_metadata
 if not exist "%ROOT%\notice.txt" goto :fail_metadata
-echo [RELEASE] latest.json / notice.txt generated in product source and dist\release-metadata.
+REM Sunrise Capture v4.2.0 reference: release_metadata -> required artifacts gate.
+set "FAILED_STAGE=RELEASE_ARTIFACT_VERIFY"
+>> "%RESULT%" echo STAGE=RELEASE_ARTIFACT_VERIFY
+> "%LIVE_STAGE%" echo STAGE=RELEASE_ARTIFACT_VERIFY
+echo [BUILD_STAGE_START] release_artifact_verify
+for %%F in (latest.json notice.txt release_info.json sunrise_file_manager_product_manifest.json UPLOAD_TO_GITHUB.txt SIGNATURE_VERIFY_RESULT.txt) do (
+ if not exist "%DIST%\release-metadata\%%F" goto :fail_metadata
+ for %%Z in ("%DIST%\release-metadata\%%F") do if %%~zZ EQU 0 goto :fail_metadata
+)
+fc /b "%ROOT%\latest.json" "%DIST%\release-metadata\latest.json" > "%LOG_DIR%\R17_release_metadata_compare.log" 2>&1
+if errorlevel 1 goto :fail_metadata
+fc /b "%ROOT%\notice.txt" "%DIST%\release-metadata\notice.txt" >> "%LOG_DIR%\R17_release_metadata_compare.log" 2>&1
+if errorlevel 1 goto :fail_metadata
+echo [BUILD_STAGE_OK] release_artifact_verify
+echo [RELEASE] latest.json / notice.txt and Capture-style release bundle generated.
 if exist "%BACKUP_SETUP%" del /q /f "%BACKUP_SETUP%"
 if exist "%INSTALLER_STAGE%" rmdir /s /q "%INSTALLER_STAGE%"
 if exist "%DIST%\_R18_installer_payload" rmdir /s /q "%DIST%\_R18_installer_payload"
@@ -260,8 +274,8 @@ if exist "%LOG_DIR%\R14_cert_provision.log" type "%LOG_DIR%\R14_cert_provision.l
 if exist "%LOG_DIR%\R14_signing_preflight.log" type "%LOG_DIR%\R14_signing_preflight.log"
 goto :fail
 :fail_metadata
-set "FAILED_STAGE=RELEASE_METADATA"
-echo [ERROR] Product release metadata generation failed. See R16_release_metadata.log.
+set "FAILED_STAGE=RELEASE_METADATA_OR_ARTIFACT_VERIFY"
+echo [ERROR] Product release metadata or artifact gate failed. See R16_release_metadata.log and R17_release_metadata_compare.log.
 echo [ERROR] The new Setup was built, but the release is NOT marked complete.
 echo [ERROR] Preserve build-logs and verify metadata before publishing.
 REM Roll back the installer artifact when metadata generation failed.

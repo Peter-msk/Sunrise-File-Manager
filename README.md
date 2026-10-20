@@ -1,4 +1,4 @@
-# Sunrise File Manager 1.0.0 (R19 R15 · Sunrise Control 중앙화)
+# Sunrise File Manager 1.0.0 (R19 R17 · Capture 원본 빌드 구조 반영)
 
 Sunrise Group의 Windows 10/11 x64용 .NET 10 WPF 파일 관리 프로그램입니다. 분할 탐색기, 탭, 폴더 검색, PDF/HWPX/DOCX·이미지 미리보기, 공유 메모 `#memo`, 선택형 Ollama 기능을 포함합니다.
 
@@ -70,3 +70,12 @@ GitHub `Peter-msk/Sunrise_capture`의 최신 릴리스 `v4.2.0`(2026-09-30)은 `
 - 현재 저장소는 **비공개**이므로 익명 PC가 직접 raw 파일을 읽을 수 없습니다. 인증 토큰을 앱에 내장하지 않으며, 별도 공개 읽기 채널 검증 전에는 원격 공지·업데이트 조회가 불가할 수 있습니다.
 - R15의 중앙 Control 미러 방식은 폐기되었습니다. 상세: `docs/R19_R16_PRODUCT_OWNED_RELEASE_METADATA_HANDOVER.md`.
 - **실제 Windows 빌드·서명·설치 및 외부 네트워크 접근 검증은 미완료**입니다.
+
+## R19 R17 — Sunrise Capture 원본 빌드 소스 직접 비교
+
+- Google Drive `Sunrise_Capture_v4.2.0_FINAL.zip`의 실제 `build_scripts/build_pipeline.py`를 열어 릴리스 메타데이터 생성 흐름을 대조했습니다.
+- File Manager 역시 서명된 Setup을 기준으로 제품 `latest.json`·`notice.txt`, 배포 정보, 제품 매니페스트, 서명 결과, GitHub 게시 안내를 `dist/release-metadata/`에 생성합니다.
+- `RELEASE_ARTIFACT_VERIFY` 별도 게이트를 추가했으며 File Manager 저장소 루트와 출력 폴더의 공지·버전 파일 동일성을 검사합니다.
+- 원본 Capture 인증서 자동 선택은 제품별 신원이 달라 그대로 복제하지 않았습니다. 기존 File Manager 인증서 고정 정책 보존.
+- 실제 Windows 실기 빌드/서명/공지 조회는 미검증이며 소스 저장소는 계속 비공개입니다.
+- [변경 비교 및 검증](docs/R19_R17_CAPTURE_SOURCE_ALIGNED_RELEASE.md).
