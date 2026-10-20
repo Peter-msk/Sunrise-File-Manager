@@ -41,6 +41,9 @@ class InstallerPipelineR03(unittest.TestCase):
   self.assertIn('SignedUninstaller=yes',(ROOT/'installer/SunriseFileManager.iss').read_text('utf-8'))
   self.assertNotIn('LogicTests.csproj',CHECK)
   self.assertNotIn('UiSmokeTests',CHECK)
+ def test_double_click_check_remains_visible(self):
+  self.assertIn('if "%NO_PAUSE%"=="0" pause',CHECK)
+  self.assertIn('--no-pause',CHECK)
  def test_preflight_no_actions(self):
   self.assertNotIn('dotnet publish',CHECK)
   self.assertNotIn('signtool.exe" sign',CHECK)

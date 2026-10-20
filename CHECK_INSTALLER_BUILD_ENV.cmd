@@ -1,6 +1,8 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
 REM Read-only prerequisite check. Does not build, sign, install, open company documents.
+set "NO_PAUSE=0"
+if /I "%~1"=="--no-pause" set "NO_PAUSE=1"
 cd /d "%~dp0"
 if errorlevel 1 exit /b 1
 set "ROOT=%CD%"
@@ -42,6 +44,7 @@ if "%MISSING%"=="0" (
   > "%REPORT%" echo STATUS=TOOLS_PRESENT
   >> "%REPORT%" echo WINDOWS_CERTIFICATE_AND_SIGNING=NOT_TESTED
   echo [READY] Required tools detected. Certificate and actual signing are checked during build.
+  if "%NO_PAUSE%"=="0" pause
   exit /b 0
 )
 > "%REPORT%" echo STATUS=MISSING_PREREQUISITES
@@ -49,6 +52,7 @@ if "%MISSING%"=="0" (
 >> "%REPORT%" echo WINDOWS_CERTIFICATE_AND_SIGNING=NOT_TESTED
 echo [BLOCKED] %MISSING% prerequisite checks failed. See R15_inno_probe.log and R15_signtool_probe.log in build-logs.
 echo [HELP] Inno Setup official download: https://jrsoftware.org/isdl.php
+if "%NO_PAUSE%"=="0" pause
 exit /b 1
 :probe_sdk
 for /f "tokens=1" %%S in ('"%~1" --list-sdks 2^>nul ^| findstr /R /C:"^10\."') do if not defined SDK10_FOUND set "SDK10_FOUND=%%S"

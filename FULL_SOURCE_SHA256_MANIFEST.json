@@ -84,8 +84,8 @@
     },
     {
       "path": "CHECK_INSTALLER_BUILD_ENV.cmd",
-      "sha256": "8f9a9b1337a7a5b20f67c1f8bb0a08087d7b410bb8a7dd538af32ea6be75d32e",
-      "bytes": 3379
+      "sha256": "bccb975806397604516bfd87a7c7872d490fb7733f500bbed453ec0fe2d2fb38",
+      "bytes": 3499
     },
     {
       "path": "CHECK_SDK.cmd",
@@ -1094,8 +1094,8 @@
     },
     {
       "path": "tests/test_r19_installer_preflight_r03.py",
-      "sha256": "e6f1dbb07cb4ee79b5c937bcafb76d27b80d2a2df884db5375424b2ea2215cca",
-      "bytes": 2403
+      "sha256": "22e83f5836ba8a6d80e7f0171048b3b8f73466070bc373b60b552cc91b736d05",
+      "bytes": 2543
     },
     {
       "path": "tests/test_r19_memo_provenance_contract.py",
