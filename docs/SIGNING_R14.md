@@ -16,8 +16,8 @@
 
 ## 코드서명 정책
 - 기본값은 **기존 인증서 재사용**. 새 인증서 자동 발급은 기본 OFF.
-- 인증서가 존재하지 않을 때만, 조직 승인 후 빌드 CMD를 실행하기 전에 같은 CMD 창에서 `set SUNRISE_ALLOW_CERT_CREATE=1`로 명시적으로 허용할 수 있다.
-- 해당 생성 옵션은 현재 Windows 사용자의 Personal/My에 인증서를 하나 생성한다. RSA 3072, SHA-256, Code Signing EKU. 비내보내기 CNG 개인키.
+- **R19 V3 보완 이후** 빌드 시 신규 인증서 생성은 지원하지 않는다. `SUNRISE_ALLOW_CERT_CREATE=1`이 설정되어 있으면 안내 후 실패한다.
+- 인증서가 없는 경우 IT/보안 담당자가 승인된 Sunrise Group 코드서명 인증서를 Windows 현재 사용자 개인 저장소에 등록해야 한다.
 - PFX/P12, 개인키/암호/자격증명은 소스, ZIP, 사용자용 `app/`에 들어가지 않는다.
 - `Sunrise.FileManager.exe` 및 `Sunrise.FileManager.dll`처럼 **이 프로젝트가 생성한 실행 PE**만 서명한다.
 - Microsoft/.NET/PdfPig 런타임·종속 DLL을 Sunrise Group 명의로 재서명하지 않는다.
@@ -38,7 +38,7 @@
 - `R14_signed_package_sha256.txt`: 최종 ZIP 해시
 
 ## 빌드 오류시
-- `SIGNING_PREFLIGHT`: Windows SDK SignTool 미설치, 인증서 부재, 인증서 개인키·EKU·기간·RSA 키크기 조건 불충족 또는 서명 보조도구 컴파일 실패.
+- `SIGNING_PREFLIGHT`: Windows SDK SignTool 미설치, 인증서 부재, 인증서 개인키·EKU·기간·RSA 키크기 조건 불충족 또는 조직의 PowerShell 스크립트 실행 정책에 의한 거부.
 - `AUTHENTICODE_SIGN`: SignTool 오류, 인증서 개인키 접근 제한, RFC3161 TSA 접속 불가.
 - `SIGNATURE_CHECK`: 서명자 불일치 또는 신뢰/서명 검증 실패.
 - `WPF_PUBLISH`: 기존 .NET 프로젝트 컴파일 오류.
@@ -46,4 +46,11 @@
 - 이전 정상 배포본은 새 릴리즈가 검증되지 않는 한 교체하지 않는다.
 
 ## 검증 수준
-정적 Python 계약검사만 완료. **실제 Windows SDK 기반 서명과 사용자 PC 실기 서명 인증은 아직 미실행**. 보조 도구의 새 인증서 발급 경로도 Windows에서 1회 확인해야 한다.
+정적 Python 계약검사만 완료. **실제 Windows SDK 기반 서명과 사용자 PC 실기 서명 인증은 아직 미실행**. 새로 컴파일한 서명 보조 EXE는 더 이상 실행하지 않는다. PowerShell 스크립트와 SignTool의 실제 서명·검증은 Windows에서 확인해야 한다.
+
+## R19 V3 Internet Security 경고 대응
+- 기존 R14~R19 R01은 `dotnet run --project source/build-tools/Sunrise.Signing/...`를 실행하여 빌드 PC에서 `Sunrise.Signing.exe`를 새로 생성·실행하였다. V3 화면에서 이 이름을 직접 차단 대상으로 표시했다.
+- 현재 기본 빌드 경로는 **새 보조 EXE 컴파일·실행을 제거**하고 `build-tools/Sunrise.GroupSigning.ps1`에서 Windows 기본 인증서 API로 인증서 선별/서명자 동일성을 확인한다. 실서명·Windows 신뢰 검증은 Windows SDK SignTool이 그대로 수행한다.
+- PowerShell은 `-NoProfile -NonInteractive -File`로 호출하며 ExecutionPolicy를 우회하지 않는다. 조직에서 스크립트 실행 자체를 제한하면 빌드가 실패한다. 회사 보안정책 변경·V3 예외 등록은 개발 도구가 자동으로 수행하지 않는다.
+- R14 당시의 C# 보조 코드가 있더라도 역사적 참고용 Library 프로젝트로만 남겨 `Sunrise.Signing.exe`가 생성되지 않도록 했다.
+- 자체서명 인증서의 평판 문제는 별개이며 V3 경고 재발이 없다는 보장은 없다. 보안 담당자의 승인을 받은 후만 배포한다.

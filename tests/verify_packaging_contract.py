@@ -9,7 +9,7 @@ cmd = cmd_data.decode("ascii")
 sdk_root = json.loads((root / "global.json").read_text(encoding="utf-8"))
 sdk_src = json.loads((src / "global.json").read_text(encoding="utf-8"))
 checks = {
-    "no_powershell_dependency": not any(root.rglob("*.ps1")),
+    "powershell_signing_only_no_policy_bypass": ((root / "build-tools/Sunrise.GroupSigning.ps1").is_file() and not any(x in (root / "BUILD_RELEASE_ONEDIR.cmd").read_text("ascii") for x in ("-ExecutionPolicy Bypass", "Set-ExecutionPolicy", "Invoke-WebRequest"))),
     "ascii_crlf_cmd": b"\r\n" in cmd_data and b"\n" not in cmd_data.replace(b"\r\n", b""),
     "sdk_10_consistent": sdk_root == sdk_src and sdk_root["sdk"] == {"version": "10.0.100", "rollForward": "latestFeature", "allowPrerelease": False},
     "recognizes_dotnet_10": '/C:"10\\."' in cmd,

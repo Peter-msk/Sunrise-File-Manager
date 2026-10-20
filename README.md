@@ -20,6 +20,10 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 
 `VERSION_OR_INSTALLER_CONFIG` 오류를 세부 진단하도록 개선했습니다. 정상 `installer/RELEASE_VERSION.txt`는 `1.0.0`이며, 문제 발생 시 `build-logs/R15_version_preflight.log`와 `R15_INSTALLER_BUILD_RESULT.txt`를 확인합니다. 상세 내용은 `docs/R19_INSTALLER_VERSION_HOTFIX_R01.md`를 참조하세요. Windows 실빌드 결과는 아직 검증되지 않았습니다.
 
+### R19 V3 그룹서명 실행파일 경고 개선 R02
+
+과거 빌드 시 컴파일·실행하던 미서명 `Sunrise.Signing.exe`를 공식 빌드 흐름에서 제거했습니다. 기존 그룹 인증서 선별은 Windows PowerShell 인증서 API, 서명 및 검증은 Windows SDK SignTool을 사용합니다. 보안 솔루션 예외 등록/PowerShell ExecutionPolicy 우회 없이 동작하도록 설계했으며, 정책이 허용하지 않으면 빌드가 중단됩니다. Windows에서의 실제 V3 재검증은 미완료입니다. `docs/R19_V3_SIGNING_EXECUTABLE_HOTFIX_R02.md`를 참조하십시오.
+
 ## 빌드 환경
 
 **Windows x64 빌드 PC**에서 다음 개발도구가 필요합니다.
@@ -27,7 +31,7 @@ Sunrise Group의 Windows 데스크톱 파일 관리 프로그램입니다. **.NE
 1. .NET 10 SDK (WPF Windows 타깃)
 2. Inno Setup 6/7 및 `ISCC.exe`
 3. Windows SDK `signtool.exe`
-4. 빌드 PC의 코드서명 인증서 (`CN=Sunrise Group`, 개인키 포함)
+4. Windows PowerShell 5.1 (기업 스크립트 정책 준수) 및 빌드 PC의 코드서명 인증서 (`CN=Sunrise Group`, 개인키 포함)
 
 명령 프롬프트에서 프로젝트 루트의 다음 파일을 실행합니다.
 

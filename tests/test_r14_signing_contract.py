@@ -23,6 +23,7 @@ class SigningContract(unittest.TestCase):
   self.assertIn('1.3.6.1.5.5.7.3.3',p)
   self.assertNotIn('Export(X509ContentType.Pfx',p)
   self.assertIn('verify-embedded',p)
+  self.assertIn('<OutputType>Library</OutputType>', (ROOT/'source/build-tools/Sunrise.Signing/Sunrise.Signing.csproj').read_text())
  def test_company_skips_documents(self):
   s=(ROOT/'BUILD_RELEASE_ONEDIR.cmd').read_text('ascii')
   self.assertNotIn('LogicTests.csproj',s)

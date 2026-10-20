@@ -13,7 +13,8 @@ set "RESULT=%LOG_DIR%\R15_INSTALLER_BUILD_RESULT.txt"
 set "VERSION_FILE=%ROOT%\installer\RELEASE_VERSION.txt"
 set "ISS=%ROOT%\installer\SunriseFileManager.iss"
 set "APP_DIR=%DIST%\_R18_installer_payload\app"
-set "SIGNING_PROJECT=%ROOT%\source\build-tools\Sunrise.Signing\Sunrise.Signing.csproj"
+set "SIGNING_SCRIPT=%ROOT%\build-tools\Sunrise.GroupSigning.ps1"
+set "POWERSHELL_EXE=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 set "CERT_FILE=%LOG_DIR%\R14_signing_certificate.txt"
 set "INSTALLER_STAGE=%DIST%\_R15_installer_stage"
 set "NO_PAUSE=0"
@@ -74,6 +75,8 @@ if not defined ISCC if exist "%ProgramFiles%\Inno Setup 6\ISCC.exe" set "ISCC=%P
 if not defined ISCC if exist "%ProgramFiles(x86)%\Inno Setup 7\ISCC.exe" set "ISCC=%ProgramFiles(x86)%\Inno Setup 7\ISCC.exe"
 if not defined ISCC if exist "%ProgramFiles%\Inno Setup 7\ISCC.exe" set "ISCC=%ProgramFiles%\Inno Setup 7\ISCC.exe"
 if not defined ISCC goto :fail_inno
+if not exist "%SIGNING_SCRIPT%" goto :fail_signing_script
+if not exist "%POWERSHELL_EXE%" goto :fail_signing_script
 set "SIGNTOOL="
 for /f "delims=" %%S in ('where.exe signtool.exe 2^>nul') do if not defined SIGNTOOL if exist "%%~S" set "SIGNTOOL=%%~S"
 if not defined SIGNTOOL for /d %%V in ("%ProgramFiles(x86)%\Windows Kits\10\bin\10.*") do if exist "%%~V\x64\signtool.exe" set "SIGNTOOL=%%~V\x64\signtool.exe"
@@ -109,7 +112,7 @@ for %%F in ("%UNSIGNED_SETUP%") do if %%~zF LSS 1000000 goto :fail_compile
 REM ISCC has already signed both Setup and the embedded Uninstaller.
 set "FAILED_STAGE=INSTALLER_VERIFY"
 >> "%RESULT%" echo STAGE=INSTALLER_VERIFY
-"%DOTNET_EXE%" run --project "%SIGNING_PROJECT%" --configuration Release --no-launch-profile --no-build -- verify-embedded "%UNSIGNED_SETUP%" "%CERT_THUMBPRINT%" > "%LOG_DIR%\R15_verify_setup.log" 2>&1
+"%POWERSHELL_EXE%" -NoLogo -NoProfile -NonInteractive -File "%SIGNING_SCRIPT%" -Action VerifyEmbedded -Path "%UNSIGNED_SETUP%" -Thumbprint "%CERT_THUMBPRINT%" > "%LOG_DIR%\R15_verify_setup.log" 2>&1
 if errorlevel 1 goto :fail_sign
 "%SIGNTOOL%" verify /pa /v "%UNSIGNED_SETUP%" > "%LOG_DIR%\R15_wintrust_setup.log" 2>&1
 if errorlevel 1 (
@@ -197,6 +200,10 @@ goto :fail
 :fail_inno
 set "FAILED_STAGE=INNO_SETUP_NOT_FOUND"
 echo [ERROR] Inno Setup ISCC.exe is required on the build PC. No auto-installation performed.
+goto :fail
+:fail_signing_script
+set "FAILED_STAGE=SIGNING_SCRIPT_UNAVAILABLE"
+echo [ERROR] Group-signing verification requires Windows PowerShell and the source signing script.
 goto :fail
 :fail_signtool
 set "FAILED_STAGE=SIGNTOOL_NOT_FOUND"

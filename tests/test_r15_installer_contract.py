@@ -56,7 +56,7 @@ class InstallerContractTests(unittest.TestCase):
         self.assertIn('/SSunriseGroup=$q%SIGNTOOL%$q sign', BUILD)
         self.assertIn('/sha1 %CERT_THUMBPRINT%', BUILD)
         self.assertIn('/tr %TIMESTAMP_URL%', BUILD)
-        self.assertIn('verify-embedded', BUILD)
+        self.assertIn('-Action VerifyEmbedded', BUILD)
         self.assertIn('R15_SIGNED_SETUP_SHA256.txt', BUILD)
         self.assertIn('STATUS=FAILED', BUILD)
 
@@ -87,7 +87,9 @@ class InstallerContractTests(unittest.TestCase):
 
     def test_no_automatic_installer_download(self):
         self.assertNotIn('winget install', BUILD.lower())
-        self.assertNotIn('powershell', BUILD.lower())
+        self.assertIn('Sunrise.GroupSigning.ps1', BUILD)
+        self.assertNotIn('-ExecutionPolicy', BUILD)
+        self.assertNotIn('Invoke-WebRequest', BUILD)
         self.assertNotIn('curl ', BUILD.lower())
         self.assertNotIn('http', ISS.lower())
 

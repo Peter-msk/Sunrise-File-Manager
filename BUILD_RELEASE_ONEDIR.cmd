@@ -27,7 +27,8 @@ set "FINAL_ZIP=%DIST%\SunriseFileManager_OneDir_Windows_x64_R14.zip"
 set "PREVIOUS=%DIST%\_SFM_R14_onedir_previous"
 set "PREVIOUS_ZIP=%DIST%\_SFM_R14_onedir_previous.zip"
 set "RESULT=%LOG_DIR%\R14_BUILD_RESULT.txt"
-set "SIGNING_PROJECT=%ROOT%\source\build-tools\Sunrise.Signing\Sunrise.Signing.csproj"
+set "SIGNING_SCRIPT=%ROOT%\build-tools\Sunrise.GroupSigning.ps1"
+set "POWERSHELL_EXE=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 set "CERT_FILE=%LOG_DIR%\R14_signing_certificate.txt"
 if not defined SUNRISE_RELEASE_VERSION set "SUNRISE_RELEASE_VERSION=1.0.0"
 set "TIMESTAMP_URL=http://timestamp.digicert.com"
@@ -67,17 +68,21 @@ if "%COMPANY_MODE%"=="1" echo [COMPANY POLICY] LogicTests and document fixture a
 REM Build-time only: discover SignTool. Never copy credentials or tools into user package.
 set "FAILED_STAGE=SIGNING_PREFLIGHT"
 >> "%RESULT%" echo STAGE=SIGNING_PREFLIGHT
-if not exist "%SIGNING_PROJECT%" goto :fail_signing
+if not exist "%SIGNING_SCRIPT%" goto :fail_signing
+if not exist "%POWERSHELL_EXE%" goto :fail_signing
 for /f "delims=" %%S in ('where.exe signtool.exe 2^>nul') do if not defined SIGNTOOL if exist "%%~S" set "SIGNTOOL=%%~S"
 if not defined SIGNTOOL for /d %%V in ("%ProgramFiles(x86)%\Windows Kits\10\bin\10.*") do if exist "%%~V\x64\signtool.exe" set "SIGNTOOL=%%~V\x64\signtool.exe"
 if not defined SIGNTOOL if exist "%ProgramFiles%\Windows Kits\10\bin" for /d %%V in ("%ProgramFiles%\Windows Kits\10\bin\10.*") do if exist "%%~V\x64\signtool.exe" set "SIGNTOOL=%%~V\x64\signtool.exe"
 if not defined SIGNTOOL goto :fail_signing
-if exist "%CERT_FILE%" del /f /q "%CERT_FILE%"
+REM Security suite may flag a newly generated, unsigned Sunrise.Signing.exe.
+REM Use Windows PowerShell certificate APIs for preflight, not a custom generated EXE.
+REM Respect corporate script policies: do NOT override ExecutionPolicy or V3 settings.
 if "%SUNRISE_ALLOW_CERT_CREATE%"=="1" (
-  "%DOTNET_EXE%" run --project "%SIGNING_PROJECT%" --configuration Release --no-launch-profile -- prepare "%CERT_FILE%" --create-if-missing > "%LOG_DIR%\R14_signing_preflight.log" 2>&1
-) else (
-  "%DOTNET_EXE%" run --project "%SIGNING_PROJECT%" --configuration Release --no-launch-profile -- prepare "%CERT_FILE%" > "%LOG_DIR%\R14_signing_preflight.log" 2>&1
+  echo [ERROR] Build-time certificate generation is disabled. Ask IT to provision the existing group certificate.
+  goto :fail_signing
 )
+if exist "%CERT_FILE%" del /f /q "%CERT_FILE%"
+"%POWERSHELL_EXE%" -NoLogo -NoProfile -NonInteractive -File "%SIGNING_SCRIPT%" -Action Prepare -Path "%CERT_FILE%" > "%LOG_DIR%\R14_signing_preflight.log" 2>&1
 if errorlevel 1 goto :fail_signing
 for /f "usebackq tokens=1,2 delims==" %%A in ("%CERT_FILE%") do if /I "%%A"=="THUMBPRINT" set "CERT_THUMBPRINT=%%B"
 if not defined CERT_THUMBPRINT goto :fail_signing
@@ -107,9 +112,9 @@ if errorlevel 1 goto :fail_signing
 if errorlevel 1 goto :fail_signing
 set "FAILED_STAGE=SIGNATURE_CHECK"
 >> "%RESULT%" echo STAGE=SIGNATURE_CHECK
-"%DOTNET_EXE%" run --project "%SIGNING_PROJECT%" --configuration Release --no-launch-profile --no-build -- verify-embedded "%STAGE%\app\Sunrise.FileManager.exe" "%CERT_THUMBPRINT%" > "%LOG_DIR%\R14_verify_exe.log" 2>&1
+"%POWERSHELL_EXE%" -NoLogo -NoProfile -NonInteractive -File "%SIGNING_SCRIPT%" -Action VerifyEmbedded -Path "%STAGE%\app\Sunrise.FileManager.exe" -Thumbprint "%CERT_THUMBPRINT%" > "%LOG_DIR%\R14_verify_exe.log" 2>&1
 if errorlevel 1 goto :fail_signing
-"%DOTNET_EXE%" run --project "%SIGNING_PROJECT%" --configuration Release --no-launch-profile --no-build -- verify-embedded "%STAGE%\app\Sunrise.FileManager.dll" "%CERT_THUMBPRINT%" > "%LOG_DIR%\R14_verify_dll.log" 2>&1
+"%POWERSHELL_EXE%" -NoLogo -NoProfile -NonInteractive -File "%SIGNING_SCRIPT%" -Action VerifyEmbedded -Path "%STAGE%\app\Sunrise.FileManager.dll" -Thumbprint "%CERT_THUMBPRINT%" > "%LOG_DIR%\R14_verify_dll.log" 2>&1
 if errorlevel 1 goto :fail_signing
 REM Untrusted self-signed certs can fail Windows trust-chain validation. Keep report honest.
 "%SIGNTOOL%" verify /pa /v "%STAGE%\app\Sunrise.FileManager.exe" > "%LOG_DIR%\R14_wintrust_exe.log" 2>&1
@@ -230,7 +235,8 @@ goto :fail
 :fail_signing
 echo [ERROR] Sunrise Group signing failed. Existing OneDir release was preserved.
 echo [ERROR] Check R14_signing_preflight.log, R14_sign_exe.log, R14_sign_dll.log or R14_verify*.log.
-echo [ERROR] SignTool from Windows SDK and a usable CurrentUser/My CN=Sunrise Group code-signing cert are required.
+echo [ERROR] SignTool, a valid CN=Sunrise Group certificate and permitted PowerShell script execution are required.
+echo [ERROR] Do not change V3 exclusions or bypass PowerShell ExecutionPolicy; contact IT if blocked.
 goto :fail_release
 :fail_project
 echo [ERROR] Missing WPF project: %PROJECT%

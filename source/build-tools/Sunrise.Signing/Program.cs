@@ -1,3 +1,6 @@
+// LEGACY IMPLEMENTATION (DISABLED): preserved as historical reference only.
+// Official builds use build-tools/Sunrise.GroupSigning.ps1 and Windows SDK SignTool.
+// This project is a Library to prevent creation/execution of Sunrise.Signing.exe.
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
