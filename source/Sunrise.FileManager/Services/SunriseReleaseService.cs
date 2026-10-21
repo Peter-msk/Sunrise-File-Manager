@@ -113,20 +113,25 @@ public static class SunriseReleaseService
                 if (response.Content.Headers.ContentLength is long header && header != release.FileSize)
                     throw new InvalidDataException("Download size mismatch");
                 await using var stream = await response.Content.ReadAsStreamAsync();
-                await using var file = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
                 using var digest = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                 long total = 0;
                 byte[] buffer = new byte[81920];
-                int n;
-                while ((n = await stream.ReadAsync(buffer)) > 0)
+                // Close the exclusive write handle BEFORE File.Move on Windows.
+                // The earlier 'await using var file' stayed alive until scope exit,
+                // so a verified download could fail with ERROR_SHARING_VIOLATION.
+                await using (var file = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
                 {
-                    total += n;
-                    if (total > release.FileSize) throw new InvalidDataException("Download exceeds declared size");
-                    await file.WriteAsync(buffer.AsMemory(0, n));
-                    digest.AppendData(buffer, 0, n);
-                    progress?.Report(total);
+                    int n;
+                    while ((n = await stream.ReadAsync(buffer)) > 0)
+                    {
+                        total += n;
+                        if (total > release.FileSize) throw new InvalidDataException("Download exceeds declared size");
+                        await file.WriteAsync(buffer.AsMemory(0, n));
+                        digest.AppendData(buffer, 0, n);
+                        progress?.Report(total);
+                    }
+                    await file.FlushAsync();
                 }
-                await file.FlushAsync();
                 if (total != release.FileSize ||
                     !string.Equals(Convert.ToHexString(digest.GetHashAndReset()), release.Sha256, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException("Downloaded release SHA256 mismatch");

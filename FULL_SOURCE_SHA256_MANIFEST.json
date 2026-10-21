@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R22_V110_METADATA_DLL_HOST_PREFLIGHT_MINIMAL",
+  "revision": "R23_V110_UPDATER_FILE_STREAM_DISPOSE",
   "version": "1.1.0",
-  "published_version": "1.0.0",
-  "status": "R21_WINDOWS_COMPILE_SIGNED_SETUP_PASS_R22_METADATA_DLL_FIX_WINDOWS_PENDING",
-  "file_count": 279,
-  "verification": "158 Python source tests, 15 packaging checks, 13 XAML XML documents verified; Windows R22 rerun pending",
+  "published_version": "1.1.0",
+  "status": "SOURCE_FIX_WINDOWS_RUNTIME_PENDING_EXISTING_INSTALLER_NOT_MODIFIED",
+  "file_count": 281,
+  "verification": "161 Python regression tests and 15 packaging checks PASS, Windows updater smoke pending",
   "files": [
     {
       "path": ".gitattributes",
@@ -79,8 +79,8 @@
     },
     {
       "path": "CURRENT_SOURCE.md",
-      "sha256": "1b61cf0d0cefe8fc58f48e60d022dbae9f05fe66a35f805901388007e93f7f55",
-      "bytes": 1483
+      "sha256": "bad7f216320fc071ea4fe9f69a0872d52fe71de96d0da78e9f2d7e64ce93e686",
+      "bytes": 2048
     },
     {
       "path": "INSTALL_OLLAMA.cmd",
@@ -431,6 +431,11 @@
       "path": "docs/R22_V110_METADATA_DLL_HOST_HOTFIX.md",
       "sha256": "69745ff92539e357f5eb2b53eeec83e982d87065da9689444a704ad1cde69257",
       "bytes": 2023
+    },
+    {
+      "path": "docs/R23_V110_UPDATE_FILE_LOCK_HOTFIX.md",
+      "sha256": "6c74c7b32a4324d346421e4b9f71751d1869eb0239e5333bdc99c6fb7bd8bd95",
+      "bytes": 1962
     },
     {
       "path": "docs/SIGNING_R14.md",
@@ -849,8 +854,8 @@
     },
     {
       "path": "source/Sunrise.FileManager/Services/SunriseReleaseService.cs",
-      "sha256": "9e3636659431594ec349f9b28bb072485dfb296f9d496ecd94f742345307c9b8",
-      "bytes": 9005
+      "sha256": "8c9ffc51fca3944984a9998ff5c782c55811eef82010613aa7b09e9148e3b602",
+      "bytes": 9331
     },
     {
       "path": "source/Sunrise.FileManager/Services/ThemeManager.cs",
@@ -1356,6 +1361,11 @@
       "path": "tests/test_r22_company_metadata_host.py",
       "sha256": "90c8e5f08199217bbc3b9f2cc7767dc775c47a82da830c822d4ba972dde743b2",
       "bytes": 3085
+    },
+    {
+      "path": "tests/test_r23_updater_file_lock.py",
+      "sha256": "57ffa0e3e7a16fd79a81510bc56b53efc7a0114addcea1c37c3e692ca3749f5c",
+      "bytes": 2480
     },
     {
       "path": "tests/verify_packaging_contract.py",
