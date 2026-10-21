@@ -52,7 +52,7 @@ RestartIfNeededByRun=no
 ; Never auto-elevate, auto-run, restart or delete the user's LocalAppData settings.
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "바탕화면에 바로가기 만들기"; Flags: unchecked

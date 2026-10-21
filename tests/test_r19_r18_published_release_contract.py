@@ -21,7 +21,7 @@ class PublishedReleaseContract(unittest.TestCase):
         self.assertEqual(p['download_url'],f['download_url'])
     def test_current_notice_announces_published_release(self):
         notice=(R/'notice.txt').read_text('utf-8')
-        self.assertIn('설치파일이 GitHub Releases에 게시',notice)
+        self.assertIn('정식 버전이 출시되었습니다',notice)
         self.assertNotIn('설치파일의 실기 빌드·서명·설치 검증은 별도',notice)
         self.assertEqual(notice, 'Sunrise File Manager 1.0.0\n\n'+(R/'release/NOTICE_BODY.txt').read_text('utf-8'))
     def test_runtime_enforces_explicit_enablement_and_release_path(self):

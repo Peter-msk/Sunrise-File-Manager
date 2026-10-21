@@ -1,13 +1,13 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R19_PUBLISHED_RELEASE_V1_0_0_R18",
-  "baseline": "R19_CAPTURE_SOURCE_RELEASE_R17",
+  "revision": "R19_KOREAN_SETUP_USER_PUBLIC_FEED_R19",
+  "baseline": "R19_PUBLISHED_RELEASE_V1_0_0_R18",
   "company_policy": true,
   "official_distribution": "SETUP_EXE",
   "published_release": "v1.0.0",
   "github_release_asset_digest": "eb866da915459cb1c61df22039957f6e07c9d863293a406a40ea5fcb47d62cdd",
-  "status": "GITHUB_RELEASE_PUBLISHED_SOURCE_STATIC_PASS_WINDOWS_GUI_NOT_TESTED",
-  "file_count": 268,
+  "status": "SOURCE_STATIC_PASS_KOREAN_WINDOWS_INSTALLER_PENDING",
+  "file_count": 270,
   "files": [
     {
       "path": ".gitattributes",
@@ -286,8 +286,8 @@
     },
     {
       "path": "build-tools/Sunrise.FileManager.ReleaseMetadata/Program.cs",
-      "sha256": "3125fd619b3c24f96a59b9155758604ba01ee7aed1ec666423c77001e04a3417",
-      "bytes": 12260
+      "sha256": "408e3c564e1feef367f50de1ed74bfb02841c73ed94a2c53b02af4a9e85cb019",
+      "bytes": 12095
     },
     {
       "path": "build-tools/Sunrise.FileManager.ReleaseMetadata/Sunrise.FileManager.ReleaseMetadata.csproj",
@@ -400,6 +400,11 @@
       "bytes": 1847
     },
     {
+      "path": "docs/R19_R19_KOREAN_INSTALLER_PUBLIC_METADATA_HANDOVER.md",
+      "sha256": "584450a65369e9b47c8581999ebf60a8ffa21d15077a001487fa00621eeedff3",
+      "bytes": 2510
+    },
+    {
       "path": "docs/R19_SIGNING_PREFLIGHT_DIAGNOSTICS_R06.md",
       "sha256": "c6e3b7a12c473029fdca4244bac0fe33a90b81c8766a47612585948c19ff5396",
       "bytes": 3404
@@ -436,23 +441,23 @@
     },
     {
       "path": "installer/SunriseFileManager.iss",
-      "sha256": "210376ae1f582de6874dcc7f6b1774d514d8409394910640f28bd93c67d8eaa6",
-      "bytes": 3254
+      "sha256": "d572e84ea1ca517e56071c11131de02423476ee11562f5a62baae2395488fb7a",
+      "bytes": 3262
     },
     {
       "path": "latest.json",
-      "sha256": "1fb418dd6e62b2169bb69cfc55cc15f102c1d65467c7688a660505e0ee15d5f2",
-      "bytes": 1171
+      "sha256": "575e11ae71d9e81b0440641d8acb8aba5a8319593fe6ef65294285a5bddc93da",
+      "bytes": 1118
     },
     {
       "path": "notice.txt",
-      "sha256": "09f7861853f1312cc38c4b60bf64360700fa33b4c5eb6b89458f308f2395ad7c",
-      "bytes": 839
+      "sha256": "a642d52284c069f140872644aa61aba7b51b28021072c33f1acf71a2f64549df",
+      "bytes": 476
     },
     {
       "path": "release/NOTICE_BODY.txt",
-      "sha256": "4b701634ca0e148e17a54b29489e4831528cf45b9bde74bba7bedf6720fed1d2",
-      "bytes": 811
+      "sha256": "544d0da81ba73d31fd8770bb60e19cfa361a8c6289390f7df56e2f1331b9a951",
+      "bytes": 448
     },
     {
       "path": "release/PUBLISHED_RELEASE.json",
@@ -1281,8 +1286,13 @@
     },
     {
       "path": "tests/test_r19_r18_published_release_contract.py",
-      "sha256": "1fb8ef876f0d536287dea3eccf31da9f9095ae8ec36099c2469eac612149d6b0",
-      "bytes": 2668
+      "sha256": "a3d5304843b44415f9ec42cbb0af4b8620c4b712f5bc07d84cd7909f1982752e",
+      "bytes": 2665
+    },
+    {
+      "path": "tests/test_r19_r19_ko_installer_public_feed.py",
+      "sha256": "ab4c4ce475efe5cc0cbe41067aaec2b6322260729c0173fe7a2c4addc6bd64ea",
+      "bytes": 2837
     },
     {
       "path": "tests/test_r19_unsigned_dev_build_r08.py",

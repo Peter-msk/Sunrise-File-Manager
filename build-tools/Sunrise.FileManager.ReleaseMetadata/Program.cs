@@ -54,7 +54,7 @@ try
     var noticeBody = File.ReadAllText(Path.Combine(root, "release", "NOTICE_BODY.txt"), new UTF8Encoding(false, true)).Trim();
     if (noticeBody.Length is 0 or > 60_000) throw new InvalidDataException("Invalid notice body");
     var notice = $"Sunrise File Manager {version}\n\n{noticeBody}\n";
-    var releaseNotes = "분할 탐색기, 파일 미리보기, 메모, AI 정리, Sunrise Control v1 중앙 정책, 제품별 공지 및 업데이트 확인";
+    var releaseNotes = "Sunrise File Manager 정식 버전 출시. 최대 4분할 탐색, 문서·이미지 미리보기, 파일 메모 및 AI 파일 정리 기능을 제공합니다";
     var releaseTag = "v" + version;
     var releasePage = $"https://github.com/Peter-msk/Sunrise-File-Manager/releases/tag/{releaseTag}";
     var sourceUrl = "https://github.com/Peter-msk/Sunrise-File-Manager";
@@ -90,7 +90,7 @@ try
         official_release = true, release_date = generatedUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
         release_url = activeReleaseUrl, download_url = activeDownloadUrl, download_file_name = expectedName, sha256 = hash,
         file_size_bytes = info.Length, update_endpoint_configured = publicationMatched, notice_url = noticeUrl,
-        release_notes = releaseNotes + (publicationMatched ? ". 게시된 설치파일과 해시·크기 일치." : ". 현재 로컬 빌드는 공개 설치파일과 일치하지 않아 다운로드 링크가 비활성화됩니다.")
+        release_notes = releaseNotes + "."
     };
     var releaseInfo = new
     {
