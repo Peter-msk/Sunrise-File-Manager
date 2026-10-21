@@ -11,9 +11,8 @@ namespace Sunrise.FileManager.Services;
 public static class SunriseReleaseService
 {
     // Product-owned metadata. Sunrise Control is ONLY the central operation/update policy.
-    // IMPORTANT: This repository is currently private. These anonymous raw URLs return 404
-    // until product metadata is published through an explicitly authorized read-only endpoint.
-    // Do not embed a GitHub token or silently fall back to the Control repository.
+    // Product repository is public at v1.0.0 publication; these read-only raw endpoints need no token.
+    // Never embed GitHub credentials or fall back to the Sunrise Control policy repository.
     public const string FeedUrl = "https://raw.githubusercontent.com/Peter-msk/Sunrise-File-Manager/main/latest.json";
     public const string NoticeUrl = "https://raw.githubusercontent.com/Peter-msk/Sunrise-File-Manager/main/notice.txt";
     private static readonly HttpClient Client = new(new HttpClientHandler { AllowAutoRedirect = false })
@@ -22,10 +21,10 @@ public static class SunriseReleaseService
         { Timeout = TimeSpan.FromMinutes(30) };
 
     public sealed record Release(string Version, string DownloadUrl, string FileName, string Sha256,
-        long FileSize, string Notes, string ReleaseUrl, string NoticeUrl)
+        long FileSize, string Notes, string ReleaseUrl, string NoticeUrl, bool UpdateConfigured)
     {
         public bool IsNewer => SunriseControlService.VersionIsOlder(SunriseControlService.Version, Version);
-        public bool CanDownload => IsNewer && IsApprovedDownload(this);
+        public bool CanDownload => IsNewer && UpdateConfigured && IsApprovedDownload(this);
     }
 
     private static async Task<byte[]> GetSmallAsync(string url, int max)
@@ -57,9 +56,10 @@ public static class SunriseReleaseService
             throw new InvalidDataException("File Manager release identity mismatch");
         string version = Read(root, "latest_version", Read(root, "version"));
         if (!System.Version.TryParse(version, out _)) throw new InvalidDataException("Invalid release version");
+        bool enabled = root.TryGetProperty("update_endpoint_configured", out var configured) && configured.ValueKind == JsonValueKind.True;
         return new Release(version, Read(root, "download_url"), Read(root, "download_file_name"), Read(root, "sha256"),
-            root.TryGetProperty("file_size_bytes", out var size) && size.TryGetInt64(out long len) ? len : 0,
-            Read(root, "release_notes"), Read(root, "release_url"), Read(root, "notice_url", NoticeUrl));
+            root.TryGetProperty("file_size_bytes", out var size) && size.ValueKind == JsonValueKind.Number && size.TryGetInt64(out long len) ? len : 0,
+            Read(root, "release_notes"), Read(root, "release_url"), Read(root, "notice_url", NoticeUrl), enabled);
     }
 
     public static async Task<string> GetNoticeAsync()
@@ -73,7 +73,9 @@ public static class SunriseReleaseService
         if (!Uri.TryCreate(release.DownloadUrl, UriKind.Absolute, out var url) || url.Scheme != Uri.UriSchemeHttps ||
             !string.Equals(url.Host, "github.com", StringComparison.OrdinalIgnoreCase) ||
             !url.AbsolutePath.StartsWith("/Peter-msk/Sunrise-File-Manager/releases/download/", StringComparison.OrdinalIgnoreCase)) return false;
-        if (release.FileSize is < 1024 or > 1024 * 1024 * 800) return false;
+        if (release.FileSize is < 1024 or > 1024L * 1024 * 800) return false;
+        if (!string.Equals(release.ReleaseUrl, $"https://github.com/Peter-msk/Sunrise-File-Manager/releases/tag/v{release.Version}", StringComparison.Ordinal)) return false;
+        if (!string.Equals(release.DownloadUrl, $"https://github.com/Peter-msk/Sunrise-File-Manager/releases/download/v{release.Version}/{release.FileName}", StringComparison.Ordinal)) return false;
         if (release.Sha256.Length != 64 || !release.Sha256.All(Uri.IsHexDigit)) return false;
         return string.Equals(release.FileName, $"Sunrise_File_Manager_{release.Version}_Setup.exe", StringComparison.Ordinal);
     }

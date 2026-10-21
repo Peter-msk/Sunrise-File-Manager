@@ -79,3 +79,12 @@ GitHub `Peter-msk/Sunrise_capture`의 최신 릴리스 `v4.2.0`(2026-09-30)은 `
 - 원본 Capture 인증서 자동 선택은 제품별 신원이 달라 그대로 복제하지 않았습니다. 기존 File Manager 인증서 고정 정책 보존.
 - 실제 Windows 실기 빌드/서명/공지 조회는 미검증이며 소스 저장소는 계속 비공개입니다.
 - [변경 비교 및 검증](docs/R19_R17_CAPTURE_SOURCE_ALIGNED_RELEASE.md).
+
+## R19 R18 — 정식 GitHub v1.0.0 릴리스 게시 정보 연동
+
+- 2026-10-21 게시된 GitHub 릴리스 v1.0.0 설치파일의 SHA-256 및 파일 크기를 `latest.json`에 반영했습니다.
+- 제품 저장소가 현재 Public이므로 제품별 공지/업데이트 조회는 인증 토큰 없는 공개 raw 링크를 사용합니다. Sunrise Control은 실행·점검·업데이트 운영 정책만 관리합니다.
+- `latest.json`의 `update_endpoint_configured=true`, `release_url`, `download_url`을 실제 GitHub 릴리스 값으로 설정했습니다. 1.0.0 설치된 PC에는 최신 버전으로 표시하며, 이후 버전이 올라오면 해시 검증 후 다운로드할 수 있습니다.
+- 빌드 과정은 `dist/release-metadata/latest.json`·`notice.txt`를 계속 생성하지만, **소스 루트의 게시된 최신 공지·버전 피드는 덮어쓰지 않습니다**. `release/PUBLISHED_RELEASE.json`의 해시·크기가 빌드 파일과 일치할 때만 생성된 로컬 메타데이터에 공개 다운로드 URL을 적용합니다.
+- GitHub API에서 릴리스 자산 digest와 크기를 확인했으며 실 PC에서 HTTP 다운로드/설치 동작과 Authenticode 실검증은 별도입니다.
+- [R18 검증·변경 기록](docs/R19_R18_PUBLISHED_RELEASE_INTEGRATION.md).

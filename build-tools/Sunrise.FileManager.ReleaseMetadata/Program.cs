@@ -62,17 +62,35 @@ try
     var latestUrl = "https://raw.githubusercontent.com/Peter-msk/Sunrise-File-Manager/main/latest.json";
     var generatedUtc = DateTimeOffset.UtcNow;
 
-    // These URLs identify the owning product, NOT a published/downloadable installer.
-    // The repo is private. Publishing needs an explicitly approved read-only channel.
+    // A published v1.0.0 binary already exists. Never overwrite its feed with
+    // a newly rebuilt binary merely because the version string is identical.
+    // The public product latest.json / notice.txt are manually published from
+    // GitHub release evidence. This generator writes LOCAL build artifacts only.
+    var publishedRecord = Path.Combine(root, "release", "PUBLISHED_RELEASE.json");
+    bool publicationMatched = false;
+    if (File.Exists(publishedRecord))
+    {
+        using var record = JsonDocument.Parse(File.ReadAllBytes(publishedRecord));
+        var pub = record.RootElement;
+        string Get(string key) => pub.TryGetProperty(key, out var x) && x.ValueKind == JsonValueKind.String ? x.GetString() ?? "" : "";
+        publicationMatched = Get("version") == version &&
+            Get("sha256").Equals(hash, StringComparison.OrdinalIgnoreCase) &&
+            Get("download_file_name") == expectedName &&
+            pub.TryGetProperty("file_size_bytes", out var z) && z.ValueKind == JsonValueKind.Number && z.TryGetInt64(out var pubSize) && pubSize == info.Length &&
+            Get("release_url") == releasePage &&
+            Get("download_url") == $"https://github.com/Peter-msk/Sunrise-File-Manager/releases/download/{releaseTag}/{expectedName}";
+    }
+    var activeReleaseUrl = publicationMatched ? releasePage : "";
+    var activeDownloadUrl = publicationMatched ? $"https://github.com/Peter-msk/Sunrise-File-Manager/releases/download/{releaseTag}/{expectedName}" : "";
     var latest = new
     {
         schema_version = "1.1", app_id = "sunrise_file_manager", product_id = "SUNRISE-FILE-MANAGER-WIN-DESKTOP",
         product_family = "Sunrise File Manager", publisher_id = "SUNRISE-SOFTWARE", channel = "stable",
         platform = "windows-x64", package_kind = "installer", version, latest_version = version,
         official_release = true, release_date = generatedUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-        release_url = "", download_url = "", download_file_name = expectedName, sha256 = hash,
-        file_size_bytes = info.Length, update_endpoint_configured = false, notice_url = noticeUrl,
-        release_notes = releaseNotes + ". 공개 릴리스 승인 전까지 다운로드 링크는 비활성화됩니다."
+        release_url = activeReleaseUrl, download_url = activeDownloadUrl, download_file_name = expectedName, sha256 = hash,
+        file_size_bytes = info.Length, update_endpoint_configured = publicationMatched, notice_url = noticeUrl,
+        release_notes = releaseNotes + (publicationMatched ? ". 게시된 설치파일과 해시·크기 일치." : ". 현재 로컬 빌드는 공개 설치파일과 일치하지 않아 다운로드 링크가 비활성화됩니다.")
     };
     var releaseInfo = new
     {
@@ -83,16 +101,16 @@ try
         code_signing_subject = signer, code_signing_thumbprint = thumbprint.ToUpperInvariant(),
         signature_verification = "R15_verify_setup.log (verified in BUILD_RELEASE_INSTALLER.cmd)",
         release_tag = releaseTag, intended_release_page = releasePage,
-        release_url = "", download_url = "", update_endpoint_configured = false,
+        release_url = activeReleaseUrl, download_url = activeDownloadUrl, update_endpoint_configured = publicationMatched,
         product_latest_url = latestUrl, product_notice_url = noticeUrl,
-        publication_status = "LOCAL_SIGNED_BUILD_PENDING_PUBLICATION"
+        publication_status = publicationMatched ? "PUBLISHED_MATCHING_RELEASE" : "LOCAL_SIGNED_BUILD_PENDING_PUBLICATION"
     };
     var productManifest = new
     {
         schema_version = "1.0", product_name = "Sunrise File Manager",
         product_id = "SUNRISE-FILE-MANAGER-WIN-DESKTOP", version, publisher = "Sunrise Group",
         distribution = new { repository = sourceUrl, proposed_release_page = releasePage,
-            latest_json = latestUrl, notice = noticeUrl, public_distribution_validated = false },
+            latest_json = latestUrl, notice = noticeUrl, public_distribution_validated = publicationMatched },
         artifacts = new { setup = expectedName, sha256 = hash, size_bytes = info.Length },
         control = new { id = "sunrise_file_manager", source = "central control.txt", scope = "operation/update/minimum_version" }
     };
@@ -101,8 +119,8 @@ try
         $"설치파일: {expectedName}\n크기: {info.Length} bytes\nSHA256: {hash}\n" +
         $"서명 Subject: {signer}\n서명 SHA1: {thumbprint.ToUpperInvariant()}\n\n" +
         "1. Windows 설치/서명/제거 실기 검증 완료 후 배포를 승인하십시오.\n" +
-        "2. 공개 읽기 가능한 제품 전용 배포 경로를 먼저 확인하십시오 (비공개 GitHub raw/release는 익명 사용 불가).\n" +
-        "3. 설치파일을 배포하고 실제 URL/크기/SHA256을 대조한 뒤 latest.json을 게시하십시오.\n" +
+        "2. 제품 저장소 공개 접근과 raw latest.json/notice.txt 조회를 확인하십시오.\n" +
+        "3. GitHub 릴리스 설치파일과 실제 URL/크기/SHA256을 대조한 뒤 제품 latest.json을 게시하십시오.\n" +
         "4. notice.txt도 File Manager 제품 채널에 게시하십시오. Sunrise Control은 운영/업데이트 정책만 유지합니다.\n" +
         "5. 빌드 스크립트는 게시·다운로드·설치를 자동 수행하지 않습니다.\n";
     var signatureReport = "Sunrise File Manager Authenticode build verification evidence\n" +
@@ -122,11 +140,9 @@ try
         [Path.Combine(dist, "release_info.json")] = Json(releaseInfo),
         [Path.Combine(dist, "sunrise_file_manager_product_manifest.json")] = Json(productManifest),
         [Path.Combine(dist, "UPLOAD_TO_GITHUB.txt")] = uploadGuide,
-        [Path.Combine(dist, "SIGNATURE_VERIFY_RESULT.txt")] = signatureReport,
-        [Path.Combine(root, "latest.json")] = Json(latest),
-        [Path.Combine(root, "notice.txt")] = notice
+        [Path.Combine(dist, "SIGNATURE_VERIFY_RESULT.txt")] = signatureReport
     };
-    // Prepare every output before modifying publication candidates.
+    // Local build metadata only. Published product feed is never modified automatically.
     foreach (var (target, body) in writes)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
@@ -168,7 +184,8 @@ try
     Console.WriteLine($"[BUILD_STAGE_OK] release_metadata version={version}");
     Console.WriteLine($"[BUILD_STAGE_OK] release_artifact_verify files={writes.Count}");
     Console.WriteLine($"[RELEASE] Setup SHA256={hash}, bytes={info.Length}");
-    Console.WriteLine("[RELEASE] Product latest.json/notice.txt generated. Publication remains disabled.");
+    Console.WriteLine("[RELEASE] Local latest.json/notice.txt generated. Published feed preserved.");
+    Console.WriteLine(publicationMatched ? "[RELEASE] Published artifact hash/size MATCH" : "[RELEASE] Local artifact is not the published release; no download URL in generated metadata.");
     return 0;
 }
 catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or JsonException or CryptographicException)

@@ -16,7 +16,7 @@ class ProductReleaseContract(unittest.TestCase):
         self.assertIn('Sunrise-File-Manager/main/latest.json',src)
         self.assertIn('Sunrise-File-Manager/main/notice.txt',src)
         self.assertNotIn('Sunrise_Control/main/products/sunrise_file_manager',src)
-        self.assertIn('private', src)
+        self.assertIn('public', src)
         central=(APP/'Services/SunriseControlService.cs').read_text('utf-8')
         self.assertIn('Sunrise_Control/main/control.txt',central)
         self.assertNotIn('latest.json',central)
@@ -35,7 +35,7 @@ class ProductReleaseContract(unittest.TestCase):
         self.assertNotIn(b'\n',raw.replace(b'\r\n',b''))
     def test_generator_hashes_real_signed_setup(self):
         code=(ROOT/'build-tools/Sunrise.FileManager.ReleaseMetadata/Program.cs').read_text('utf-8')
-        for token in ['SHA256.HashData(stream)', 'info.Length', 'RELEASE_VERSION.txt', 'NOTICE_BODY.txt', 'latest.json', 'notice.txt', 'release-metadata', 'update_endpoint_configured = false', 'download_url = ""']:
+        for token in ['SHA256.HashData(stream)', 'info.Length', 'RELEASE_VERSION.txt', 'NOTICE_BODY.txt', 'latest.json', 'notice.txt', 'release-metadata', 'update_endpoint_configured = publicationMatched', 'download_url = activeDownloadUrl']:
             self.assertIn(token,code)
         self.assertNotIn('Process.Start',code)
         self.assertNotIn('Sunrise_Control',code)
@@ -44,8 +44,8 @@ class ProductReleaseContract(unittest.TestCase):
     def test_source_release_is_publishing_gated(self):
         feed=json.loads((ROOT/'latest.json').read_text('utf-8'))
         self.assertEqual(feed['latest_version'],(ROOT/'installer/RELEASE_VERSION.txt').read_text('utf-8').strip())
-        self.assertFalse(feed['download_url'])
-        self.assertFalse(feed['update_endpoint_configured'])
+        self.assertEqual(feed['download_url'], 'https://github.com/Peter-msk/Sunrise-File-Manager/releases/download/v1.0.0/Sunrise_File_Manager_1.0.0_Setup.exe')
+        self.assertTrue(feed['update_endpoint_configured'])
         self.assertIn('Sunrise-File-Manager/main/notice.txt',feed['notice_url'])
         self.assertNotIn('Sunrise_Control',json.dumps(feed))
         self.assertGreater((ROOT/'release/NOTICE_BODY.txt').stat().st_size, 80)

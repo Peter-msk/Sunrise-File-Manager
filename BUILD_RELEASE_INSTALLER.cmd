@@ -166,8 +166,6 @@ if errorlevel 1 goto :fail_metadata
 if not defined SUNRISE_DOTNET_RESOLVED goto :fail_metadata
 "%SUNRISE_DOTNET_RESOLVED%" run --project "%ROOT%\build-tools\Sunrise.FileManager.ReleaseMetadata\Sunrise.FileManager.ReleaseMetadata.csproj" --configuration Release --no-launch-profile -- "%ROOT%" "%FINAL_SETUP%" "%SFM_APP_VERSION%" > "%LOG_DIR%\R16_release_metadata.log" 2>&1
 if errorlevel 1 goto :fail_metadata
-if not exist "%ROOT%\latest.json" goto :fail_metadata
-if not exist "%ROOT%\notice.txt" goto :fail_metadata
 REM Sunrise Capture v4.2.0 reference: release_metadata -> required artifacts gate.
 set "FAILED_STAGE=RELEASE_ARTIFACT_VERIFY"
 >> "%RESULT%" echo STAGE=RELEASE_ARTIFACT_VERIFY
@@ -177,12 +175,10 @@ for %%F in (latest.json notice.txt release_info.json sunrise_file_manager_produc
  if not exist "%DIST%\release-metadata\%%F" goto :fail_metadata
  for %%Z in ("%DIST%\release-metadata\%%F") do if %%~zZ EQU 0 goto :fail_metadata
 )
-fc /b "%ROOT%\latest.json" "%DIST%\release-metadata\latest.json" > "%LOG_DIR%\R17_release_metadata_compare.log" 2>&1
-if errorlevel 1 goto :fail_metadata
-fc /b "%ROOT%\notice.txt" "%DIST%\release-metadata\notice.txt" >> "%LOG_DIR%\R17_release_metadata_compare.log" 2>&1
-if errorlevel 1 goto :fail_metadata
+REM Local metadata may differ from published feed when re-building an already released version.
+REM Never overwrite committed latest.json or notice.txt on local builds.
 echo [BUILD_STAGE_OK] release_artifact_verify
-echo [RELEASE] latest.json / notice.txt and Capture-style release bundle generated.
+echo [RELEASE] Local latest.json / notice.txt bundle generated. Published feed preserved.
 if exist "%BACKUP_SETUP%" del /q /f "%BACKUP_SETUP%"
 if exist "%INSTALLER_STAGE%" rmdir /s /q "%INSTALLER_STAGE%"
 if exist "%DIST%\_R18_installer_payload" rmdir /s /q "%DIST%\_R18_installer_payload"

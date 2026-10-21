@@ -46,9 +46,12 @@
     "official_builder": "BUILD_ON_WINDOWS_COMPANY.cmd",
     "backend": "R14 signed self-contained WPF OneDir embedded in installer",
     "company_document_tests": "SKIPPED",
-    "windows_install_verify": "PENDING",
-    "online_update_endpoint": "NOT_CONFIGURED",
-    "source_audit": "STATIC_TEST_PASS_WINDOWS_GATES_PENDING"
+    "windows_install_verify": "NOT_TESTED_BY_ASSISTANT",
+    "online_update_endpoint": "PUBLISHED_GITHUB_RELEASE_V1.0.0",
+    "source_audit": "STATIC_TEST_PASS_GITHUB_ASSET_DIGEST_CONFIRMED_WINDOWS_GATES_PENDING",
+    "github_release_url": "https://github.com/Peter-msk/Sunrise-File-Manager/releases/tag/v1.0.0",
+    "released_asset_sha256": "eb866da915459cb1c61df22039957f6e07c9d863293a406a40ea5fcb47d62cdd",
+    "published_asset_size_bytes": 51251864
   },
   "revision": "R19_MEMO_AUTHOR_INTEGRITY_OPTIN_DPAPI_HISTORY",
   "release_qualification": "SOURCE_STATIC_PASS_WINDOWS_RELEASE_PENDING",

@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "version": "1.0.0",
+  "release_url": "https://github.com/Peter-msk/Sunrise-File-Manager/releases/tag/v1.0.0",
+  "download_url": "https://github.com/Peter-msk/Sunrise-File-Manager/releases/download/v1.0.0/Sunrise_File_Manager_1.0.0_Setup.exe",
+  "download_file_name": "Sunrise_File_Manager_1.0.0_Setup.exe",
+  "sha256": "eb866da915459cb1c61df22039957f6e07c9d863293a406a40ea5fcb47d62cdd",
+  "file_size_bytes": 51251864,
+  "published_at_utc": "2026-10-21T07:11:15Z",
+  "source": "GitHub v1.0.0 release API asset digest and asset size; local installer binary not downloaded here"
+}

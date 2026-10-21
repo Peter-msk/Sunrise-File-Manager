@@ -17,12 +17,12 @@ class SunriseControlReleaseContract(unittest.TestCase):
         self.assertEqual(feed['product_id'], 'SUNRISE-FILE-MANAGER-WIN-DESKTOP')
         self.assertEqual(feed['app_id'], 'sunrise_file_manager')
 
-    def test_no_phantom_installer(self):
+    def test_github_published_installer(self):
         feed = json.loads((ROOT / 'latest.json').read_text('utf-8'))
-        self.assertFalse(feed['download_url'])
-        self.assertFalse(feed['sha256'])
-        self.assertEqual(feed['file_size_bytes'], 0)
-        self.assertFalse(feed['update_endpoint_configured'])
+        self.assertTrue(feed['download_url'].endswith('/releases/download/v1.0.0/Sunrise_File_Manager_1.0.0_Setup.exe'))
+        self.assertEqual(feed['sha256'], 'eb866da915459cb1c61df22039957f6e07c9d863293a406a40ea5fcb47d62cdd')
+        self.assertEqual(feed['file_size_bytes'], 51251864)
+        self.assertTrue(feed['update_endpoint_configured'])
 
     def test_product_owned_metadata_urls(self):
         source = (APP/'Services/SunriseReleaseService.cs').read_text('utf-8')

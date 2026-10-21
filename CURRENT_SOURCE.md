@@ -1,9 +1,9 @@
-# Sunrise File Manager 1.0.0 — R19 R17
+# Sunrise File Manager 1.0.0 — R19 R18 정식 릴리스 연동
 
-Google Drive `Sunrise_Capture_v4.2.0_FINAL.zip`의 실제 `build_scripts/build_pipeline.py`·`build_artifact_contract.json`을 확인하여 릴리스 산출물 계약을 File Manager에 적용했습니다.
+GitHub v1.0.0 정식 릴리스가 게시되었습니다. [설치파일/릴리스](https://github.com/Peter-msk/Sunrise-File-Manager/releases/tag/v1.0.0) · [R18 전체 소스 ZIP](./releases/source/Sunrise_File_Manager_1.0.0_R19_PUBLISHED_RELEASE_V1_R18_FULL_SOURCE.zip) · [R18 인수인계](docs/R19_R18_PUBLISHED_RELEASE_INTEGRATION.md)
 
-- [R17 전체 소스](./releases/source/Sunrise_File_Manager_1.0.0_R19_CAPTURE_SOURCE_RELEASE_R17_FULL_SOURCE.zip)
-- [Capture 원본 빌드 비교 보고서](docs/R19_R17_CAPTURE_SOURCE_ALIGNED_RELEASE.md)
-- 공식 Setup 서명/검증 후 제품별 `latest.json`·`notice.txt`와 `release_info.json`, 매니페스트, 서명 기록, 게시 안내 생성 및 필수 산출물 검사.
-- 중앙 Control은 실행·점검·업데이트 정책만 관리합니다.
-- 정적 검사 134건과 패키징 계약검사 15건 통과. Windows 실기 빌드·서명·설치 및 비공개 GitHub 익명 조회는 미검증/제약 상태.
+제품별 `latest.json` 및 `notice.txt`는 이 저장소 루트의 공개 파일을 조회합니다. `latest.json` 다운로드 URL·SHA-256·크기는 GitHub 릴리스 자산 메타데이터와 일치합니다. Sunrise Control은 중앙 실행/업데이트/점검 정책만 담당합니다.
+
+정식 빌드의 배포 메타데이터는 `dist/release-metadata/`에 생성하며 소스 루트 공개 피드는 덮어쓰지 않습니다. `release/PUBLISHED_RELEASE.json`과 설치파일 해시·크기가 맞을 때만 로컬 생성물에 게시 URL을 제공합니다.
+
+회귀검사 138건, 하위검사 38건 및 패키징 15건 PASS (정적 검증). Windows GUI/설치/다운로드 실기 검증은 별도입니다.
