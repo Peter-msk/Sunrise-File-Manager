@@ -16,7 +16,7 @@
   "download_file_name": "Sunrise_File_Manager_1.2.0_Setup.exe",
   "sha256": "f56fd00c150e0cc0ee8746eb86369313f6afe793c5f51cb4a9362181aef1292b",
   "file_size_bytes": 51487464,
-  "update_endpoint_configured": false,
+  "update_endpoint_configured": true,
   "notice_url": "https://raw.githubusercontent.com/Peter-msk/Sunrise-File-Manager/main/notice.txt",
   "release_notes": "Sunrise File Manager 1.2.0\uC740 \uC5C5\uB370\uC774\uD2B8\uC640 \uD30C\uC77C \uC791\uC5C5\uC758 \uC548\uC815\uC131\uC744 \uAC1C\uC120\uD588\uC2B5\uB2C8\uB2E4.."
 }
