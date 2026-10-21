@@ -1,10 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R21_V110_WPF_CS0246_IO_HOTFIX",
+  "revision": "R22_V110_METADATA_DLL_HOST_PREFLIGHT_MINIMAL",
   "version": "1.1.0",
   "published_version": "1.0.0",
-  "status": "SOURCE_TEST_PASS_WINDOWS_WPF_REBUILD_PENDING",
-  "file_count": 277,
+  "status": "R21_WINDOWS_COMPILE_SIGNED_SETUP_PASS_R22_METADATA_DLL_FIX_WINDOWS_PENDING",
+  "file_count": 279,
+  "verification": "158 Python source tests, 15 packaging checks, 13 XAML XML documents verified; Windows R22 rerun pending",
   "files": [
     {
       "path": ".gitattributes",
@@ -38,8 +39,8 @@
     },
     {
       "path": "BUILD_ON_WINDOWS_COMPANY.cmd",
-      "sha256": "5c812abf4cc021473efaacdc28e45bb5d0a261800ea32aa68732136c7813c857",
-      "bytes": 1425
+      "sha256": "becbf46ab2530ee8ba8c1b5780df1a317604381bfeeea42f008f9e90e4c95ac6",
+      "bytes": 1270
     },
     {
       "path": "BUILD_PIPELINE_R02_NOTES.md",
@@ -48,13 +49,13 @@
     },
     {
       "path": "BUILD_RELEASE_INSTALLER.cmd",
-      "sha256": "8b0af9dea83a1742cfac417803f17b27ed8acd61d3ece7975ac50abaf290c625",
-      "bytes": 15558
+      "sha256": "1cff02fc3f87df548143c188265374f45b40e985809ec5907fa1fa1c40481a57",
+      "bytes": 16095
     },
     {
       "path": "BUILD_RELEASE_ONEDIR.cmd",
-      "sha256": "89f6a814815a8eb54d14b64eb79e50b9fd6469745a0d32cfef7d5e416e0d2047",
-      "bytes": 14199
+      "sha256": "35b138563cb2eeef2c57715b844ff0fb8b83ad222375f712278e0355d6dc27ec",
+      "bytes": 14170
     },
     {
       "path": "BUILD_TEST_ENVIRONMENT.txt",
@@ -78,8 +79,8 @@
     },
     {
       "path": "CURRENT_SOURCE.md",
-      "sha256": "762528a08550b00b4e0d7462cae9d7b0cfaa6fca0bd7678d5f3626e7079c8db0",
-      "bytes": 967
+      "sha256": "1b61cf0d0cefe8fc58f48e60d022dbae9f05fe66a35f805901388007e93f7f55",
+      "bytes": 1483
     },
     {
       "path": "INSTALL_OLLAMA.cmd",
@@ -183,8 +184,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "1a2df94c0ec65ef4c4ed69f936fb01b470fafa0f92b910425e8a673b802b3072",
-      "bytes": 10288
+      "sha256": "e0828b023ae8357679f648b1137f4990d56a745ec256da5f548e95c1ec66b87e",
+      "bytes": 10674
     },
     {
       "path": "RELEASE_STATUS.json",
@@ -425,6 +426,11 @@
       "path": "docs/R21_V110_WPF_CS0246_IO_HOTFIX.md",
       "sha256": "a1dbb873e21353f950b1d7ad7876cc29e5146c0f7ec1d40589aaef2a2c96e5c2",
       "bytes": 1886
+    },
+    {
+      "path": "docs/R22_V110_METADATA_DLL_HOST_HOTFIX.md",
+      "sha256": "69745ff92539e357f5eb2b53eeec83e982d87065da9689444a704ad1cde69257",
+      "bytes": 2023
     },
     {
       "path": "docs/SIGNING_R14.md",
@@ -1238,8 +1244,8 @@
     },
     {
       "path": "tests/test_r15_installer_contract.py",
-      "sha256": "33d6aea19ec1c84a805432c1bee429484758250ea505aa48c6b4c34431849785",
-      "bytes": 4913
+      "sha256": "0670380edf5eaa798d5838671e301cad606acdb2187e8730619bd81afe9abf5f",
+      "bytes": 4917
     },
     {
       "path": "tests/test_r17_drive_merge_contract.py",
@@ -1347,6 +1353,11 @@
       "bytes": 1423
     },
     {
+      "path": "tests/test_r22_company_metadata_host.py",
+      "sha256": "90c8e5f08199217bbc3b9f2cc7767dc775c47a82da830c822d4ba972dde743b2",
+      "bytes": 3085
+    },
+    {
       "path": "tests/verify_packaging_contract.py",
       "sha256": "6dbc69f42eebbf9449735273b8e8357761389dec9eb5f13a7cdeda6c46768fbc",
       "bytes": 2628
@@ -1391,6 +1402,5 @@
       "sha256": "556a9afe499449a5f05e1889084dc9a3cad191b59f74035c4bbcf5cb05d5c154",
       "bytes": 4089
     }
-  ],
-  "baseline": "R20_V110_THEME_ACCESSIBILITY"
+  ]
 }

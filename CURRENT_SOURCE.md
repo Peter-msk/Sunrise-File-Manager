@@ -10,3 +10,8 @@
 소스 정적 검사 통과, Windows WPF 실제 컴파일·설치·DPI·사용자 조작 검증은 완료되지 않았습니다.
 
 - [R21 Windows 실기 CS0246 핫픽스 안내](docs/R21_V110_WPF_CS0246_IO_HOTFIX.md)
+
+- [R22 빌드 오류·중복 검사 간소화](docs/R22_V110_METADATA_DLL_HOST_HOTFIX.md)
+- R21 Windows 빌드 로그에서 WPF 0 errors / signed Setup success, 마지막 ReleaseMetadata.exe 실행만 ACCESS_DENIED.
+- R22는 `dotnet build -p:UseAppHost=false` 뒤 `dotnet <ReleaseMetadata.dll>`을 실행하여 unsigned helper EXE 실행을 제거합니다.
+- 공식 빌드 시작 시 반복적인 별도 체크리스트 출력은 생략하며 필요한 환경 검증은 실제 사용 단계에서 시행합니다.

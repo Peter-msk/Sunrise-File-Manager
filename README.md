@@ -1,3 +1,5 @@
+> 1.1.0 R22 빌드 안정화 소스입니다. 공식 빌드는 단일 CMD에서 실행하며, 중복 사전 체크리스트는 생략합니다. 추가 설명은 [R22 빌드 개선 안내](docs/R22_V110_METADATA_DLL_HOST_HOTFIX.md)에서 확인할 수 있습니다.
+
 > 1.1.0 UI 개선 소스입니다. 공식 배포는 현재 v1.0.0이며, 새 1.1.0 설치파일은 Windows 서명·실기 검증 및 릴리스 게시 후 제공됩니다. 상세 변경: [1.1.0 인수인계](docs/R20_V110_THEME_ACCESSIBILITY_HANDOVER.md).
 
 # Sunrise File Manager 1.1.0 (차기 버전 소스)
@@ -9,11 +11,11 @@ Sunrise Group의 Windows 10/11 x64용 .NET 10 WPF 파일 관리 프로그램입�
 1. **`BUILD_ON_WINDOWS_COMPANY.cmd`**: 공식 서명 설치형 Setup EXE를 빌드합니다. Windows x64, .NET 10 SDK, Inno Setup, Windows SDK SignTool, Windows 기본 certutil/certreq가 필요합니다. 회사 정책에서는 문서 fixture·업무파일 로직 테스트를 실행하지 않습니다.
 2. **`BUILD_DEV_EXE.cmd`**: .NET 10 SDK를 이용한 **미서명 개발 확인용 EXE**를 게시합니다. 회사 정책에 따른 사용 여부를 판단해야 하며, 공식 배포물로 사용하지 않습니다.
 
-나머지 `BUILD_RELEASE_INSTALLER.cmd`, `BUILD_RELEASE_ONEDIR.cmd`, `CHECK_INSTALLER_BUILD_ENV.cmd`, `build-tools/*.cmd`는 공식 빌드가 내부에서 호출하는 보조 스크립트입니다. 수동 인증서 지문 선택 도구나 별도 인증서 사전검사 실행은 필요하지 않습니다.
+`BUILD_RELEASE_INSTALLER.cmd`, `BUILD_RELEASE_ONEDIR.cmd`, `build-tools/*.cmd`는 공식 빌드의 내부 보조 스크립트이고, `CHECK_INSTALLER_BUILD_ENV.cmd`는 사용자가 요청할 때만 실행하는 진단 도구입니다. 수동 인증서 지문 선택 도구나 별도 인증서 사전검사 실행은 필요하지 않습니다.
 
 ### R13: 진행 화면과 단계별 로그 보완
 
-`BUILD_ON_WINDOWS_COMPANY.cmd`를 실행하면 먼저 환경을 확인합니다. 이후 **WPF 게시 → Sunrise Group 서명 인증서 확인·최초 생성 → EXE/DLL 서명·검증 → Inno Setup 설치파일·Uninstaller 서명 → 검증·결과 저장** 순서로 작업합니다. 각 단계는 CMD 화면에 출력됩니다. 하위 OneDir 빌드 출력 전체를 로그로 숨기는 종전 R12 동작을 제거했습니다.
+`BUILD_ON_WINDOWS_COMPANY.cmd`를 실행하면 별도 사전 체크리스트를 출력하지 않고 필요한 실제 도구만 빌드 단계에서 확인합니다. 이후 **WPF 게시 → Sunrise Group 서명 인증서 확인·최초 생성 → EXE/DLL 서명·검증 → Inno Setup 설치파일·Uninstaller 서명 → 검증·결과 저장** 순서로 작업합니다. 각 단계는 CMD 화면에 출력됩니다. 하위 OneDir 빌드 출력 전체를 로그로 숨기는 종전 R12 동작을 제거했습니다.
 
 빌드창이 멈춘 것처럼 보일 때는 **같은 소스 폴더의 `build-logs/R13_CURRENT_STAGE.txt`**를 먼저 확인하십시오. `STAGE=WPF_PUBLISH`라면 컴파일/패키지 복원 과정이고, `SIGNING_PREFLIGHT`라면 인증서 확인, `AUTHENTICODE_SIGN`이라면 서명 및 타임스탬프 통신, `INSTALLER_COMPILE`이라면 Inno Setup 컴파일 과정입니다. 자세한 오류는 `R14_BUILD_RESULT.txt`, `R15_INSTALLER_BUILD_RESULT.txt`와 단계별 `R14_*.log`, `R15_*.log`에 남습니다.
 

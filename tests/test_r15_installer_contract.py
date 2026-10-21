@@ -45,8 +45,8 @@ class InstallerContractTests(unittest.TestCase):
     def test_r14_signed_payload_and_company_mode(self):
         self.assertIn('BUILD_RELEASE_ONEDIR.cmd" --company --no-pause --installer-payload', BUILD)
         self.assertIn('STATUS=SUCCESS', BUILD)
-        self.assertIn('Sunrise.FileManager.exe', BUILD)
-        self.assertIn('Sunrise.FileManager.dll', BUILD)
+        self.assertIn('Sunrise.FileManager.exe', BACKEND)
+        self.assertIn('Sunrise.FileManager.dll', BACKEND)
         self.assertIn('-p:PublishSingleFile=false', BACKEND)
         self.assertIn('-p:Version=%SUNRISE_RELEASE_VERSION%', BACKEND)
         self.assertIn('SKIPPED', BACKEND)

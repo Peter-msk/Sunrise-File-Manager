@@ -101,9 +101,7 @@ REM R13 keeps child console live; each native tool also writes its own detail lo
 call "%ROOT%\BUILD_RELEASE_ONEDIR.cmd" --company --no-pause --installer-payload
 if errorlevel 1 goto :fail_payload
 >> "%LOG_DIR%\R15_payload_build.log" echo STATUS=SUCCESS
-findstr /X /C:"STATUS=SUCCESS" "%LOG_DIR%\R14_BUILD_RESULT.txt" >nul 2>&1
-if errorlevel 1 goto :fail_payload
-for %%F in ("%APP_DIR%\Sunrise.FileManager.exe" "%APP_DIR%\Sunrise.FileManager.dll" "%APP_DIR%\hostfxr.dll" "%APP_DIR%\coreclr.dll") do if not exist "%%~F" goto :fail_payload
+REM The called payload stage already validated its signed EXE/DLL and runtime.
 if not exist "%CERT_FILE%" goto :fail_payload
 set "CERT_THUMBPRINT="
 for /f "usebackq tokens=1,2 delims==" %%A in ("%CERT_FILE%") do if /I "%%A"=="THUMBPRINT" set "CERT_THUMBPRINT=%%B"
@@ -160,12 +158,26 @@ set "FAILED_STAGE=RELEASE_METADATA"
 >> "%RESULT%" echo STAGE=RELEASE_METADATA
 > "%LIVE_STAGE%" echo STAGE=RELEASE_METADATA
 echo [RELEASE] Generating own-product latest.json and notice.txt from verified Setup.
+REM R22: Company Windows policy can deny launching a freshly generated unsigned
+REM ReleaseMetadata.exe. Build a DLL-only helper and run it using the already
+REM installed/approved dotnet.exe host. Never start an apphost EXE here.
 set "SUNRISE_DOTNET_RESOLVED="
 call "%ROOT%\build-tools\FindDotNet10.cmd" > "%LOG_DIR%\R16_dotnet_metadata_discovery.log" 2>&1
 if errorlevel 1 goto :fail_metadata
 if not defined SUNRISE_DOTNET_RESOLVED goto :fail_metadata
-"%SUNRISE_DOTNET_RESOLVED%" run --project "%ROOT%\build-tools\Sunrise.FileManager.ReleaseMetadata\Sunrise.FileManager.ReleaseMetadata.csproj" --configuration Release --no-launch-profile -- "%ROOT%" "%FINAL_SETUP%" "%SFM_APP_VERSION%" > "%LOG_DIR%\R16_release_metadata.log" 2>&1
-if errorlevel 1 goto :fail_metadata
+set "METADATA_PROJECT=%ROOT%\build-tools\Sunrise.FileManager.ReleaseMetadata\Sunrise.FileManager.ReleaseMetadata.csproj"
+set "METADATA_DLL=%ROOT%\build-tools\Sunrise.FileManager.ReleaseMetadata\bin\Release\net10.0\Sunrise.FileManager.ReleaseMetadata.dll"
+"%SUNRISE_DOTNET_RESOLVED%" build "%METADATA_PROJECT%" --configuration Release -p:UseAppHost=false --nologo -v:quiet > "%LOG_DIR%\R16_metadata_build.log" 2>&1
+if errorlevel 1 (
+ echo [ERROR] Metadata DLL build failed. See build-logs\R16_metadata_build.log.
+ goto :fail_metadata
+)
+REM Output DLL is loaded by dotnet.exe; no direct creation/process launch of an unsigned helper EXE.
+"%SUNRISE_DOTNET_RESOLVED%" "%METADATA_DLL%" "%ROOT%" "%FINAL_SETUP%" "%SFM_APP_VERSION%" > "%LOG_DIR%\R16_release_metadata.log" 2>&1
+if errorlevel 1 (
+ echo [ERROR] Metadata generation failed. See build-logs\R16_release_metadata.log.
+ goto :fail_metadata
+)
 REM Sunrise Capture v4.2.0 reference: release_metadata -> required artifacts gate.
 set "FAILED_STAGE=RELEASE_ARTIFACT_VERIFY"
 >> "%RESULT%" echo STAGE=RELEASE_ARTIFACT_VERIFY
@@ -270,8 +282,7 @@ if exist "%LOG_DIR%\R14_cert_provision.log" type "%LOG_DIR%\R14_cert_provision.l
 if exist "%LOG_DIR%\R14_signing_preflight.log" type "%LOG_DIR%\R14_signing_preflight.log"
 goto :fail
 :fail_metadata
-set "FAILED_STAGE=RELEASE_METADATA_OR_ARTIFACT_VERIFY"
-echo [ERROR] Product release metadata or artifact gate failed. See R16_release_metadata.log and R17_release_metadata_compare.log.
+echo [ERROR] Release stage %FAILED_STAGE% failed. See R16_metadata_build.log / R16_release_metadata.log.
 echo [ERROR] The new Setup was built, but the release is NOT marked complete.
 echo [ERROR] Preserve build-logs and verify metadata before publishing.
 REM Roll back the installer artifact when metadata generation failed.

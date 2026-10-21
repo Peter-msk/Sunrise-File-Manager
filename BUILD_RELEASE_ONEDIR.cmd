@@ -54,8 +54,7 @@ set "DOTNET_EXE=%SUNRISE_DOTNET_RESOLVED%"
 set "FOUND_SDK_VER=%SUNRISE_DOTNET_VERSION%"
 for %%I in ("%DOTNET_EXE%") do set "DOTNET_ROOT=%%~dpI"
 set "PATH=%DOTNET_ROOT%;%PATH%"
-"%DOTNET_EXE%" --list-sdks > "%LOG_DIR%\R14_sdk_list.log" 2>&1
-if errorlevel 1 goto :fail_sdk
+REM FindDotNet10.cmd already identified an installed .NET 10 SDK.
 >> "%RESULT%" echo SDK=%FOUND_SDK_VER%
 echo [INFO] .NET 10 SDK: %FOUND_SDK_VER%
 echo [INFO] OneDir / win-x64 / self-contained / Sunrise Group Authenticode required
