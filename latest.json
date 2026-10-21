@@ -14,9 +14,9 @@
   "release_url": "",
   "download_url": "",
   "download_file_name": "Sunrise_File_Manager_1.0.0_Setup.exe",
-  "sha256": "",
-  "file_size_bytes": 0,
+  "sha256": "eb866da915459cb1c61df22039957f6e07c9d863293a406a40ea5fcb47d62cdd",
+  "file_size_bytes": 51251864,
   "update_endpoint_configured": false,
   "notice_url": "https://raw.githubusercontent.com/Peter-msk/Sunrise-File-Manager/main/notice.txt",
-  "release_notes": "공식 1.0.0 제품별 메타데이터는 Sunrise File Manager 저장소에서 관리합니다. 빌드 성공 시 실제 Setup의 SHA256/크기로 latest.json과 notice.txt를 생성하며, 설치파일의 공개 배포가 검증될 때까지 다운로드 엔드포인트는 비활성화됩니다."
+  "release_notes": "\uBD84\uD560 \uD0D0\uC0C9\uAE30, \uD30C\uC77C \uBBF8\uB9AC\uBCF4\uAE30, \uBA54\uBAA8, AI \uC815\uB9AC, Sunrise Control v1 \uC911\uC559 \uC815\uCC45, \uC81C\uD488\uBCC4 \uACF5\uC9C0 \uBC0F \uC5C5\uB370\uC774\uD2B8 \uD655\uC778. \uACF5\uAC1C \uB9B4\uB9AC\uC2A4 \uC2B9\uC778 \uC804\uAE4C\uC9C0 \uB2E4\uC6B4\uB85C\uB4DC \uB9C1\uD06C\uB294 \uBE44\uD65C\uC131\uD654\uB429\uB2C8\uB2E4."
 }
