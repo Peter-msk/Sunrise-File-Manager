@@ -11,12 +11,12 @@
   "latest_version": "1.0.0",
   "official_release": true,
   "release_date": "2026-10-21",
-  "release_url": "https://github.com/Peter-msk/Sunrise-File-Manager/releases/tag/v1.0.0",
-  "download_url": "https://github.com/Peter-msk/Sunrise-File-Manager/releases/download/v1.0.0/Sunrise_File_Manager_1.0.0_Setup.exe",
+  "release_url": "",
+  "download_url": "",
   "download_file_name": "Sunrise_File_Manager_1.0.0_Setup.exe",
-  "sha256": "eb866da915459cb1c61df22039957f6e07c9d863293a406a40ea5fcb47d62cdd",
-  "file_size_bytes": 51251864,
-  "update_endpoint_configured": true,
+  "sha256": "d1e496c6f6989912e181ddbe4923c5b0f672cefbe4927287503de48a3bb0548a",
+  "file_size_bytes": 51249800,
+  "update_endpoint_configured": false,
   "notice_url": "https://raw.githubusercontent.com/Peter-msk/Sunrise-File-Manager/main/notice.txt",
-  "release_notes": "Sunrise File Manager 1.0.0 정식 설치파일 출시. 분할 탐색기, 파일 미리보기, 공유 메모, AI 파일 정리, Sunrise Control 정책 및 제품별 공지·업데이트 확인 기능을 포함합니다."
+  "release_notes": "\uBD84\uD560 \uD0D0\uC0C9\uAE30, \uD30C\uC77C \uBBF8\uB9AC\uBCF4\uAE30, \uBA54\uBAA8, AI \uC815\uB9AC, Sunrise Control v1 \uC911\uC559 \uC815\uCC45, \uC81C\uD488\uBCC4 \uACF5\uC9C0 \uBC0F \uC5C5\uB370\uC774\uD2B8 \uD655\uC778. \uD604\uC7AC \uB85C\uCEEC \uBE4C\uB4DC\uB294 \uACF5\uAC1C \uC124\uCE58\uD30C\uC77C\uACFC \uC77C\uCE58\uD558\uC9C0 \uC54A\uC544 \uB2E4\uC6B4\uB85C\uB4DC \uB9C1\uD06C\uAC00 \uBE44\uD65C\uC131\uD654\uB429\uB2C8\uB2E4."
 }
