@@ -20,6 +20,7 @@ public sealed class ExplorerTab : INotifyPropertyChanged
     {
         get
         {
+            if (Sunrise.FileManager.Services.WindowsKnownLocations.IsRecycleBin(CurrentPath)) return "휴지통";
             string path = CurrentPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             return Path.GetFileName(path) is { Length: > 0 } name ? name : CurrentPath;
         }

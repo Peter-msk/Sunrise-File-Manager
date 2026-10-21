@@ -17,7 +17,7 @@ public partial class ExplorerPane
 {
     public void SyncToFolderIfUntouched(string? folderPath)
     {
-        if (HasUserNavigated || _hasInitialSessionPath || string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
+        if (HasUserNavigated || _hasInitialSessionPath || string.IsNullOrWhiteSpace(folderPath) || !WindowsKnownLocations.Exists(folderPath))
             return;
         if (_activeTab is not null && !string.Equals(_activeTab.CurrentPath, folderPath, StringComparison.OrdinalIgnoreCase))
         {
@@ -28,7 +28,7 @@ public partial class ExplorerPane
 
     public void SyncToFolder(string folderPath)
     {
-        if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath) || _activeTab is null)
+        if (string.IsNullOrWhiteSpace(folderPath) || !WindowsKnownLocations.Exists(folderPath) || _activeTab is null)
             return;
         HasUserNavigated = true;
         if (_activeTab.Navigate(folderPath))
@@ -86,12 +86,13 @@ public partial class ExplorerPane
         foreach (ExplorerTab item in _tabs)
             item.IsSelected = ReferenceEquals(item, _activeTab);
         string path = _activeTab.CurrentPath;
-        AddressBox.Text = path;
+        ConfigureRecycleBinView();
+        SetAddressPath(path);
         UpdateBreadcrumbs(path);
         AttachFolderWatcher(path);
         BackButton.IsEnabled = _activeTab.CanGoBack;
         ForwardButton.IsEnabled = _activeTab.CanGoForward;
-        UpButton.IsEnabled = Directory.GetParent(path) is not null;
+        UpButton.IsEnabled = !IsRecycleBin && Directory.GetParent(path) is not null;
         _ = ApplyFilterAndSortAsync();
     }
 
@@ -154,7 +155,7 @@ public partial class ExplorerPane
         foreach (ExplorerTab item in _tabs)
             item.IsSelected = ReferenceEquals(item, tab);
         _activeTab = tab;
-        AddressBox.Text = tab.CurrentPath;
+        SetAddressPath(tab.CurrentPath);
         UpdateBreadcrumbs(tab.CurrentPath);
         SearchBox.Text = string.Empty;
         _filterTimer.Stop();
@@ -165,6 +166,7 @@ public partial class ExplorerPane
     {
         if (BreadcrumbPanel is null) return;
         BreadcrumbPanel.Children.Clear();
+        if (WindowsKnownLocations.IsRecycleBin(fullPath)) { AddBreadcrumbButton("휴지통", WindowsKnownLocations.RecycleBin); return; }
         if (string.IsNullOrWhiteSpace(fullPath)) return;
 
         try
@@ -173,7 +175,9 @@ public partial class ExplorerPane
             string? root = Path.GetPathRoot(normalized);
             if (string.IsNullOrEmpty(root)) return;
 
-            AddBreadcrumbButton(root.TrimEnd('\\') + "\\", root);
+            var known = WindowsKnownLocations.Match(normalized);
+            if (known is { } location) root = location.Path;
+            AddBreadcrumbButton(known?.Label ?? root.TrimEnd('\\') + "\\", root);
             string remainder = normalized[root.Length..];
             string accumulated = root;
             foreach (string part in remainder.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
@@ -203,12 +207,12 @@ public partial class ExplorerPane
             Padding = new Thickness(6, 1, 6, 1),
             MinHeight = 20,
             FontSize = 11.5,
-            AllowDrop = true
+            AllowDrop = !WindowsKnownLocations.IsRecycleBin(targetPath)
         };
         btn.Click += (_, _) => TryNavigate(targetPath);
         btn.PreviewDragOver += (_, e) =>
         {
-            if (_actionsEnabled && e.Data.GetDataPresent(DataFormats.FileDrop) &&
+            if (!WindowsKnownLocations.IsRecycleBin(targetPath) && _actionsEnabled && e.Data.GetDataPresent(DataFormats.FileDrop) &&
                 e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0 &&
                 !string.Equals(targetPath, ActiveFolder, StringComparison.OrdinalIgnoreCase))
             {
@@ -221,7 +225,7 @@ public partial class ExplorerPane
         };
         btn.PreviewDrop += (_, e) =>
         {
-            if (_actionsEnabled && e.Data.GetDataPresent(DataFormats.FileDrop) &&
+            if (!WindowsKnownLocations.IsRecycleBin(targetPath) && _actionsEnabled && e.Data.GetDataPresent(DataFormats.FileDrop) &&
                 e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0 &&
                 !string.Equals(targetPath, ActiveFolder, StringComparison.OrdinalIgnoreCase))
             {
@@ -248,12 +252,13 @@ public partial class ExplorerPane
 
         ExplorerTab tab = _activeTab;
         string path = tab.CurrentPath;
-        AddressBox.Text = path;
+        ConfigureRecycleBinView();
+        SetAddressPath(path);
         UpdateBreadcrumbs(path);
         AttachFolderWatcher(path);
         BackButton.IsEnabled = tab.CanGoBack;
         ForwardButton.IsEnabled = tab.CanGoForward;
-        UpButton.IsEnabled = Directory.GetParent(path) is not null;
+        UpButton.IsEnabled = !IsRecycleBin && Directory.GetParent(path) is not null;
         PaneStatus.Text = "조회 중…";
         FooterText.Text = path;
         _allEntries = [];
@@ -265,7 +270,9 @@ public partial class ExplorerPane
 
         try
         {
-            ListingResult result = await DirectoryScanner.ReadAsync(path, cancellation.Token, showHidden: true);
+            ListingResult result = IsRecycleBin
+                ? await RecycleBinService.ReadAsync(cancellation.Token)
+                : await DirectoryScanner.ReadAsync(path, cancellation.Token, showHidden: true);
             if (generation != _listingGeneration || !ReferenceEquals(_activeTab, tab)) return;
             foreach (FileEntry entry in result.Entries)
             {
@@ -278,7 +285,7 @@ public partial class ExplorerPane
             if (DriveSpaceText is not null) DriveSpaceText.Text = _driveSpaceSummary;
             _ = ApplyFilterAndSortAsync();
             PaneStatus.Text = result.Warning is null ? $"{result.Entries.Count:N0}개" : "일부 항목 제한";
-            if (NavigationTree.Visibility == Visibility.Visible)
+            if (!IsRecycleBin && NavigationTree.Visibility == Visibility.Visible)
                 _ = NavigationTree.HighlightPathAsync(path);
         }
         catch (OperationCanceledException)
@@ -303,22 +310,30 @@ public partial class ExplorerPane
         }
     }
 
+    private void SetAddressPath(string path)
+    {
+        AddressBox.ToolTip = path;
+        AddressBox.Text = AddressBox.IsKeyboardFocusWithin ? path : WindowsKnownLocations.DisplayPath(path);
+    }
+
     private void TryNavigate(string requestedPath)
     {
         if (string.IsNullOrWhiteSpace(requestedPath)) return;
+        requestedPath = WindowsKnownLocations.ExpandDisplayPath(requestedPath);
         try
         {
-            string full = FileActionsService.ExpandAndResolveFolderPath(requestedPath, _activeTab?.CurrentPath);
-            if (!Directory.Exists(full))
+            string full = WindowsKnownLocations.IsRecycleBin(requestedPath) ? WindowsKnownLocations.RecycleBin
+                : FileActionsService.ExpandAndResolveFolderPath(requestedPath, ActiveFolder);
+            if (!WindowsKnownLocations.Exists(full))
             {
                 MessageBox.Show($"폴더를 찾을 수 없습니다.\n{full}", "이동 실패", MessageBoxButton.OK, MessageBoxImage.Information);
-                if (_activeTab is not null) AddressBox.Text = _activeTab.CurrentPath;
+                if (_activeTab is not null) SetAddressPath(_activeTab.CurrentPath);
                 return;
             }
             if (_activeTab is null) return;
             HasUserNavigated = true;
             if (_activeTab.Navigate(full)) _ = LoadFolderAsync();
-            else AddressBox.Text = _activeTab.CurrentPath;
+            else SetAddressPath(_activeTab.CurrentPath);
         }
         catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException)
         {
@@ -343,7 +358,7 @@ public partial class ExplorerPane
             return;
         }
         HasUserNavigated = true;
-        var newTab = new ExplorerTab(Directory.Exists(folderPath) ? folderPath : DefaultFolder());
+        var newTab = new ExplorerTab(WindowsKnownLocations.Exists(folderPath) ? folderPath : DefaultFolder());
         _tabs.Add(newTab);
         SelectTab(newTab);
     }

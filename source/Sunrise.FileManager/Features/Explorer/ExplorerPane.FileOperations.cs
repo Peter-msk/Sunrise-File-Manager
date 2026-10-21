@@ -16,6 +16,7 @@ public partial class ExplorerPane
 {
     private static void OpenOriginal(FileEntry entry)
     {
+        if (entry.IsVirtual) return;
         try
         {
             Process.Start(new ProcessStartInfo(entry.FullPath) { UseShellExecute = true });
@@ -26,11 +27,33 @@ public partial class ExplorerPane
         }
     }
 
-    private void DuplicatePaths(IReadOnlyList<string> paths)
+    private CancellationTokenSource? _localFileJob;
+    internal void CancelLocalFileJob() => _localFileJob?.Cancel();
+
+    private async Task<T> RunLocalFileJobAsync<T>(Func<CancellationToken, T> operation, string status)
+    {
+        if (_localFileJob is not null) throw new IOException("이 탐색기에서 파일 작업이 진행 중입니다.");
+        using var cancellation = new CancellationTokenSource();
+        _localFileJob = cancellation;
+        bool enabled = IsEnabled;
+        IsEnabled = false;
+        BlockingFileActionChanged?.Invoke(true);
+        PaneStatus.Text = status;
+        try { return await Task.Run(() => operation(cancellation.Token), cancellation.Token); }
+        finally
+        {
+            _localFileJob = null;
+            IsEnabled = enabled;
+            BlockingFileActionChanged?.Invoke(false);
+        }
+    }
+
+    private async Task DuplicatePathsAsync(IReadOnlyList<string> paths)
     {
         try
         {
-            var created = FileActionsService.DuplicateEntries(paths);
+            string[] snapshot = paths.ToArray();
+            var created = await RunLocalFileJobAsync(token => FileActionsService.DuplicateEntries(snapshot, token), "사본 생성 중…");
             if (created.Count > 0)
             {
                 _undoService.RecordDuplicates(created);
@@ -40,8 +63,10 @@ public partial class ExplorerPane
             if (FileActionCompleted is null) RefreshCurrent();
             else FileActionCompleted.Invoke();
         }
+        catch (OperationCanceledException) { PaneStatus.Text = "파일 작업을 취소했습니다."; RefreshCurrent(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
+            RefreshCurrent();
             MessageBox.Show(Window.GetWindow(this), ex.Message, "사본 만들기 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -89,7 +114,7 @@ public partial class ExplorerPane
         }
     }
 
-    private void ExecuteZipCompress()
+    private async Task ExecuteZipCompressAsync()
     {
         if (!_actionsEnabled || ActiveFolder is not string folder) return;
         string[] selection = SelectedPaths.ToArray();
@@ -106,20 +131,21 @@ public partial class ExplorerPane
         try
         {
             string zipPath = Path.Combine(folder, dialog.ResultName);
-            string created = FileActionsService.CompressToZip(selection, zipPath);
+            string created = await RunLocalFileJobAsync(token => FileActionsService.CompressToZip(selection, zipPath, token), "ZIP 압축 중…");
             _undoService.RecordCreated(created, "ZIP 압축");
             UpdateUndoButtonState();
             _restoreSelectionPath = created;
             if (FileActionCompleted is null) RefreshCurrent();
             else FileActionCompleted.Invoke();
         }
+        catch (OperationCanceledException) { PaneStatus.Text = "파일 작업을 취소했습니다."; RefreshCurrent(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
             MessageBox.Show(Window.GetWindow(this), ex.Message, "ZIP 압축 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
-    private void ExecuteZipExtract()
+    private async Task ExecuteZipExtractAsync()
     {
         if (!_actionsEnabled || ActiveFolder is not string folder) return;
         if (FilesGrid.SelectedItem is not FileEntry entry || entry.IsDirectory ||
@@ -134,11 +160,13 @@ public partial class ExplorerPane
         try
         {
             string destFolder = Path.Combine(folder, FileActionsService.ValidateName(dialog.ResultName));
-            string extracted = FileActionsService.ExtractZip(entry.FullPath, destFolder);
+            string sourceZip = entry.FullPath;
+            string extracted = await RunLocalFileJobAsync(token => FileActionsService.ExtractZip(sourceZip, destFolder, token), "ZIP 압축 해제 중…");
             _restoreSelectionPath = extracted;
             if (FileActionCompleted is null) RefreshCurrent();
             else FileActionCompleted.Invoke();
         }
+        catch (OperationCanceledException) { PaneStatus.Text = "파일 작업을 취소했습니다."; RefreshCurrent(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException or NotSupportedException)
         {
             MessageBox.Show(Window.GetWindow(this), ex.Message, "ZIP 압축 풀기 실패", MessageBoxButton.OK, MessageBoxImage.Warning);

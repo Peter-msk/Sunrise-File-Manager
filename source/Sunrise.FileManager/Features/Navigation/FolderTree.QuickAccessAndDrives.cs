@@ -222,23 +222,13 @@ public partial class FolderTree
         }
     }
 
-    private static string ResolveKnownFolderPath(string key) => key switch
-    {
-        "Desktop" => Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
-        "Documents" => Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-        "Downloads" => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"),
-        "Pictures" => Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
-        "Music" => Environment.GetFolderPath(Environment.SpecialFolder.MyMusic),
-        "Videos" => Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),
-        _ => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
-    };
+    private static string ResolveKnownFolderPath(string key) => WindowsKnownLocations.Resolve(key);
 
     private void NavigateKnownFolder(string key)
     {
         if (key == "RecycleBin")
         {
-            try { Process.Start(new ProcessStartInfo("explorer.exe", "shell:RecycleBinFolder") { UseShellExecute = true }); }
-            catch (Exception ex) { MessageBox.Show(ex.Message, "휴지통 열기 실패", MessageBoxButton.OK, MessageBoxImage.Information); }
+            PathChosen?.Invoke(WindowsKnownLocations.RecycleBin);
             return;
         }
         string path = ResolveKnownFolderPath(key);

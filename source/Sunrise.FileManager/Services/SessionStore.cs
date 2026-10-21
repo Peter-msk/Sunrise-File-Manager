@@ -25,6 +25,7 @@ public sealed class PanelSession
 
 public sealed class AppSession
 {
+    public int UiScalePercent { get; set; } = UiScalePolicy.DefaultPercent;
     public int VisiblePanels { get; set; } = 1;
     public int ActivePane { get; set; }
     public double WindowWidth { get; set; }
@@ -74,6 +75,7 @@ public static class SessionStore
     {
         ArgumentNullException.ThrowIfNull(session);
         session.PinnedFolders ??= [];
+        session.UiScalePercent = UiScalePolicy.Normalize(session.UiScalePercent);
         if (!double.IsFinite(session.WindowWidth) || !double.IsFinite(session.WindowHeight) ||
             !double.IsFinite(session.WindowLeft) || !double.IsFinite(session.WindowTop) ||
             !double.IsFinite(session.InspectorWidth) || !double.IsFinite(session.PreviewWidth) ||

@@ -212,7 +212,7 @@ public static class ExplorerCommandRouter
             "Tiles" => new ExplorerViewSpec("Tiles", 52, 64, false, true),
             "SmallIcons" => new ExplorerViewSpec("SmallIcons", 26, 48, false, false),
             "List" => new ExplorerViewSpec("List", 32, 48, false, false),
-            _ => new ExplorerViewSpec("Details", 36, 48, true, false)
+            _ => new ExplorerViewSpec("Details", 30, 48, true, false)
         };
     }
 }

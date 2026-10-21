@@ -37,6 +37,23 @@ public partial class MainWindow : Window
     private readonly AiCommandPanel AiPanel;
     private Window? _aiWindow;
     private bool _mainWindowClosing;
+    private bool _updateExitApproved;
+    internal bool UpdateShutdownAccepted => _mainWindowClosing;
+
+    internal bool ConfirmUpdateExit()
+    {
+        if (_working || _aiBusy || _activeRecycleJobs > 0)
+        {
+            foreach (var pane in _panes) pane?.CancelLocalFileJob();
+            _transferCancellation?.Cancel();
+            AiPanel.Cancel();
+            MessageBox.Show("진행 중인 작업에 취소를 요청했습니다. 휴지통 이동은 완료를 기다려야 합니다.\n처리가 끝나면 종료 또는 업데이트를 다시 선택하십시오.",
+                "작업 진행 중", MessageBoxButton.OK, MessageBoxImage.Information);
+            return false;
+        }
+        _updateExitApproved = Inspector.ConfirmLeavingMemo();
+        return _updateExitApproved;
+    }
     private bool _inspectorOpen = true;
     private bool _dockPreviewOpen;
     private double _inspectorPreferredWidth = 330;
@@ -58,9 +75,9 @@ public partial class MainWindow : Window
         ThemeDarkMenuItem.IsChecked = _currentTheme == "Dark";
         HeaderThemeButton.Content = _currentTheme switch
         {
-            "System" => "◐ PC 테마",
-            "Dark" => "☾ 다크",
-            _ => "☀ 라이트"
+            "System" => "PC 테마",
+            "Dark" => "다크",
+            _ => "라이트"
         };
         foreach (var pane in _panes) pane?.RefreshThemeColors();
     }
@@ -92,6 +109,9 @@ public partial class MainWindow : Window
         PreviewPane.SizeChanged += (_, _) => UpdateWorkspaceLayout();
         string? settingsWarning = null;
         AppSession session = initialSession ?? SessionStore.Load(out settingsWarning);
+        foreach (int scale in UiScalePolicy.Choices) UiScaleSelector.Items.Add(new ComboBoxItem { Content = $"{scale}%", Tag = scale });
+        UiScaleSelector.SelectedIndex = Array.IndexOf(UiScalePolicy.Choices, UiScalePolicy.Normalize(session.UiScalePercent));
+        UiScaleService.Set(session.UiScalePercent);
         // Restore only sensible, visible window geometry (old sessions simply use defaults).
         if (session.WindowWidth is >= 1010 and <= 12000 && session.WindowHeight is >= 560 and <= 9000)
         {
@@ -117,6 +137,7 @@ public partial class MainWindow : Window
         _themeReady = true;
         _inspectorOpen = session.LayoutVersion < 18 || session.InspectorVisible;
         _dockPreviewOpen = session.LayoutVersion >= 18 && session.DockPreviewVisible;
+        Inspector.CloseRequested += () => SetInspectorVisible(false);
         PreviewPane.CloseRequested += () => SetDockPreview(false);
         AiPanel.CloseRequested += HideAiWindow;
         Inspector.MemoSaved += () => { if (_activePane < _panes.Length) _panes[_activePane]?.RefreshCurrent(); };
@@ -213,6 +234,13 @@ public partial class MainWindow : Window
     {
         var window = new SunriseControlWindow(_controlPolicy) { Owner = this };
         window.ShowDialog();
+    }
+
+    private void UiScale_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (UiScaleSelector.SelectedItem is not ComboBoxItem { Tag: int percent }) return;
+        UiScaleService.Set(percent);
+        if (_layoutInitialized) { UpdateWorkspaceLayout(); ScheduleSessionSave(); }
     }
 
     private void ThemeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -612,17 +640,13 @@ public partial class MainWindow : Window
         JobDetail.Text = "현재 작업의 안전한 취소를 요청했습니다.";
     }
 
-    // Do not transfer control to Setup while file jobs are active or a memo is unsaved.
-    // The actual exit path rechecks these conditions in Window_Closing.
-    public bool CanExitForUpdate() => _activeRecycleJobs == 0 && !_working && !_aiBusy &&
-        Inspector.ConfirmLeavingMemo();
-
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         if (_activeRecycleJobs > 0)
         {
+            foreach (var pane in _panes) pane?.CancelLocalFileJob();
             e.Cancel = true;
-            MessageBox.Show("휴지통 이동이 진행 중입니다. 완료된 다음 종료할 수 있습니다.",
+            MessageBox.Show("파일 작업의 취소를 요청했습니다. 휴지통 이동은 완료를 기다려야 합니다. 처리 후 다시 종료하십시오.",
                 "파일 작업 진행 중", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -638,7 +662,7 @@ public partial class MainWindow : Window
             }
             return;
         }
-        if (!Inspector.ConfirmLeavingMemo()) { e.Cancel = true; return; }
+        if (!_updateExitApproved && !Inspector.ConfirmLeavingMemo()) { e.Cancel = true; return; }
         _sessionSaveTimer.Stop();
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= SystemThemeChanged;
         if (_persistSession) TrySaveSession(showError: true);
@@ -665,7 +689,8 @@ public partial class MainWindow : Window
                 VisiblePanels = _visiblePanels,
                 ActivePane = _activePane,
                 SplitLayoutPreset = _splitPreset.ToString(),
-                LayoutVersion = 20,
+                LayoutVersion = 21,
+                UiScalePercent = UiScaleService.Percent,
                 Theme = _currentTheme,
                 InspectorVisible = _inspectorOpen,
                 DockPreviewVisible = _dockPreviewOpen,

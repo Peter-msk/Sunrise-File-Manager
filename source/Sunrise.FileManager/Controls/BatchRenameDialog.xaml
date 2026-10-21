@@ -64,7 +64,7 @@
    </Grid.ColumnDefinitions>
    <TextBlock Grid.Column="0" x:Name="ValidationStatus" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" FontSize="12"/>
    <Button Grid.Column="1" Content="취소" IsCancel="True" Style="{StaticResource ExplorerCommand}" Margin="0,0,8,0"/>
-   <Button Grid.Column="2" x:Name="ApplyButton" Content="✔ 일괄 이름 변경 실행" Click="Apply_Click" Style="{StaticResource PrimaryButton}" FontWeight="SemiBold" Padding="14,5"/>
+   <Button Grid.Column="2" x:Name="ApplyButton" Content="일괄 이름 변경 실행" Click="Apply_Click" Style="{StaticResource PrimaryButton}" FontWeight="SemiBold" Padding="14,5"/>
   </Grid>
  </Grid>
 </Window>

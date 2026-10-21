@@ -1,35 +1,41 @@
-using System.Diagnostics;
-using System.Text;
+using System.ComponentModel;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using Sunrise.FileManager.Services;
 
 namespace Sunrise.FileManager.Controls;
 
-/// <summary>Central status, product-specific notices and user-approved verified installer update.</summary>
+/// <summary>Product notice/update surface. New releases offer update or application exit.</summary>
 public sealed class SunriseControlWindow : Window
 {
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 8) };
     private readonly TextBox _details = new() { IsReadOnly = true, TextWrapping = TextWrapping.Wrap,
         VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         Padding = new Thickness(12), FontSize = 13, AcceptsReturn = true };
-    private readonly Button _download = new() { Content = "업데이트 다운로드", MinWidth = 130, IsEnabled = false, Margin = new Thickness(6, 0, 0, 0) };
+    private readonly Button _download = new() { Content = "업데이트", MinWidth = 130, IsEnabled = false, Margin = new Thickness(6, 0, 0, 0) };
     private readonly Button _refresh = new() { Content = "업데이트 확인", MinWidth = 115 };
     private readonly Button _notice = new() { Content = "공지사항 새로고침", MinWidth = 132, Margin = new Thickness(6, 0, 0, 0) };
+    private readonly Button _close = new() { MinWidth = 110, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
+    private readonly CancellationTokenSource _lifetime = new();
     private SunriseReleaseService.Release? _release;
-    private readonly SunriseControlService.Policy _policy;
-    private readonly bool _required;
-    private bool _installHandoffStarted;
+    private SunriseControlService.Policy _policy;
+    private bool _required;
+    private bool _busy;
+    private bool _closed;
+    private bool _installRequested;
+    public bool MustExit => _required;
 
-    public SunriseControlWindow(SunriseControlService.Policy policy, bool required = false)
+    public SunriseControlWindow(SunriseControlService.Policy policy, bool required = false,
+        SunriseReleaseService.Release? release = null, string? notice = null, bool startupSnapshot = false)
     {
         _policy = policy;
         _required = required;
-        Title = "Sunrise File Manager 1.2.0 · 공지사항 및 업데이트";
+        _release = release;
+        Title = $"Sunrise File Manager {SunriseControlService.Version} · 공지사항 및 업데이트";
         Width = 780; Height = 590; MinWidth = 590; MinHeight = 390;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         SetResourceReference(BackgroundProperty, "PanelBackground");
@@ -40,10 +46,9 @@ public sealed class SunriseControlWindow : Window
         layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        var heading = new TextBlock { Text = "Sunrise File Manager  ·  공식 버전 1.2.0", FontSize = 19, FontWeight = FontWeights.SemiBold };
+        var heading = new TextBlock { Text = $"Sunrise File Manager  ·  현재 버전 {SunriseControlService.Version}",
+            FontSize = 19, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap };
         Grid.SetRow(heading, 0); layout.Children.Add(heading);
-        _status.Text = _required ? "Sunrise Control 정책에 따라 업데이트가 필요합니다. 업데이트를 완료하기 전에는 실행할 수 없습니다."
-            : $"Sunrise Control: {policy.Operation} / 업데이트: {policy.Update} (출처: {policy.Source})";
         Grid.SetRow(_status, 1); layout.Children.Add(_status);
         var buttons = new WrapPanel { Margin = new Thickness(0, 0, 0, 10) };
         _refresh.Click += async (_, _) => await RefreshReleaseAsync();
@@ -51,133 +56,141 @@ public sealed class SunriseControlWindow : Window
         _download.Click += async (_, _) => await DownloadAsync();
         buttons.Children.Add(_refresh); buttons.Children.Add(_notice); buttons.Children.Add(_download);
         Grid.SetRow(buttons, 2); layout.Children.Add(buttons);
-        _details.Text = "공지사항을 불러오는 중입니다…";
+        _details.Text = notice ?? "공지사항을 불러올 수 없습니다. 새로고침으로 다시 확인할 수 있습니다.";
         Grid.SetRow(_details, 3); layout.Children.Add(_details);
-        var close = new Button { Content = _required ? "프로그램 종료" : "닫기", MinWidth = 110,
-            HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
-        close.Click += (_, _) => Close();
-        Grid.SetRow(close, 4); layout.Children.Add(close);
+        _close.Click += (_, _) => Close();
+        Grid.SetRow(_close, 4); layout.Children.Add(_close);
         Content = layout;
-        Loaded += async (_, _) => { await RefreshNoticeAsync(); await RefreshReleaseAsync(); };
+        RenderReleaseStatus();
+        Loaded += async (_, _) =>
+        {
+            if (notice is not null) SunriseReleaseService.MarkNoticeRead(notice);
+            if (!startupSnapshot) await Task.WhenAll(RefreshNoticeAsync(), RefreshReleaseAsync());
+        };
+        Closing += WindowClosing;
+        Closed += (_, _) =>
+        {
+            _closed = true;
+            _lifetime.Cancel();
+            if (_required && !_installRequested && Application.Current is App app) app.ExitUpdateGate();
+        };
+    }
+
+    private bool CanInstall => !_policy.BlocksEntry && _policy.Update != "block" && _release?.CanDownload == true &&
+        !SunriseControlService.VersionIsOlder(_release.Version, _policy.MinimumVersion);
+
+    private void WindowClosing(object? sender, CancelEventArgs e)
+    {
+        if (!_installRequested && _required && Application.Current.MainWindow is MainWindow main && !main.ConfirmUpdateExit())
+            e.Cancel = true;
+    }
+
+    private void UpdateButtons()
+    {
+        if (_closed) return;
+        _download.IsEnabled = !_busy && CanInstall;
+        _refresh.IsEnabled = !_busy;
+        _close.Content = _required ? "프로그램 종료" : "닫기";
+    }
+
+    private void RenderReleaseStatus()
+    {
+        _required |= _policy.RequiresUpdate || (_policy.Update != "block" && _release?.IsNewer == true) || _policy.BlocksEntry;
+        if (_policy.BlocksEntry) _status.Text = string.IsNullOrWhiteSpace(_policy.Message)
+            ? "중앙 운영 정책에 따라 실행이 제한되었습니다. 프로그램을 종료하십시오." : _policy.Message;
+        else if (_policy.Update == "block") _status.Text = "업데이트가 일시 중지되어 있습니다.";
+        else if (_release?.IsNewer == true)
+            _status.Text = $"새 버전 {_release.Version}이 있습니다. " + (CanInstall
+                ? "업데이트를 진행하거나 프로그램을 종료하십시오."
+                : "설치파일 배포정보를 확인할 수 없습니다. 새로고침하거나 종료하십시오.");
+        else if (_required) _status.Text = "업데이트가 필요합니다. 배포정보를 새로 확인하거나 프로그램을 종료하십시오.";
+        else _status.Text = _release is null ? "업데이트 정보를 불러오지 못했습니다. 다시 확인할 수 있습니다."
+            : $"최신 버전을 사용 중입니다: {SunriseControlService.Version}";
+        UpdateButtons();
     }
 
     private async Task RefreshNoticeAsync()
     {
+        if (_closed || !_notice.IsEnabled) return;
         _notice.IsEnabled = false;
-        try { _details.Text = await SunriseReleaseService.GetNoticeAsync(); }
-        catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException)
-        { _details.Text = "공지사항을 불러올 수 없습니다. 인터넷 연결을 확인하십시오.\n" + ex.Message; }
-        finally { _notice.IsEnabled = true; }
+        try
+        {
+            string body = await SunriseReleaseService.GetNoticeAsync(_lifetime.Token);
+            if (_closed) return;
+            _details.Text = body;
+            SunriseReleaseService.MarkNoticeRead(body);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidDataException or OperationCanceledException or DecoderFallbackException)
+        { if (!_closed) _details.Text = "공지사항을 불러올 수 없습니다. 인터넷 연결을 확인한 다음 다시 시도하십시오."; }
+        finally { if (!_closed) _notice.IsEnabled = true; }
     }
 
     private async Task RefreshReleaseAsync()
     {
-        _refresh.IsEnabled = false;
-        _download.IsEnabled = false;
+        if (_busy || _closed) return;
+        _busy = true;
+        UpdateButtons();
         try
         {
-            _release = await SunriseReleaseService.CheckAsync();
-            if (_policy.Update == "block") _status.Text = "중앙 정책에서 업데이트를 일시 중지했습니다.";
-            else if (_release.IsNewer)
-                _status.Text = $"새 버전 {_release.Version} 확인됨. " +
-                    (_release.CanDownload ? "검증된 설치파일을 다운로드할 수 있습니다." : "설치파일 검증 정보가 아직 게시되지 않았습니다.");
-            else _status.Text = $"최신 버전 사용 중: {SunriseControlService.Version} (서버: {_release.Version})";
-            _download.IsEnabled = _policy.Update != "block" && _release.CanDownload &&
-                (!_required || !SunriseControlService.VersionIsOlder(_release.Version, _policy.MinimumVersion));
+            _policy = await SunriseControlService.CheckAsync(_lifetime.Token);
+            _release = await SunriseReleaseService.CheckAsync(_lifetime.Token);
+            if (!_closed) RenderReleaseStatus();
         }
-        catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException or JsonException)
-        { _status.Text = "업데이트 서버에 연결하지 못했습니다: " + ex.Message; }
-        finally { _refresh.IsEnabled = true; }
-    }
-
-    /// <summary>Stage a local launch request while this process is alive; wait for its exit before Setup starts.</summary>
-    private static void LaunchSetupAfterExit(string installerPath)
-    {
-        string fullPath = Path.GetFullPath(installerPath);
-        if (!File.Exists(fullPath) || !Path.IsPathFullyQualified(fullPath) ||
-            !string.Equals(Path.GetExtension(fullPath), ".exe", StringComparison.OrdinalIgnoreCase))
-            throw new IOException("설치파일 경로를 확인할 수 없습니다.");
-
-        // This path has already been verified by DownloadAsync (HTTPS + exact SHA-256).
-        // PowerShell runs a FIXED local command, never code or commands from the server.
-        string quotedPath = fullPath.Replace("'", "''", StringComparison.Ordinal);
-        int currentPid = Environment.ProcessId;
-        string command =
-            "$ErrorActionPreference='Stop'; " +
-            "try { $old=[System.Diagnostics.Process]::GetProcessById(" + currentPid + "); " +
-            "if (-not $old.WaitForExit(60000)) { exit 12 } " +
-            "} catch [System.ArgumentException] { } " +
-            "Start-Process -FilePath '" + quotedPath + "'";
-        string encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(command));
-        string systemDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
-        string host = Path.Combine(systemDir, @"WindowsPowerShell\v1.0\powershell.exe");
-        if (!File.Exists(host)) throw new FileNotFoundException("Windows 업데이트 실행 호스트를 찾을 수 없습니다.", host);
-        var psi = new ProcessStartInfo(host) { UseShellExecute = false, CreateNoWindow = true };
-        psi.ArgumentList.Add("-NoProfile");
-        psi.ArgumentList.Add("-NonInteractive");
-        psi.ArgumentList.Add("-EncodedCommand");
-        psi.ArgumentList.Add(encoded);
-        using var helper = Process.Start(psi) ?? throw new IOException("설치 대기 프로세스를 시작하지 못했습니다.");
+        catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidDataException or OperationCanceledException or JsonException)
+        {
+            _release = null;
+            if (!_closed) { RenderReleaseStatus(); _status.Text += " 배포정보를 다시 확인하십시오."; }
+        }
+        finally { _busy = false; UpdateButtons(); }
     }
 
     private async Task DownloadAsync()
     {
-        if (_release is null || !_release.CanDownload || _policy.Update == "block" ||
-            (_required && SunriseControlService.VersionIsOlder(_release.Version, _policy.MinimumVersion))) return;
-        if (MessageBox.Show(this, $"Sunrise File Manager {_release.Version} 설치파일을 다운로드하겠습니까?\n다운로드 후 SHA-256 무결성을 검증합니다.",
-            "업데이트 다운로드", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
-        if (_installHandoffStarted) return;
-        _download.IsEnabled = false;
-        _refresh.IsEnabled = false;
+        if (_busy || _closed || !CanInstall || _release is not { } release) return;
+        if (MessageBox.Show(this, $"Sunrise File Manager {release.Version}(으)로 업데이트하겠습니까?\n" +
+            "설치파일 다운로드와 검증 후 현재 프로그램을 종료하고 설치를 시작합니다.\n진행 중인 파일 작업을 먼저 완료하십시오.",
+            "업데이트", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+        _busy = true;
+        UpdateButtons();
+        InstallerUpdateHandoff? unusedDownload = null;
         try
         {
-            // Recheck the central decision at the action boundary; the dialog may
-            // have stayed open after an administrator changed the group policy.
-            var currentPolicy = await SunriseControlService.CheckAsync();
-            if (currentPolicy.BlocksEntry || currentPolicy.Update == "block" ||
-                (currentPolicy.Update == "required" &&
-                 SunriseControlService.VersionIsOlder(_release.Version, currentPolicy.MinimumVersion)))
+            _policy = await SunriseControlService.CheckAsync(_lifetime.Token);
+            if (!CanInstall) { RenderReleaseStatus(); return; }
+            _status.Text = "설치파일 다운로드·검증 진행 중…";
+            var progress = new Progress<long>(n =>
             {
-                _status.Text = "Sunrise Control 정책에 따라 업데이트를 진행할 수 없습니다.";
-                return;
-            }
-            _status.Text = "설치파일 다운로드·무결성 검사 진행 중…";
-            var progress = new Progress<long>(n => _status.Text = $"다운로드: {n / 1024d / 1024d:F1} / {_release.FileSize / 1024d / 1024d:F1} MB");
-            string path = await SunriseReleaseService.DownloadAsync(_release, progress);
-            _status.Text = "SHA-256 검증 완료. 설치 실행 여부를 선택하십시오.";
-            if (MessageBox.Show(this, "다운로드와 SHA-256 검증이 완료되었습니다.\n설치 프로그램을 실행하고 File Manager를 종료하시겠습니까?",
-                "업데이트 설치", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                if (!_closed && !_installRequested) _status.Text = $"다운로드: {n / 1024d / 1024d:F1} / {release.FileSize / 1024d / 1024d:F1} MB";
+            });
+            string path = await SunriseReleaseService.DownloadAsync(release, progress, _lifetime.Token);
+            unusedDownload = InstallerUpdateHandoff.Prepare(path, release);
+            _lifetime.Token.ThrowIfCancellationRequested();
+            _policy = await SunriseControlService.CheckAsync(_lifetime.Token);
+            if (!CanInstall) { RenderReleaseStatus(); return; }
+            _status.Text = "다운로드 완료. 프로그램 종료 후 설치를 시작합니다…";
+            _installRequested = true;
+            if (Application.Current is not App app || !app.RequestInstallerUpdate(unusedDownload))
             {
-                // The installer MUST start only after the WPF process releases its AppMutex
-                // and all program files. The local OS helper has no network access and does
-                // not modify files; Inno Setup owns the actual installation/repair.
-                currentPolicy = await SunriseControlService.CheckAsync();
-                if (currentPolicy.BlocksEntry || currentPolicy.Update == "block" ||
-                    (currentPolicy.Update == "required" &&
-                     SunriseControlService.VersionIsOlder(_release.Version, currentPolicy.MinimumVersion)))
-                {
-                    _status.Text = "Sunrise Control 정책이 변경되어 설치를 중단했습니다.";
-                    return;
-                }
-                if (Application.Current.MainWindow is MainWindow main && !main.CanExitForUpdate())
-                {
-                    _status.Text = "진행 중인 파일 작업을 마친 뒤 업데이트를 다시 실행하십시오.";
-                    MessageBox.Show(this, "파일 작업이 진행 중이거나 메모 변경사항이 저장되지 않았습니다.\n작업을 마치고 다시 시도하십시오.",
-                        "업데이트 대기", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-                LaunchSetupAfterExit(path);
-                _installHandoffStarted = true;
-                Application.Current.Shutdown();
+                _installRequested = false;
+                _status.Text = "파일 작업·메모를 확인한 다음 업데이트를 다시 선택하십시오.";
             }
+            else unusedDownload = null;
         }
-        catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException or System.ComponentModel.Win32Exception)
+        catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidDataException or OperationCanceledException or UnauthorizedAccessException or Win32Exception)
         {
-            _status.Text = "업데이트 실패: " + ex.Message;
-            MessageBox.Show(this, "업데이트가 완료되지 않았습니다. 기존 프로그램과 사용자 파일은 변경되지 않았습니다.\n" + ex.Message,
-                "업데이트 오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _installRequested = false;
+            if (!_closed)
+            {
+                _status.Text = ex is InvalidDataException ? "설치파일 배포정보 또는 검증 결과가 일치하지 않아 중단했습니다."
+                    : "업데이트를 완료하지 못했습니다. 연결 상태를 확인한 다음 다시 시도하십시오.";
+                System.Diagnostics.Trace.TraceWarning("Update failed: {0}", ex.GetType().Name);
+            }
         }
-        finally { _refresh.IsEnabled = !_installHandoffStarted; _download.IsEnabled = !_installHandoffStarted && _release?.CanDownload == true &&
-            _policy.Update != "block" && (!_required || !SunriseControlService.VersionIsOlder(_release.Version, _policy.MinimumVersion)); }
+        finally
+        {
+            unusedDownload?.Cancel();
+            _busy = false;
+            UpdateButtons();
+        }
     }
 }

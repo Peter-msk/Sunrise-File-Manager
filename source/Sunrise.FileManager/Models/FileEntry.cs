@@ -73,6 +73,11 @@ public sealed class FileEntry : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public bool IsVirtual { get; init; }
+    public string OriginalLocation { get; init; } = "";
+    public DateTime DeletedAt { get; init; }
+    public string DeletedDisplay => DeletedAt == DateTime.MinValue ? "—" : DeletedAt.ToString("yyyy-MM-dd HH:mm");
+
     public required string Name { get; init; }
     public required string FullPath { get; init; }
     public required bool IsDirectory { get; init; }
@@ -145,7 +150,7 @@ public sealed class FileEntry : INotifyPropertyChanged
         get
         {
             // Dark mode cannot reuse the dark navy/green category colors of light mode.
-            if (ThemeManager.IsDark)
+            if (_darkTheme)
             {
                 if (!_colorCoding) return "#EDF4FF";
                 if (IsHidden) return "#AFC3D7";
@@ -175,7 +180,12 @@ public sealed class FileEntry : INotifyPropertyChanged
         }
     }
 
-    public void RefreshThemeColors() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NameForeground)));
+    private bool _darkTheme;
+    public void RefreshThemeColors(bool isDark = false)
+    {
+        _darkTheme = isDark;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NameForeground)));
+    }
 
     public double RowOpacity => _isCutPending ? 0.52 : (IsHidden ? 0.62 : 1.0);
 

@@ -84,7 +84,9 @@ public static partial class FileActionsService
         if (!Directory.Exists(parent)) throw new DirectoryNotFoundException("현재 폴더를 찾을 수 없습니다.");
         string path = Path.Combine(parent, ValidateName(name));
         if (File.Exists(path) || Directory.Exists(path)) throw new IOException("같은 이름의 항목이 이미 존재합니다.");
-        File.WriteAllText(path, initialContent, new System.Text.UTF8Encoding(false));
+        using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+        using (var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false)))
+            writer.Write(initialContent);
         return path;
     }
 

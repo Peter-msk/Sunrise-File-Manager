@@ -6,7 +6,8 @@
     <Grid>
      <Grid.RowDefinitions><RowDefinition Height="27"/><RowDefinition Height="27"/></Grid.RowDefinitions>
      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-     <TextBlock Grid.ColumnSpan="3" Text="상세정보 · 스마트 파일 메모" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+     <Button Grid.Column="2" Content="×" ToolTip="상세정보 · 메모 닫기" Click="CloseInspector_Click" Padding="5,0" MinHeight="23"/>
+     <TextBlock Grid.ColumnSpan="2" Text="상세정보 · 스마트 파일 메모" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
      <Button Grid.Row="1" Grid.Column="1" x:Name="FolderSizeButton" Content="용량계산" Click="FolderSizeButton_Click" Padding="7,2" MinHeight="24" FontSize="11" Margin="0,0,4,0" ToolTip="선택한 폴더의 전체 용량·파일 수·하위 폴더 수를 계산합니다."/>
      <Button Grid.Row="1" Grid.Column="2" x:Name="HashButton" Content="SHA-256" Click="HashButton_Click" Padding="7,2" MinHeight="24" FontSize="11" ToolTip="선택한 파일의 SHA-256 무결성 해시를 계산합니다."/>
     </Grid>
@@ -33,7 +34,7 @@
      <Grid.RowDefinitions><RowDefinition Height="28"/><RowDefinition Height="30"/></Grid.RowDefinitions>
      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
      <TextBlock Grid.ColumnSpan="3" Text="스마트 파일 메모 (#memo)" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
-     <Button Grid.Row="1" Grid.Column="1" x:Name="AiMemoButton" Content="🤖 AI 요약" Click="AiMemoButton_Click" Padding="8,3" MinHeight="27" Margin="0,0,4,0" FontSize="11.5" ToolTip="온보드 AI(Ollama)로 이 문서를 요약하여 메모 입력창에 추가합니다."/>
+     <Button Grid.Row="1" Grid.Column="1" x:Name="AiMemoButton" Content="AI 요약" Click="AiMemoButton_Click" Padding="8,3" MinHeight="27" Margin="0,0,4,0" FontSize="11.5" ToolTip="온보드 AI(Ollama)로 이 문서를 요약하여 메모 입력창에 추가합니다."/>
      <Button Grid.Row="1" Grid.Column="2" x:Name="SaveButton" Content="메모 저장" Click="SaveButton_Click" Style="{StaticResource PrimaryButton}" Padding="10,3" MinHeight="27"/>
     </Grid>
     <Grid Grid.Row="1" Margin="0,6,0,2">

@@ -118,6 +118,11 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         SizeChanged += (_, _) => ApplyResponsiveLayout();
         TabStrip.ItemsSource = _tabs;
         NavigationTree.GetActiveFolder = () => ActiveFolder;
+        AddressBox.GotKeyboardFocus += (_, _) => { if (_activeTab is not null) { AddressBox.Text = _activeTab.CurrentPath; AddressBox.SelectAll(); } };
+        AddressBox.LostKeyboardFocus += (_, _) =>
+        {
+            if (_activeTab is not null && AddressBox.Text == _activeTab.CurrentPath) SetAddressPath(_activeTab.CurrentPath);
+        };
         NavigationTree.PinnedFoldersChanged += list => PinnedFoldersChanged?.Invoke(list);
         NavigationTree.FolderDropRequested += (paths, targetFolder, kind) =>
         {
@@ -193,7 +198,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
                 foreach (string? path in saved.Take(12))
                 {
                     if (string.IsNullOrWhiteSpace(path)) continue;
-                    if (Directory.Exists(path)) _tabs.Add(new ExplorerTab(path));
+                    if (WindowsKnownLocations.Exists(path)) _tabs.Add(new ExplorerTab(path));
                 }
             }
             if (_tabs.Count == 0) _tabs.Add(new ExplorerTab(fallback));
@@ -208,14 +213,15 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     public void RefreshThemeColors()
     {
-        foreach (var item in _allEntries) item.RefreshThemeColors();
+        foreach (var item in _allEntries) item.RefreshThemeColors(ThemeManager.IsDark);
     }
 
     public IReadOnlyList<string> GetPinnedFolders() => NavigationTree.PinnedFolders;
     public void SyncPinnedFolders(IEnumerable<string> folders) => NavigationTree.SetPinnedFolders(folders);
 
-    public string? ActiveFolder => _activeTab?.CurrentPath;
-    public FileEntry? SelectedFile => FilesGrid.SelectedItems.Count == 1 ? FilesGrid.SelectedItem as FileEntry : null;
+    public bool IsRecycleBin => WindowsKnownLocations.IsRecycleBin(_activeTab?.CurrentPath);
+    public string? ActiveFolder => IsRecycleBin ? null : _activeTab?.CurrentPath;
+    public FileEntry? SelectedFile => !IsRecycleBin && FilesGrid.SelectedItems.Count == 1 ? FilesGrid.SelectedItem as FileEntry : null;
 
     public bool RestoreSelection(string path)
     {
@@ -244,6 +250,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
     {
         get
         {
+            if (IsRecycleBin) return Array.Empty<string>();
             var gridSelected = FilesGrid.SelectedItems.OfType<FileEntry>().Select(item => item.FullPath).ToList();
             if (gridSelected.Count > 0) return gridSelected;
             return _allEntries.Where(x => x.IsChecked).Select(x => x.FullPath).ToArray();
@@ -376,7 +383,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void Up_Click(object sender, RoutedEventArgs e)
     {
-        string? parent = _activeTab is null ? null : Directory.GetParent(_activeTab.CurrentPath)?.FullName;
+        string? parent = _activeTab is null || IsRecycleBin ? null : Directory.GetParent(_activeTab.CurrentPath)?.FullName;
         if (parent is not null) TryNavigate(parent);
     }
 
@@ -466,6 +473,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         if (e.OriginalSource is not DependencyObject source) return;
         var row = ItemsControl.ContainerFromElement(FilesGrid, source) as DataGridRow;
         if (row?.Item is not FileEntry entry) return;
+        if (IsRecycleBin) { ShowRecycleItemHint(); e.Handled = true; return; }
         e.Handled = true;
         if (entry.IsDirectory)
         {
@@ -508,6 +516,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void ContextOpen_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
         if (FilesGrid.SelectedItem is not FileEntry entry) return;
         if (entry.IsDirectory) { TryNavigate(entry.FullPath); return; }
         OpenOriginal(entry);
@@ -515,6 +524,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void ContextOpenWith_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
         if (FilesGrid.SelectedItem is not FileEntry entry || entry.IsDirectory) return;
         try { FileActionsService.OpenWithDialog(entry.FullPath); }
         catch (Exception ex) { MessageBox.Show(ex.Message, "연결 프로그램 열기 실패", MessageBoxButton.OK, MessageBoxImage.Warning); }
@@ -522,6 +532,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void ContextOpenInNewTab_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
         if (FilesGrid.SelectedItem is FileEntry { IsDirectory: true } entry)
             OpenTabAt(entry.FullPath);
         else if (ActiveFolder is string current)
@@ -530,6 +541,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void ContextPinFolder_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
         if (FilesGrid.SelectedItem is FileEntry { IsDirectory: true } entry)
             NavigationTree.PinFolder(entry.FullPath);
         else if (ActiveFolder is string current)
@@ -538,7 +550,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void ClipboardCopy_Click(object sender, RoutedEventArgs e) => PutSelectionOnClipboard(false);
     private void ClipboardCut_Click(object sender, RoutedEventArgs e) { if (_actionsEnabled) PutSelectionOnClipboard(true); }
-    private void ClipboardPaste_Click(object sender, RoutedEventArgs e) => ExecuteClipboardPaste();
+    private async void ClipboardPaste_Click(object sender, RoutedEventArgs e) => await ExecuteClipboardPasteAsync();
 
     private void Undo_Click(object sender, RoutedEventArgs e)
     {
@@ -568,14 +580,15 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         }
     }
 
-    private void Duplicate_Click(object sender, RoutedEventArgs e)
+    private async void Duplicate_Click(object sender, RoutedEventArgs e)
     {
         if (!_actionsEnabled || SelectedPaths.Count == 0) return;
-        DuplicatePaths(SelectedPaths);
+        await DuplicatePathsAsync(SelectedPaths.ToArray());
     }
 
     private void ContextCopyPath_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
         var items = FilesGrid.SelectedItems.OfType<FileEntry>().Select(x => x.FullPath).ToArray();
         if (items.Length == 0) return;
         try { Clipboard.SetText(string.Join(Environment.NewLine, items)); FooterText.Text = "선택 항목의 전체 경로를 복사했습니다."; }
@@ -594,6 +607,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void ContextProperties_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
         string? targetPath = (FilesGrid.SelectedItem as FileEntry)?.FullPath ?? ActiveFolder;
         if (string.IsNullOrWhiteSpace(targetPath)) return;
         try
@@ -614,6 +628,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void OpenWindowsExplorer_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
         string? target = (FilesGrid.SelectedItem as FileEntry)?.FullPath ?? ActiveFolder;
         if (string.IsNullOrWhiteSpace(target)) return;
         try { FileActionsService.OpenInWindowsExplorer(target); }
@@ -679,8 +694,8 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void NewFolder_Click(object sender, RoutedEventArgs e) => ExecuteCreateFolder();
     private void NewFile_Click(object sender, RoutedEventArgs e) => ExecuteCreateFile();
-    private void ZipCompress_Click(object sender, RoutedEventArgs e) => ExecuteZipCompress();
-    private void ZipExtract_Click(object sender, RoutedEventArgs e) => ExecuteZipExtract();
+    private async void ZipCompress_Click(object sender, RoutedEventArgs e) => await ExecuteZipCompressAsync();
+    private async void ZipExtract_Click(object sender, RoutedEventArgs e) => await ExecuteZipExtractAsync();
     private void ExportList_Click(object sender, RoutedEventArgs e) => ExecuteExportDirectoryListing();
 
     private void Rename_Click(object sender, RoutedEventArgs e)
@@ -804,7 +819,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         e.Handled = true;
     }
 
-    private void FilesGrid_PreviewDrop(object sender, DragEventArgs e)
+    private async void FilesGrid_PreviewDrop(object sender, DragEventArgs e)
     {
         var payload = GetDropInfo(e);
         FilesGrid.BorderThickness = new Thickness(0);
@@ -816,7 +831,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         {
             if (kind == TransferKind.Copy)
             {
-                DuplicatePaths(payload.Paths);
+                await DuplicatePathsAsync(payload.Paths);
                 return;
             }
             e.Effects = DragDropEffects.None;

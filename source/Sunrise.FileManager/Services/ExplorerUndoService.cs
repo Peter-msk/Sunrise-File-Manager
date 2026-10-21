@@ -11,6 +11,9 @@ public sealed class ExplorerUndoService
     private readonly Stack<UndoEntry> _history = new();
     private readonly Stack<UndoEntry> _redoHistory = new();
     private const int MaxHistory = 30;
+    private readonly Action<string> _recycle;
+    public ExplorerUndoService() : this(FileActionsService.Recycle) { }
+    internal ExplorerUndoService(Action<string> recycle) => _recycle = recycle;
 
     public bool CanUndo => _history.Count > 0;
     public bool CanRedo => _redoHistory.Count > 0;
@@ -81,6 +84,8 @@ public sealed class ExplorerUndoService
             {
                 if (createdNew)
                 {
+                    if ((File.GetAttributes(currentPath) & FileAttributes.ReparsePoint) != 0)
+                        throw new IOException("연결·접합점은 실행 취소에서 삭제하지 않습니다.");
                     if (Directory.Exists(currentPath))
                     {
                         if (!Directory.EnumerateFileSystemEntries(currentPath).Any())
@@ -96,16 +101,8 @@ public sealed class ExplorerUndoService
                     }
                     else if (File.Exists(currentPath))
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            try { FileActionsService.Recycle(currentPath); doneCount++; }
-                            catch { File.Delete(currentPath); doneCount++; }
-                        }
-                        else
-                        {
-                            File.Delete(currentPath);
-                            doneCount++;
-                        }
+                        _recycle(currentPath); // Failure must preserve the file; never fall back to permanent deletion.
+                        doneCount++;
                     }
                 }
                 else if (!string.IsNullOrEmpty(originalPath))
@@ -118,7 +115,7 @@ public sealed class ExplorerUndoService
                     }
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.ComponentModel.Win32Exception or OperationCanceledException)
             {
                 errors.Add($"{Path.GetFileName(currentPath)}: {ex.Message}");
             }
@@ -167,7 +164,7 @@ public sealed class ExplorerUndoService
                     }
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.ComponentModel.Win32Exception or OperationCanceledException)
             {
                 errors.Add($"{Path.GetFileName(currentPath)}: {ex.Message}");
             }

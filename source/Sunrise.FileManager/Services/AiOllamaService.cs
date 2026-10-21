@@ -194,9 +194,22 @@ public sealed partial class AiOllamaService : IAiIntentAdapter, IDisposable
         return await SendGenerateRequestAsync(payload, token).ConfigureAwait(false);
     }
 
+    internal static string BuildGenerateJson(object payload)
+    {
+        var body = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(payload))!.AsObject();
+        if (body["model"]?.GetValue<string>().StartsWith("qwen3:", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            body["think"] = false;
+            var options = body["options"] as System.Text.Json.Nodes.JsonObject ?? new System.Text.Json.Nodes.JsonObject();
+            options["num_ctx"] = 4096;
+            if (body["options"] is null) body["options"] = options;
+        }
+        return body.ToJsonString();
+    }
+
     private async Task<string> SendGenerateRequestAsync(object payload, CancellationToken token)
     {
-        string json = JsonSerializer.Serialize(payload);
+        string json = BuildGenerateJson(payload);
         using var message = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseUri, "/api/generate"))
         {
             Content = new StringContent(json, Encoding.UTF8, "application/json")

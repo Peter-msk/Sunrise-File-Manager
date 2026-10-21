@@ -8,7 +8,7 @@
 
    <!-- Row 0: Classic Windows menu for each split pane -->
    <Menu Grid.Row="0" Style="{StaticResource SunrisePaneMenu}" BorderThickness="0,0,0,1" Padding="2,0">
-    <MenuItem Header="파일(_F)">
+    <MenuItem x:Name="FileCommandMenu" Header="파일(_F)">
      <MenuItem Header="새 탭 열기" InputGestureText="Ctrl+T" Click="NewTab_Click"/>
      <Separator/>
      <MenuItem Header="새 폴더" InputGestureText="Ctrl+Shift+N" Click="NewFolder_Click"/>
@@ -20,7 +20,7 @@
      <MenuItem Header="CMD에서 열기" Click="OpenCmd_Click"/>
      <MenuItem Header="Windows 탐색기에서 열기" Click="OpenWindowsExplorer_Click"/>
     </MenuItem>
-    <MenuItem Header="편집(_E)">
+    <MenuItem x:Name="EditCommandMenu" Header="편집(_E)">
      <MenuItem Header="실행 취소" InputGestureText="Ctrl+Z" Click="Undo_Click"/>
      <MenuItem Header="다시 실행" InputGestureText="Ctrl+Y" Click="Redo_Click"/>
      <Separator/>
@@ -152,10 +152,10 @@
     <Button Foreground="{DynamicResource TextPrimary}" x:Name="CopySelectionButton" Content="복사" Click="ClipboardCopy_Click" ToolTip="선택 항목 복사 (Ctrl+C)"/>
     <Button Foreground="{DynamicResource TextPrimary}" x:Name="PasteSelectionButton" Content="붙여넣기" Click="ClipboardPaste_Click" ToolTip="클립보드 항목 붙여넣기 (Ctrl+V · 동일 폴더 내 사본 자동 생성)"/>
     <Button Foreground="{DynamicResource TextPrimary}" x:Name="RenameButton" Content="이름 변경" Click="Rename_Click" ToolTip="이름 바꾸기 · 다중 선택 시 일괄 이름 바꾸기 (F2)"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="DuplicateButton" Visibility="Collapsed" Content="⧉ 복제" Click="Duplicate_Click" ToolTip="선택 항목 즉시 사본 생성 (Ctrl+D)"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="DuplicateButton" Visibility="Collapsed" Content="복제" Click="Duplicate_Click" ToolTip="선택 항목 즉시 사본 생성 (Ctrl+D)"/>
     <Button Foreground="{DynamicResource TextPrimary}" x:Name="RecycleButton" Content="삭제" Click="Recycle_Click" ToolTip="휴지통으로 이동 (Delete) · 영구 삭제는 Shift+Delete"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="UndoButton" Visibility="Collapsed" Content="↶ 실행 취소" Click="Undo_Click" IsEnabled="False" ToolTip="최근 이름 변경·이동·생성·복제 실행 취소 (Ctrl+Z)"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="RedoButton" Visibility="Collapsed" Content="↷ 다시 실행" Click="Redo_Click" IsEnabled="False" ToolTip="실행 취소한 작업 다시 실행 (Ctrl+Y)"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="UndoButton" Visibility="Collapsed" Content="실행 취소" Click="Undo_Click" IsEnabled="False" ToolTip="최근 이름 변경·이동·생성·복제 실행 취소 (Ctrl+Z)"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="RedoButton" Visibility="Collapsed" Content="다시 실행" Click="Redo_Click" IsEnabled="False" ToolTip="실행 취소한 작업 다시 실행 (Ctrl+Y)"/>
     <Separator/>
     <!-- 3. Windows Explorer '정렬 · 필터' & '보기' Group -->
     <ComboBox x:Name="CategorySelector" Foreground="{DynamicResource TextPrimary}" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeInputBorder}" FontSize="12" SelectionChanged="CategorySelector_SelectionChanged" Width="96" ToolTip="파일 유형별 필터" Margin="2,0">
@@ -173,16 +173,16 @@
     </ComboBox>
     <Separator/>
     <!-- 4. Windows Shell, Archive & Q-Dir Export Utilities -->
-    <Button Foreground="{DynamicResource TextPrimary}" Content="↗ 열기" Click="ContextOpen_Click" ToolTip="Windows 기본 연결 앱에서 열기 (Enter)"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="ZipCompressButton" Visibility="Collapsed" Content="📦 압축" Click="ZipCompress_Click" ToolTip="선택 항목을 ZIP 압축 파일로 묶기"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="ZipExtractButton" Visibility="Collapsed" Content="📂 압축풀기" Click="ZipExtract_Click" ToolTip="선택한 ZIP 압축 파일 풀기"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="ExportListButton" Visibility="Collapsed" Content="📋 목록 내보내기" Click="ExportList_Click" ToolTip="현재 폴더 파일 목록을 CSV로 저장하거나 클립보드로 복사"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="OpenCmdButton" Visibility="Collapsed" Content="⌨ CMD" Click="OpenCmd_Click" ToolTip="현재 폴더 경로에서 명령 프롬프트(cmd.exe) 열기"/>
+    <Button Foreground="{DynamicResource TextPrimary}" Content="열기" Click="ContextOpen_Click" ToolTip="Windows 기본 연결 앱에서 열기 (Enter)"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="ZipCompressButton" Visibility="Collapsed" Content="압축" Click="ZipCompress_Click" ToolTip="선택 항목을 ZIP 압축 파일로 묶기"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="ZipExtractButton" Visibility="Collapsed" Content="압축풀기" Click="ZipExtract_Click" ToolTip="선택한 ZIP 압축 파일 풀기"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="ExportListButton" Visibility="Collapsed" Content="목록 내보내기" Click="ExportList_Click" ToolTip="현재 폴더 파일 목록을 CSV로 저장하거나 클립보드로 복사"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="OpenCmdButton" Visibility="Collapsed" Content="CMD" Click="OpenCmd_Click" ToolTip="현재 폴더 경로에서 명령 프롬프트(cmd.exe) 열기"/>
     <Separator/>
     <!-- 5. Windows Explorer Pane Toggles (탐색 창 · 세부 정보 창 · 미리보기 창) -->
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="TreeToggle" Visibility="Collapsed" Content="◧ 탐색 창" Click="TreeToggle_Click" ToolTip="좌측 폴더 탐색 트리 표시/숨김"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="DetailsToggle" Visibility="Collapsed" Content="ⓘ 세부 정보" Click="DetailsToggle_Click" ToolTip="세부 정보 및 #memo 창 표시/숨김 (Alt+Shift+P)"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="PreviewToggle" Visibility="Collapsed" Content="◨ 미리보기" Click="PreviewToggle_Click" ToolTip="우측 독립 미리보기 창 표시/숨김 (Alt+P / Space)"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="TreeToggle" Visibility="Collapsed" Content="탐색 창" Click="TreeToggle_Click" ToolTip="좌측 폴더 탐색 트리 표시/숨김"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="DetailsToggle" Visibility="Collapsed" Content="세부 정보" Click="DetailsToggle_Click" ToolTip="세부 정보 및 #memo 창 표시/숨김 (Alt+Shift+P)"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="PreviewToggle" Visibility="Collapsed" Content="미리보기" Click="PreviewToggle_Click" ToolTip="우측 독립 미리보기 창 표시/숨김 (Alt+P / Space)"/>
    </ToolBar>
 
    <!-- File navigation: reclaimed command-bar height -->
@@ -210,7 +210,7 @@
        <MenuItem Header="연결 프로그램 선택…" Click="ContextOpenWith_Click"/>
        <MenuItem Header="새 탭에서 폴더 열기" InputGestureText="Ctrl+T" Click="ContextOpenInNewTab_Click"/>
        <MenuItem Header="우측 미리보기 켜기/끄기" InputGestureText="Alt+P / Space" Click="PreviewToggle_Click"/>
-       <MenuItem Header="🤖 선택 항목 온보드 AI 정리 / 요약 (F8)" Click="SendToAi_Click"/>
+       <MenuItem Header="선택 항목 온보드 AI 정리 / 요약 (F8)" Click="SendToAi_Click"/>
        <MenuItem Header="즐겨찾기(빠른 이동)에 고정" Click="ContextPinFolder_Click"/>
        <Separator/>
        <MenuItem Header="실행 취소" InputGestureText="Ctrl+Z" Click="Undo_Click"/>
@@ -242,7 +242,7 @@
       </ContextMenu>
      </DataGrid.ContextMenu>
      <DataGrid.Columns>
-      <DataGridTemplateColumn Header=" " Width="42" CanUserSort="False">
+      <DataGridTemplateColumn Header="구분" HeaderStyle="{StaticResource CenteredFileHeader}" Width="48" CanUserSort="False">
        <DataGridTemplateColumn.CellTemplate>
         <DataTemplate>
          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -268,10 +268,12 @@
        </DataGridTextColumn.ElementStyle>
       </DataGridTextColumn>
       <DataGridTextColumn Header="수정한 날짜" Binding="{Binding ModifiedDisplay}" SortMemberPath="ModifiedAt" Width="152" />
-      <DataGridTextColumn Header="유형" Binding="{Binding TypeName}" SortMemberPath="TypeName" Width="112" />
-      <DataGridTextColumn Header="크기" Binding="{Binding SizeDisplay}" SortMemberPath="SizeBytes" Width="90" />
-      <DataGridTextColumn Header="메모" Binding="{Binding MemoBadge}" SortMemberPath="HasMemo" Width="62" />
-      <DataGridTextColumn Header="만든 날짜" Binding="{Binding CreatedDisplay}" SortMemberPath="CreatedAt" Width="152" />
+      <DataGridTextColumn Header="유형" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}" Binding="{Binding TypeName}" SortMemberPath="TypeName" Width="112" />
+      <DataGridTextColumn Header="크기" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}" Binding="{Binding SizeDisplay}" SortMemberPath="SizeBytes" Width="90" />
+      <DataGridTextColumn Header="메모" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}" Binding="{Binding MemoBadge}" SortMemberPath="HasMemo" Width="62" />
+      <DataGridTextColumn Header="만든 날짜" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}" Binding="{Binding CreatedDisplay}" SortMemberPath="CreatedAt" Width="152" />
+     <DataGridTextColumn x:Name="RecycleDeletedColumn" Header="삭제한 날짜" SortMemberPath="DeletedAt" Binding="{Binding DeletedDisplay}" Width="152" Visibility="Collapsed" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}"/>
+      <DataGridTextColumn x:Name="RecycleOriginColumn" Header="원래 위치" SortMemberPath="OriginalLocation" Binding="{Binding OriginalLocation}" Width="220" Visibility="Collapsed" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}"/>
      </DataGrid.Columns>
     </DataGrid>
 

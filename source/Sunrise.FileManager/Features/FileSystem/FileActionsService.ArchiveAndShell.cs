@@ -13,12 +13,13 @@ namespace Sunrise.FileManager.Services;
 /// </summary>
 public static partial class FileActionsService
 {
-    public static IReadOnlyList<string> DuplicateEntries(IReadOnlyList<string> sourcePaths)
+    public static IReadOnlyList<string> DuplicateEntries(IReadOnlyList<string> sourcePaths, CancellationToken token = default)
     {
         ArgumentNullException.ThrowIfNull(sourcePaths);
         var created = new List<string>();
         foreach (string raw in sourcePaths)
         {
+            token.ThrowIfCancellationRequested();
             string source = Path.GetFullPath(raw);
             EnsureOrdinaryEntry(source);
             bool isDir = Directory.Exists(source);
@@ -42,39 +43,65 @@ public static partial class FileActionsService
             if (string.IsNullOrEmpty(target))
                 throw new IOException("복사본 이름 후보(999개)가 모두 사용 중입니다.");
 
-            if (isDir)
+            string staging = Path.Combine(parent, ".sunrise-duplicate-" + Guid.NewGuid().ToString("N"));
+            try
             {
-                CopyDirectoryRecursive(source, target);
+                int scanned = 0;
+                if (isDir) CopyDirectoryRecursive(source, staging, token, ref scanned);
+                else CopyDuplicateFile(source, staging, token);
+                token.ThrowIfCancellationRequested();
+                if (isDir) Directory.Move(staging, target);
+                else File.Move(staging, target);
             }
-            else
+            finally
             {
-                File.Copy(source, target, overwrite: false);
+                if (File.Exists(staging))
+                {
+                    File.SetAttributes(staging, FileAttributes.Normal);
+                    File.Delete(staging);
+                }
+                else if (Directory.Exists(staging))
+                {
+                    foreach (string file in Directory.EnumerateFiles(staging, "*", SearchOption.AllDirectories))
+                        File.SetAttributes(file, FileAttributes.Normal);
+                    Directory.Delete(staging, true);
+                }
             }
             created.Add(target);
         }
         return created;
     }
 
-    private static void CopyDirectoryRecursive(string sourceDir, string targetDir)
+    private static void CopyDuplicateFile(string source, string target, CancellationToken token)
     {
+        using (var input = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read))
+        using (var output = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            input.CopyToAsync(output, 81920, token).GetAwaiter().GetResult();
+        // Preserve File.Copy's metadata behavior while allowing cooperative cancellation.
+        File.SetLastWriteTimeUtc(target, File.GetLastWriteTimeUtc(source));
+        File.SetAttributes(target, File.GetAttributes(source));
+    }
+
+    private static void CopyDirectoryRecursive(string sourceDir, string targetDir, CancellationToken token, ref int scanned)
+    {
+        token.ThrowIfCancellationRequested();
         Directory.CreateDirectory(targetDir);
-        foreach (string file in Directory.EnumerateFiles(sourceDir))
+        foreach (string child in Directory.EnumerateFileSystemEntries(sourceDir))
         {
-            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0) continue;
-            string destFile = Path.Combine(targetDir, Path.GetFileName(file));
-            File.Copy(file, destFile, overwrite: false);
-        }
-        foreach (string subDir in Directory.EnumerateDirectories(sourceDir))
-        {
-            if ((File.GetAttributes(subDir) & FileAttributes.ReparsePoint) != 0) continue;
-            string destSubDir = Path.Combine(targetDir, Path.GetFileName(subDir));
-            CopyDirectoryRecursive(subDir, destSubDir);
+            token.ThrowIfCancellationRequested();
+            if (++scanned > TransferService.MaxPlannedEntries) throw new IOException("사본 생성은 최대 50,000개 항목까지 지원합니다.");
+            if ((File.GetAttributes(child) & FileAttributes.ReparsePoint) != 0)
+                throw new IOException("연결·접합점이 포함된 폴더의 사본은 생성하지 않습니다.");
+            string target = Path.Combine(targetDir, Path.GetFileName(child));
+            if (Directory.Exists(child)) CopyDirectoryRecursive(child, target, token, ref scanned);
+            else CopyDuplicateFile(child, target, token);
         }
     }
 
-    public static string CompressToZip(IReadOnlyList<string> sourcePaths, string destinationZipPath)
+    public static string CompressToZip(IReadOnlyList<string> sourcePaths, string destinationZipPath, CancellationToken token = default)
     {
         ArgumentNullException.ThrowIfNull(sourcePaths);
+        token.ThrowIfCancellationRequested();
         if (sourcePaths.Count == 0) throw new ArgumentException("압축할 항목을 선택하세요.");
         string zipFull = Path.GetFullPath(destinationZipPath);
         if (!zipFull.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
@@ -83,26 +110,36 @@ public static partial class FileActionsService
         if (File.Exists(zipFull) || Directory.Exists(zipFull))
             throw new IOException("같은 이름의 압축 파일이 이미 존재합니다.");
 
+        foreach (string source in sourcePaths.Select(Path.GetFullPath))
+        {
+            if (Directory.Exists(source) && (zipFull.StartsWith(Path.TrimEndingDirectorySeparator(source) + Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase) || string.Equals(zipFull, source, StringComparison.OrdinalIgnoreCase)))
+                throw new IOException("압축할 폴더 내부에는 결과 ZIP을 저장할 수 없습니다.");
+        }
         string tempZip = zipFull + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
             using (var archive = ZipFile.Open(tempZip, ZipArchiveMode.Create))
             {
+                int scanned = 0;
                 foreach (string raw in sourcePaths)
                 {
+                    token.ThrowIfCancellationRequested();
+                    if (++scanned > 20_000) throw new IOException("ZIP은 최대 20,000개 항목까지 지원합니다.");
                     string src = Path.GetFullPath(raw);
                     EnsureOrdinaryEntry(src);
                     if (Directory.Exists(src))
                     {
                         string rootName = Path.GetFileName(Path.TrimEndingDirectorySeparator(src));
-                        AddDirectoryToZip(archive, src, rootName);
+                        AddDirectoryToZip(archive, src, rootName, token, ref scanned);
                     }
                     else
                     {
-                        archive.CreateEntryFromFile(src, Path.GetFileName(src), CompressionLevel.Optimal);
+                        AddFileToZip(archive, src, Path.GetFileName(src), token);
                     }
                 }
             }
+            token.ThrowIfCancellationRequested();
             File.Move(tempZip, zipFull, overwrite: false);
             return zipFull;
         }
@@ -110,26 +147,42 @@ public static partial class FileActionsService
         {
             if (File.Exists(tempZip))
             {
-                try { File.Delete(tempZip); } catch { }
+                try { File.Delete(tempZip); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                { System.Diagnostics.Trace.TraceWarning("ZIP staging retained: {0}", ex.GetType().Name); }
             }
         }
     }
 
-    private static void AddDirectoryToZip(ZipArchive archive, string dirPath, string relativePrefix)
+    private static void AddFileToZip(ZipArchive archive, string source, string name, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
+        var entry = archive.CreateEntry(name, CompressionLevel.Optimal);
+        using var input = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var output = entry.Open();
+        input.CopyToAsync(output, 81920, token).GetAwaiter().GetResult();
+    }
+
+    private static void AddDirectoryToZip(ZipArchive archive, string dirPath, string relativePrefix,
+        CancellationToken token, ref int scanned)
+    {
+        token.ThrowIfCancellationRequested();
+        if (++scanned > 20_000) throw new IOException("ZIP은 최대 20,000개 항목까지 지원합니다.");
         bool hasAny = false;
         foreach (string file in Directory.EnumerateFiles(dirPath))
         {
-            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0) continue;
+            token.ThrowIfCancellationRequested();
+            if (++scanned > 20_000) throw new IOException("ZIP은 최대 20,000개 항목까지 지원합니다.");
+            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0) throw new IOException("ZIP에 연결 항목을 포함할 수 없습니다.");
             hasAny = true;
             string entryName = relativePrefix + "/" + Path.GetFileName(file);
-            archive.CreateEntryFromFile(file, entryName, CompressionLevel.Optimal);
+            AddFileToZip(archive, file, entryName, token);
         }
         foreach (string sub in Directory.EnumerateDirectories(dirPath))
         {
-            if ((File.GetAttributes(sub) & FileAttributes.ReparsePoint) != 0) continue;
+            if ((File.GetAttributes(sub) & FileAttributes.ReparsePoint) != 0) throw new IOException("ZIP에 연결 항목을 포함할 수 없습니다.");
             hasAny = true;
-            AddDirectoryToZip(archive, sub, relativePrefix + "/" + Path.GetFileName(sub));
+            AddDirectoryToZip(archive, sub, relativePrefix + "/" + Path.GetFileName(sub), token, ref scanned);
         }
         if (!hasAny)
         {
@@ -137,8 +190,9 @@ public static partial class FileActionsService
         }
     }
 
-    public static string ExtractZip(string zipFilePath, string destinationFolder)
+    public static string ExtractZip(string zipFilePath, string destinationFolder, CancellationToken token = default)
     {
+        token.ThrowIfCancellationRequested();
         string srcZip = Path.GetFullPath(zipFilePath);
         EnsureOrdinaryEntry(srcZip);
         if (!File.Exists(srcZip) || !srcZip.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
@@ -147,30 +201,74 @@ public static partial class FileActionsService
         if (File.Exists(dest) || Directory.Exists(dest))
             throw new IOException("압축을 풀 대상 폴더 이름이 이미 존재합니다.");
 
-        Directory.CreateDirectory(dest);
-        string destPrefix = Path.EndsInDirectorySeparator(dest) ? dest : dest + Path.DirectorySeparatorChar;
-        using var archive = ZipFile.OpenRead(srcZip);
-        if (archive.Entries.Count > 20_000)
-            throw new InvalidDataException("압축 파일 내부 항목이 20,000개를 초과하여 중지했습니다.");
-
-        foreach (ZipArchiveEntry entry in archive.Entries)
+        string staging = dest + ".sunrise-extract-" + Guid.NewGuid().ToString("N");
+        bool committed = false;
+        try
         {
-            string targetPath = Path.GetFullPath(Path.Combine(dest, entry.FullName));
-            if (!targetPath.StartsWith(destPrefix, StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(targetPath, dest, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("압축 파일에 상위 폴더 탈출(Zip-Slip) 경로가 포함되어 차단했습니다.");
-
-            if (string.IsNullOrEmpty(entry.Name))
+            using (var archive = ZipFile.OpenRead(srcZip))
             {
-                Directory.CreateDirectory(targetPath);
+                if (archive.Entries.Count is 0 or > 20_000)
+                    throw new InvalidDataException("ZIP 내부 항목 수는 1~20,000개여야 합니다.");
+                const long maxTotal = 8L * 1024 * 1024 * 1024;
+                long expandedBytes = 0;
+                var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var plan = new List<(ZipArchiveEntry Entry, string Relative, bool Directory)>();
+                foreach (var entry in archive.Entries)
+                {
+                    token.ThrowIfCancellationRequested();
+                    string relative = entry.FullName.Replace('\\', '/');
+                    bool isDirectory = relative.EndsWith('/');
+                    string[] parts = relative.TrimEnd('/').Split('/');
+                    if (relative.StartsWith('/') || parts.Length == 0 || parts.Any(part => part is "" or "." or ".."))
+                        throw new InvalidDataException("ZIP 내부 경로가 올바르지 않습니다.");
+                    foreach (string part in parts) ValidateName(part);
+                    relative = Path.Combine(parts);
+                    int unixType = (entry.ExternalAttributes >> 16) & 0xF000;
+                    if (unixType is not (0 or 0x8000 or 0x4000) ||
+                        (entry.ExternalAttributes & (int)FileAttributes.ReparsePoint) != 0 || !paths.Add(relative))
+                        throw new InvalidDataException("ZIP에 중복 경로 또는 지원하지 않는 연결 항목이 있습니다.");
+                    if (entry.Length > maxTotal - expandedBytes)
+                        throw new InvalidDataException("압축 해제 총 용량은 8GB를 초과할 수 없습니다.");
+                    expandedBytes += entry.Length;
+                    plan.Add((entry, relative, isDirectory));
+                }
+                // No destination is exposed until every entry is validated and extracted.
+                Directory.CreateDirectory(staging);
+                foreach (var (entry, relative, isDirectory) in plan)
+                {
+                    token.ThrowIfCancellationRequested();
+                    string target = Path.Combine(staging, relative);
+                    if (isDirectory) { Directory.CreateDirectory(target); continue; }
+                    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                    using var input = entry.Open();
+                    using var output = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                    byte[] buffer = new byte[81920];
+                    long written = 0;
+                    int count;
+                    while ((count = input.Read(buffer)) > 0)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        if (count > entry.Length - written) throw new InvalidDataException("ZIP의 선언된 용량을 초과했습니다.");
+                        output.Write(buffer, 0, count);
+                        written += count;
+                    }
+                    if (written != entry.Length) throw new InvalidDataException("ZIP 내부 파일이 잘렸습니다.");
+                }
             }
-            else
+            token.ThrowIfCancellationRequested();
+            Directory.Move(staging, dest);
+            committed = true;
+            return dest;
+        }
+        finally
+        {
+            if (!committed && Directory.Exists(staging))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-                entry.ExtractToFile(targetPath, overwrite: false);
+                try { Directory.Delete(staging, recursive: true); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                { System.Diagnostics.Trace.TraceWarning("ZIP extraction staging retained: {0}", ex.GetType().Name); }
             }
         }
-        return dest;
     }
 
     public static RecycleBatchResult DeletePermanently(IReadOnlyList<string> paths)
@@ -251,10 +349,10 @@ public static partial class FileActionsService
                             totalBytes = checked(totalBytes + file.Length);
                         }
                     }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { truncated = true; }
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { truncated = true; }
         }
         return new FolderSizeSummary(totalBytes, fileCount, folderCount, truncated);
     }
@@ -263,7 +361,7 @@ public static partial class FileActionsService
     {
         string full = Path.GetFullPath(filePath);
         EnsureOrdinaryEntry(full);
-        using var stream = new FileStream(full, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 256 * 1024, FileOptions.SequentialScan);
+        using var stream = new FileStream(full, FileMode.Open, FileAccess.Read, FileShare.Read, 256 * 1024, FileOptions.SequentialScan);
         return Convert.ToHexString(SHA256.HashData(stream));
     }
 

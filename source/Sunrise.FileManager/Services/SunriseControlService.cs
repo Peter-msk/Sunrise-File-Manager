@@ -14,7 +14,7 @@ namespace Sunrise.FileManager.Services;
 public static class SunriseControlService
 {
     public const string ControlId = "sunrise_file_manager";
-    public const string Version = "1.2.0";
+    public const string Version = "1.3.0";
     public const string Url = "https://raw.githubusercontent.com/Peter-msk/Sunrise_Control/main/control.txt";
     private static readonly string CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Sunrise", "FileManager", "control-v1-cache.json");
@@ -37,18 +37,24 @@ public static class SunriseControlService
     public static bool VersionIsOlder(string current, string minimum) =>
         System.Version.TryParse(current, out var c) && System.Version.TryParse(minimum, out var m) && c < m;
 
-    public static async Task<Policy> CheckAsync()
+    public static Task<Policy> CheckAsync(CancellationToken cancellationToken = default) =>
+        CheckAsync(Client, CachePath, DateTimeOffset.UtcNow, cancellationToken);
+
+    internal static async Task<Policy> CheckAsync(HttpClient transport, string cachePath, DateTimeOffset now,
+        CancellationToken cancellationToken = default)
     {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(5));
         try
         {
-            using var response = await Client.GetAsync(Url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            using var response = await transport.GetAsync(Url, HttpCompletionOption.ResponseHeadersRead, timeout.Token).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             if (response.Content.Headers.ContentLength is > 131072) throw new InvalidDataException("Control too large");
-            await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token).ConfigureAwait(false);
             using var buffer = new MemoryStream();
             byte[] chunk = new byte[8192];
             int count;
-            while ((count = await stream.ReadAsync(chunk).ConfigureAwait(false)) > 0)
+            while ((count = await stream.ReadAsync(chunk, timeout.Token).ConfigureAwait(false)) > 0)
             {
                 if (buffer.Length + count > 131072) throw new InvalidDataException("Control too large");
                 buffer.Write(chunk, 0, count);
@@ -57,27 +63,31 @@ public static class SunriseControlService
             var policy = Parse(content, "online", out int ttl);
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(CachePath)!);
-                string tmp = CachePath + ".tmp";
-                File.WriteAllText(tmp, JsonSerializer.Serialize(new CacheRecord(content, DateTimeOffset.UtcNow)), Encoding.UTF8);
-                File.Move(tmp, CachePath, true);
+                Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
+                string tmp = cachePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                try
+                {
+                    File.WriteAllText(tmp, JsonSerializer.Serialize(new CacheRecord(content, now)), Encoding.UTF8);
+                    File.Move(tmp, cachePath, true);
+                }
+                finally { if (File.Exists(tmp)) File.Delete(tmp); }
             }
             catch (IOException) { /* Remote policy is still valid; cache persistence is optional. */ }
             catch (UnauthorizedAccessException) { }
             return policy;
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or JsonException or ArgumentException or DecoderFallbackException)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested && ex is (HttpRequestException or OperationCanceledException or IOException or InvalidDataException or UnauthorizedAccessException or JsonException or ArgumentException or DecoderFallbackException))
         {
             Policy fallback = new("allow", "allow", "", "", "fallback");
             try
             {
-                if (File.Exists(CachePath))
+                if (File.Exists(cachePath) && new FileInfo(cachePath).Length <= 300_000)
                 {
-                    var cached = JsonSerializer.Deserialize<CacheRecord>(File.ReadAllText(CachePath, Encoding.UTF8));
+                    var cached = JsonSerializer.Deserialize<CacheRecord>(File.ReadAllText(cachePath, Encoding.UTF8));
                     if (cached is not null)
                     {
                         var parsed = Parse(cached.Content, "cache", out int ttl);
-                        var age = DateTimeOffset.UtcNow - cached.FetchedUtc;
+                        var age = now - cached.FetchedUtc;
                         if (age >= TimeSpan.Zero && age <= TimeSpan.FromSeconds(ttl)) return parsed;
                         // The cache is too old for a live product policy. Only use its explicit
                         // global fallback state, as required by the Control v1 wire contract.
@@ -85,7 +95,7 @@ public static class SunriseControlService
                     }
                 }
             }
-            catch (Exception cacheException) when (cacheException is IOException or UnauthorizedAccessException or JsonException or ArgumentException) { }
+            catch (Exception cacheException) when (cacheException is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or ArgumentException) { }
             return fallback;
         }
     }
@@ -95,7 +105,7 @@ public static class SunriseControlService
     {
         var values = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
         string section = "";
-        foreach (string raw in body.Replace("\r", "").Split('\n'))
+        foreach (string raw in body.TrimStart('\uFEFF').Replace("\r", "").Split('\n'))
         {
             string line = raw.Trim();
             if (line.Length == 0 || line.StartsWith('#') || line.StartsWith(';')) continue;
@@ -131,7 +141,7 @@ public static class SunriseControlService
     {
         var global = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         bool inGlobal = false;
-        foreach (string raw in content.Replace("\r", "").Split('\n'))
+        foreach (string raw in content.TrimStart('\uFEFF').Replace("\r", "").Split('\n'))
         {
             var line = raw.Trim();
             if (line.StartsWith('[') && line.EndsWith(']')) { inGlobal = line.Equals("[global]", StringComparison.OrdinalIgnoreCase); continue; }

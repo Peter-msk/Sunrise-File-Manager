@@ -47,6 +47,8 @@ public static class FileListView
             "CreatedAt" => descending
                 ? ordered.ThenByDescending(item => item.CreatedAt)
                 : ordered.ThenBy(item => item.CreatedAt),
+            "DeletedAt" => descending ? ordered.ThenByDescending(item => item.DeletedAt) : ordered.ThenBy(item => item.DeletedAt),
+            "OriginalLocation" => descending ? ordered.ThenByDescending(item => item.OriginalLocation, StringComparer.CurrentCultureIgnoreCase) : ordered.ThenBy(item => item.OriginalLocation, StringComparer.CurrentCultureIgnoreCase),
             "HasMemo" => descending
                 ? ordered.ThenByDescending(item => item.HasMemo)
                 : ordered.ThenBy(item => item.HasMemo),

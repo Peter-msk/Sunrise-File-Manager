@@ -63,7 +63,7 @@
     <TextBlock Text="③ 결과 파일을 저장할 폴더" FontWeight="SemiBold" Margin="0,8,0,2"/>
     <WrapPanel Margin="0,4">
      <Button x:Name="DestinationButton" Content="📁 대상 폴더 지정…" Style="{StaticResource ExplorerCommand}" Click="Destination_Click" Margin="0,0,6,0"/>
-     <Button x:Name="UseOtherPaneButton" Content="⇄ 반대쪽 분할 패널 폴더 사용" Style="{StaticResource ExplorerCommand}" Click="UseOtherPane_Click" Margin="0,0,6,0" ToolTip="2~4분할 화면에서 다른 탐색기 패널에 열려 있는 폴더를 즉시 대상 폴더로 지정합니다."/>
+     <Button x:Name="UseOtherPaneButton" Content="반대쪽 분할 패널 폴더 사용" Style="{StaticResource ExplorerCommand}" Click="UseOtherPane_Click" Margin="0,0,6,0" ToolTip="2~4분할 화면에서 다른 탐색기 패널에 열려 있는 폴더를 즉시 대상 폴더로 지정합니다."/>
      <Button x:Name="UseCurrentFolderButton" Content="📂 현재 폴더를 대상으로 지정" Style="{StaticResource ExplorerCommand}" Click="UseCurrentFolder_Click" ToolTip="현재 탐색기 폴더 아래에 분류 폴더를 생성하도록 지정합니다."/>
     </WrapPanel>
     <TextBlock x:Name="DestinationLabel" Text="대상 폴더 미선택 · 이동/복사는 실행 전 반드시 지정" TextWrapping="Wrap" MaxHeight="34" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" FontSize="12"/>
@@ -75,7 +75,7 @@
     <Button x:Name="ExecuteButton" Style="{StaticResource PrimaryButton}" Content="④ 확인하고 실행" Click="Execute_Click" IsEnabled="False" Margin="0,0,4,4"/>
     <Button x:Name="AskOllamaButton" Content="💬 온보드 AI 문서 요약·질의" Click="AskOllama_Click" Margin="0,0,4,4" ToolTip="선택한 파일이나 현재 폴더 정보를 내 PC의 Ollama 온보드 AI로 요약·질의합니다."/>
     <Button x:Name="SaveSummaryMemoButton" Content="📝 요약을 #memo로 저장" Click="SaveSummaryMemo_Click" Visibility="Collapsed" Margin="0,0,4,4" ToolTip="방금 생성된 온보드 AI 요약 결과를 선택 파일의 #memo에 저장합니다."/>
-    <Button x:Name="SaveSummaryMdButton" Content="📄 요약을 .md 파일로 저장" Click="SaveSummaryMd_Click" Visibility="Collapsed" Margin="0,0,4,4" ToolTip="방금 생성된 온보드 AI 요약 결과를 현재 폴더에 마크다운(.md) 파일로 저장합니다."/>
+    <Button x:Name="SaveSummaryMdButton" Content="요약을 .md 파일로 저장" Click="SaveSummaryMd_Click" Visibility="Collapsed" Margin="0,0,4,4" ToolTip="방금 생성된 온보드 AI 요약 결과를 현재 폴더에 마크다운(.md) 파일로 저장합니다."/>
     <Button x:Name="InspectionButton" Content="중복 검사 / 분류 도구" Click="Inspection_Click" Margin="0,0,4,4"/>
     <Button x:Name="HistoryButton" Content="작업 기록 / 되돌리기" Click="History_Click" Margin="0,0,4,4"/>
     <Button x:Name="CancelButton" Content="계획 해제" Click="Cancel_Click" Margin="0,0,0,4"/>

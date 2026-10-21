@@ -48,7 +48,7 @@ public partial class ExplorerPane
         { MessageBox.Show(ex.Message, "클립보드 사용 실패", MessageBoxButton.OK, MessageBoxImage.Warning); }
     }
 
-    private void ExecuteClipboardPaste()
+    private async Task ExecuteClipboardPasteAsync()
     {
         if (!_actionsEnabled || ActiveFolder is not string folder) return;
         try
@@ -75,7 +75,7 @@ public partial class ExplorerPane
                 string[] crossFolderPaths = paths.Except(sameFolderPaths, StringComparer.OrdinalIgnoreCase).ToArray();
                 if (sameFolderPaths.Length > 0)
                 {
-                    DuplicatePaths(sameFolderPaths);
+                    await DuplicatePathsAsync(sameFolderPaths);
                 }
                 if (crossFolderPaths.Length > 0)
                 {
@@ -131,6 +131,16 @@ public partial class ExplorerPane
 
     private bool ExecuteShortcutAction(ExplorerShortcutAction action, RoutedEventArgs e)
     {
+        if (IsRecycleBin && action is ExplorerShortcutAction.Undo or ExplorerShortcutAction.Redo or
+            ExplorerShortcutAction.Copy or ExplorerShortcutAction.Cut or ExplorerShortcutAction.Paste or
+            ExplorerShortcutAction.CopyPath or ExplorerShortcutAction.Duplicate or ExplorerShortcutAction.Rename or
+            ExplorerShortcutAction.RecycleDelete or ExplorerShortcutAction.PermanentDelete or
+            ExplorerShortcutAction.NewFolder or ExplorerShortcutAction.NewFile)
+        {
+            FooterText.Text = "휴지통에서는 우클릭 메뉴로 원래 위치에 복원할 수 있습니다.";
+            e.Handled = true;
+            return true;
+        }
         switch (action)
         {
             case ExplorerShortcutAction.Undo:

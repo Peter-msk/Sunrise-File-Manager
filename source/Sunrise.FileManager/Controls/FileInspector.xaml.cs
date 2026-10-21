@@ -13,6 +13,8 @@ namespace Sunrise.FileManager.Controls;
 /// </summary>
 public partial class FileInspector : UserControl
 {
+    public event Action? CloseRequested;
+    private void CloseInspector_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke();
     private FileEntry? _selected;
     private bool _updatingMemo;
     private bool _updatingAttributes;
