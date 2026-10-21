@@ -1,5 +1,5 @@
 <Window x:Class="Sunrise.FileManager.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:Sunrise.FileManager.Controls"
- Style="{StaticResource AppWindow}" Title="Sunrise File Manager 1.0.0" Width="1520" Height="930" MinWidth="1010" MinHeight="560" WindowStartupLocation="CenterScreen" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown">
+ Style="{StaticResource AppWindow}" Title="Sunrise File Manager 1.1.0" Width="1520" Height="930" MinWidth="1010" MinHeight="560" WindowStartupLocation="CenterScreen" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown">
  <Grid>
   <Grid.RowDefinitions><RowDefinition Height="56"/><RowDefinition x:Name="TransferToolbarRow" Height="0"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
   <Border Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1" Padding="14,0">
@@ -9,6 +9,8 @@
      <TextBlock Text="Sunrise File Manager" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/>
     </StackPanel>
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+     <Button x:Name="HeaderThemeButton" Content="◐ 테마" Style="{StaticResource ExplorerCommand}" Click="ThemeCycle_Click"
+       ToolTip="테마 순환: PC 설정 적용 → 라이트 → 다크" Margin="0,0,6,0" Padding="10,5"/>
      <Border Background="{DynamicResource ThemeSoftAlt}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="5" Padding="2" Margin="0,0,6,0">
       <StackPanel Orientation="Horizontal">
        <Button x:Name="OneButton" Style="{StaticResource ExplorerToggle}" Content="단일" Click="One_Click" ToolTip="단일 폴더 보기 (Ctrl+1)"/>
@@ -28,6 +30,7 @@
        <MenuItem Header="분할 배치 전환" Click="CycleSplitPreset_Click"/>
        <Separator/>
        <MenuItem Header="화면 테마">
+        <MenuItem x:Name="ThemeSystemMenuItem" Header="PC 설정 적용" IsCheckable="True" Click="ThemeSystem_Click"/>
         <MenuItem x:Name="ThemeLightMenuItem" Header="라이트 모드" IsCheckable="True" Click="ThemeLight_Click"/>
         <MenuItem x:Name="ThemeDarkMenuItem" Header="다크 모드" IsCheckable="True" Click="ThemeDark_Click"/>
        </MenuItem>
@@ -43,7 +46,7 @@
       <Button x:Name="InspectorToggleButton" Content="상세정보 · 메모" Click="InspectorToggle_Click"/>
       <Button x:Name="MainPreviewButton" Content="미리보기" Click="MainPreview_Click"/>
       <Button x:Name="AiConnectButton" Content="AI 연결" Click="AiConnect_Click"/>
-      <ComboBox x:Name="ThemeSelector" SelectionChanged="ThemeSelector_SelectionChanged"><ComboBoxItem Content="라이트" Tag="Light"/><ComboBoxItem Content="다크" Tag="Dark"/></ComboBox>
+      <ComboBox x:Name="ThemeSelector" SelectionChanged="ThemeSelector_SelectionChanged"><ComboBoxItem Content="PC 설정" Tag="System"/><ComboBoxItem Content="라이트" Tag="Light"/><ComboBoxItem Content="다크" Tag="Dark"/></ComboBox>
      </StackPanel>
     </StackPanel>
    </Grid>
@@ -85,10 +88,14 @@
    <local:FilePreviewPanel x:Name="PreviewPane" Grid.Column="2" Visibility="Collapsed"/>
   </Grid>
   <Border Grid.Row="3" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0" Padding="14,7">
-   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="200"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="145"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <StackPanel Margin="0,0,12,0"><TextBlock x:Name="JobStatus" Text="준비됨 · Windows 기본 탐색기 호환 모드" Foreground="{DynamicResource TextMuted}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/><TextBlock x:Name="JobDetail" Visibility="Collapsed" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource TextMuted}"/></StackPanel>
     <ProgressBar x:Name="JobProgress" Visibility="Collapsed" Grid.Column="1" Minimum="0" Maximum="100" Height="7" VerticalAlignment="Center" Margin="0,0,12,0"/>
-    <Button x:Name="CancelJobButton" Visibility="Collapsed" Grid.Column="2" Content="취소" Click="CancelJob_Click" IsEnabled="False" Padding="8,2" MinHeight="24"/>
+    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+     <Button Content="공지사항" Style="{StaticResource ExplorerCommand}" Click="Notice_Click" MinHeight="25" Padding="10,3" FontSize="12" ToolTip="Sunrise File Manager 최신 공지 확인"/>
+     <Button Content="업데이트" Style="{StaticResource ExplorerCommand}" Click="UpdateCheck_Click" MinHeight="25" Padding="10,3" FontSize="12" ToolTip="최신 버전 확인 및 업데이트 다운로드" Margin="3,0,0,0"/>
+    </StackPanel>
+    <Button x:Name="CancelJobButton" Visibility="Collapsed" Grid.Column="3" Content="취소" Click="CancelJob_Click" IsEnabled="False" Padding="8,2" MinHeight="24"/>
    </Grid>
   </Border>
  </Grid>

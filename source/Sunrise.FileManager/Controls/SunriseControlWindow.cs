@@ -27,18 +27,18 @@ public sealed class SunriseControlWindow : Window
     {
         _policy = policy;
         _required = required;
-        Title = "Sunrise File Manager 1.0.0 · 공지사항 및 업데이트";
+        Title = "Sunrise File Manager 1.1.0 · 공지사항 및 업데이트";
         Width = 780; Height = 590; MinWidth = 590; MinHeight = 390;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
-        Background = Brushes.White;
-        Foreground = new SolidColorBrush(Color.FromRgb(25, 46, 68));
+        SetResourceReference(BackgroundProperty, "PanelBackground");
+        SetResourceReference(ForegroundProperty, "TextPrimary");
         var layout = new Grid { Margin = new Thickness(18) };
         layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        var heading = new TextBlock { Text = "Sunrise File Manager  ·  공식 버전 1.0.0", FontSize = 19, FontWeight = FontWeights.SemiBold };
+        var heading = new TextBlock { Text = "Sunrise File Manager  ·  공식 버전 1.1.0", FontSize = 19, FontWeight = FontWeights.SemiBold };
         Grid.SetRow(heading, 0); layout.Children.Add(heading);
         _status.Text = _required ? "Sunrise Control 정책에 따라 업데이트가 필요합니다. 업데이트를 완료하기 전에는 실행할 수 없습니다."
             : $"Sunrise Control: {policy.Operation} / 업데이트: {policy.Update} (출처: {policy.Source})";

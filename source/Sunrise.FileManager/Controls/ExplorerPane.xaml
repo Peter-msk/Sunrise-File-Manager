@@ -202,6 +202,10 @@
               PreviewMouseMove="FilesGrid_PreviewMouseMove" PreviewKeyDown="FilesGrid_PreviewKeyDown">
      <DataGrid.ContextMenu>
       <ContextMenu>
+       <ContextMenu.Resources>
+        <Style TargetType="MenuItem" BasedOn="{StaticResource CompactContextMenuItem}"/>
+        <Style TargetType="Separator" BasedOn="{StaticResource CompactContextSeparator}"/>
+       </ContextMenu.Resources>
        <MenuItem Header="연결 앱에서 원본 열기" InputGestureText="Enter" Click="ContextOpen_Click"/>
        <MenuItem Header="연결 프로그램 선택…" Click="ContextOpenWith_Click"/>
        <MenuItem Header="새 탭에서 폴더 열기" InputGestureText="Ctrl+T" Click="ContextOpenInNewTab_Click"/>

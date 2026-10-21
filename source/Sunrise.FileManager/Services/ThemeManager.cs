@@ -1,4 +1,5 @@
 using System.Windows;
+using Microsoft.Win32;
 using System.Windows.Media;
 
 namespace Sunrise.FileManager.Services;
@@ -48,16 +49,44 @@ public static class ThemeManager
         ["ThemeTransferBar"] = ("#EAF1F7", "#24364B"),
         ["ThemeColumnDivider"] = ("#9AACC2", "#65819D"),
         ["ThemeButtonOnAccent"] = ("#FFFFFF", "#101E2C"),
+        // Color-matched split toolbar in light and dark themes.
+        ["ThemeSplitInactive"] = ("#E8EFF6", "#253449"),
+        ["ThemeSplitActive"] = ("#12678D", "#73D4F2"),
+        ["ThemeSplitText"] = ("#20425D", "#E3EEFC"),
+        ["ThemeSplitActiveText"] = ("#FFFFFF", "#10293B"),
+        ["ThemeScrollThumb"] = ("#A6B9CD", "#667F9B"),
+        ["ThemeScrollThumbHover"] = ("#597F9E", "#94C5E2"),
+        ["ThemeComboPopup"] = ("#FFFFFF", "#26384E"),
+        ["ThemeComboSelected"] = ("#D7EAF7", "#3B5874"),
     };
 
     public static bool IsDark { get; private set; }
 
+    // Session value represents the user's preference, not the currently resolved palette.
     public static string Normalize(string? requested) =>
-        string.Equals(requested, "Dark", StringComparison.OrdinalIgnoreCase) ? "Dark" : "Light";
+        string.Equals(requested, "Dark", StringComparison.OrdinalIgnoreCase) ? "Dark" :
+        string.Equals(requested, "Light", StringComparison.OrdinalIgnoreCase) ? "Light" : "System";
+
+    public static bool SystemUsesDark()
+    {
+        // Windows 10/11 per-user *app* color scheme (not the taskbar scheme).
+        // Missing/malformed registry keys follow Windows' normal light default.
+        try
+        {
+            object? value = Registry.GetValue(
+                @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+                "AppsUseLightTheme", 1);
+            return value is int setting && setting == 0;
+        }
+        catch (System.Security.SecurityException) { return false; }
+        catch (UnauthorizedAccessException) { return false; }
+        catch (IOException) { return false; }
+    }
 
     public static void Apply(string? requested)
     {
-        bool dark = Normalize(requested) == "Dark";
+        string choice = Normalize(requested);
+        bool dark = choice == "Dark" || (choice == "System" && SystemUsesDark());
         IsDark = dark;
         var resources = Application.Current.Resources;
         foreach (var (key, pair) in Palette)

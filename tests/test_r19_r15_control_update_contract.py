@@ -13,7 +13,9 @@ class SunriseControlReleaseContract(unittest.TestCase):
         feed = json.loads((ROOT / 'latest.json').read_text('utf-8'))
         self.assertEqual(feed['version'], '1.0.0')
         self.assertEqual(feed['latest_version'], '1.0.0')
-        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text('utf-8').strip(), feed['version'])
+        # Public feed remains the last published release until v1.1.0 is actually signed and uploaded.
+        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text('utf-8').strip(), '1.1.0')
+        self.assertEqual((APP/'Services/SunriseControlService.cs').read_text('utf-8').count('public const string Version = "1.1.0";'), 1)
         self.assertEqual(feed['product_id'], 'SUNRISE-FILE-MANAGER-WIN-DESKTOP')
         self.assertEqual(feed['app_id'], 'sunrise_file_manager')
 

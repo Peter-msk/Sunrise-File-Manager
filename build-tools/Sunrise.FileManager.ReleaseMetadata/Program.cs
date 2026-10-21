@@ -51,10 +51,16 @@ try
 
     using var stream = File.OpenRead(setup);
     var hash = Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
-    var noticeBody = File.ReadAllText(Path.Combine(root, "release", "NOTICE_BODY.txt"), new UTF8Encoding(false, true)).Trim();
+    // Each new build version must provide its own release notice. Never reuse the
+    // previous public version's notice when preparing a new signed installer.
+    var noticeTemplate = Path.Combine(root, "release", $"NOTICE_BODY_{version}.txt");
+    if (!File.Exists(noticeTemplate)) throw new InvalidDataException("Version-specific release notice missing: " + noticeTemplate);
+    var noticeBody = File.ReadAllText(noticeTemplate, new UTF8Encoding(false, true)).Trim();
     if (noticeBody.Length is 0 or > 60_000) throw new InvalidDataException("Invalid notice body");
     var notice = $"Sunrise File Manager {version}\n\n{noticeBody}\n";
-    var releaseNotes = "Sunrise File Manager 정식 버전 출시. 최대 4분할 탐색, 문서·이미지 미리보기, 파일 메모 및 AI 파일 정리 기능을 제공합니다";
+    var releaseNotes = version == "1.1.0"
+        ? "Sunrise File Manager 1.1.0 화면 개선. PC 테마 연동, 파일 유형 아이콘, 공지·업데이트 바로가기와 AI 정리창 사용성이 개선되었습니다"
+        : "Sunrise File Manager 정식 버전 출시. 최대 4분할 탐색, 문서·이미지 미리보기, 파일 메모 및 AI 파일 정리 기능을 제공합니다";
     var releaseTag = "v" + version;
     var releasePage = $"https://github.com/Peter-msk/Sunrise-File-Manager/releases/tag/{releaseTag}";
     var sourceUrl = "https://github.com/Peter-msk/Sunrise-File-Manager";

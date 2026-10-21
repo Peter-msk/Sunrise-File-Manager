@@ -35,7 +35,7 @@ class ProductReleaseContract(unittest.TestCase):
         self.assertNotIn(b'\n',raw.replace(b'\r\n',b''))
     def test_generator_hashes_real_signed_setup(self):
         code=(ROOT/'build-tools/Sunrise.FileManager.ReleaseMetadata/Program.cs').read_text('utf-8')
-        for token in ['SHA256.HashData(stream)', 'info.Length', 'RELEASE_VERSION.txt', 'NOTICE_BODY.txt', 'latest.json', 'notice.txt', 'release-metadata', 'update_endpoint_configured = publicationMatched', 'download_url = activeDownloadUrl']:
+        for token in ['SHA256.HashData(stream)', 'info.Length', 'RELEASE_VERSION.txt', 'NOTICE_BODY_{version}.txt', 'latest.json', 'notice.txt', 'release-metadata', 'update_endpoint_configured = publicationMatched', 'download_url = activeDownloadUrl']:
             self.assertIn(token,code)
         self.assertNotIn('Process.Start',code)
         self.assertNotIn('Sunrise_Control',code)
@@ -43,7 +43,8 @@ class ProductReleaseContract(unittest.TestCase):
         self.assertIn('<TargetFramework>net10.0</TargetFramework>',(ROOT/'build-tools/Sunrise.FileManager.ReleaseMetadata/Sunrise.FileManager.ReleaseMetadata.csproj').read_text('utf-8'))
     def test_source_release_is_publishing_gated(self):
         feed=json.loads((ROOT/'latest.json').read_text('utf-8'))
-        self.assertEqual(feed['latest_version'],(ROOT/'installer/RELEASE_VERSION.txt').read_text('utf-8').strip())
+        self.assertEqual(feed['latest_version'], '1.0.0')  # Published public feed; 1.1.0 remains source-only.
+        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text('utf-8').strip(), '1.1.0')
         self.assertEqual(feed['download_url'], 'https://github.com/Peter-msk/Sunrise-File-Manager/releases/download/v1.0.0/Sunrise_File_Manager_1.0.0_Setup.exe')
         self.assertTrue(feed['update_endpoint_configured'])
         self.assertIn('Sunrise-File-Manager/main/notice.txt',feed['notice_url'])

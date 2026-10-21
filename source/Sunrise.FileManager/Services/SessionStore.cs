@@ -36,7 +36,7 @@ public sealed class AppSession
     public double PreviewWidth { get; set; } = 350;
     public string SplitLayoutPreset { get; set; } = "Single";
     public int LayoutVersion { get; set; } = 1;
-    public string Theme { get; set; } = "Light";
+    public string Theme { get; set; } = "System";
     public bool InspectorVisible { get; set; } = true;
     public bool DockPreviewVisible { get; set; }
     public List<string> PinnedFolders { get; set; } = [];

@@ -28,6 +28,8 @@ public partial class FolderTree : UserControl
     public FolderTree()
     {
         InitializeComponent();
+        // Expansion must load real child nodes, including when the custom themed expander is clicked.
+        FolderItems.AddHandler(TreeViewItem.ExpandedEvent, new RoutedEventHandler(FolderItem_Expanded));
         ReloadRoots();
         RenderPinnedFolders();
     }

@@ -37,7 +37,7 @@ class UserFacingReleaseTest(unittest.TestCase):
         self.assertIn('release_notes = releaseNotes + "."',gen)
         self.assertNotIn('게시된 설치파일과 해시·크기 일치.',gen)
         self.assertNotIn('현재 로컬 빌드는 공개 설치파일과 일치하지 않아',gen)
-        self.assertIn('release/NOTICE_BODY.txt',gen.replace('Path.Combine(root, "release", "NOTICE_BODY.txt")','release/NOTICE_BODY.txt'))
+        self.assertIn('NOTICE_BODY_{version}.txt', gen)
     def test_no_unsafe_distribution_changes(self):
         publish=(ROOT/'BUILD_RELEASE_ONEDIR.cmd').read_text('ascii')
         self.assertIn('--self-contained true',publish)

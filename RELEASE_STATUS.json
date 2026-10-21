@@ -65,5 +65,10 @@
     "restore": "USER_APPROVED_VERSION_SELECT_COMPARE",
     "identity_authentication": "NOT_IMPLEMENTED",
     "windows_runtime_verification": "PENDING"
-  }
+  },
+  "source_version": "1.1.0",
+  "source_revision": "R20_V110_THEME_ACCESSIBILITY",
+  "published_version": "1.0.0",
+  "published_feed_unchanged": true,
+  "distribution_release_status": "V1_1_0_WINDOWS_BUILD_AND_RELEASE_PENDING"
 }

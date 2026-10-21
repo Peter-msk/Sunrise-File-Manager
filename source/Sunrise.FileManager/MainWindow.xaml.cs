@@ -44,7 +44,26 @@ public partial class MainWindow : Window
     private bool _syncingInspector;
     private bool _syncingPinned;
     private bool _themeReady;
-    private string _currentTheme = "Light";
+    private string _currentTheme = "System";
+    private void SystemThemeChanged(object? sender, Microsoft.Win32.UserPreferenceChangedEventArgs e)
+    {
+        if (_currentTheme != "System" || Dispatcher.HasShutdownStarted) return;
+        _ = Dispatcher.BeginInvoke(new Action(() => ApplySelectedTheme()));
+    }
+    private void ApplySelectedTheme()
+    {
+        ThemeManager.Apply(_currentTheme);
+        ThemeSystemMenuItem.IsChecked = _currentTheme == "System";
+        ThemeLightMenuItem.IsChecked = _currentTheme == "Light";
+        ThemeDarkMenuItem.IsChecked = _currentTheme == "Dark";
+        HeaderThemeButton.Content = _currentTheme switch
+        {
+            "System" => "◐ PC 테마",
+            "Dark" => "☾ 다크",
+            _ => "☀ 라이트"
+        };
+        foreach (var pane in _panes) pane?.RefreshThemeColors();
+    }
     private readonly bool _persistSession;
     private readonly System.Windows.Threading.DispatcherTimer _sessionSaveTimer = new()
     {
@@ -92,10 +111,9 @@ public partial class MainWindow : Window
         if (session.InspectorWidth is >= 270 and <= 800) _inspectorPreferredWidth = session.InspectorWidth;
         if (session.PreviewWidth is >= 260 and <= 900) _previewPreferredWidth = session.PreviewWidth;
         _currentTheme = ThemeManager.Normalize(session.Theme);
-        ThemeManager.Apply(_currentTheme);
-        ThemeSelector.SelectedIndex = _currentTheme == "Dark" ? 1 : 0;
-        ThemeLightMenuItem.IsChecked = _currentTheme == "Light";
-        ThemeDarkMenuItem.IsChecked = _currentTheme == "Dark";
+        ThemeSelector.SelectedIndex = _currentTheme switch { "Light" => 1, "Dark" => 2, _ => 0 };
+        ApplySelectedTheme();
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged += SystemThemeChanged;
         _themeReady = true;
         _inspectorOpen = session.LayoutVersion < 18 || session.InspectorVisible;
         _dockPreviewOpen = session.LayoutVersion >= 18 && session.DockPreviewVisible;
@@ -201,15 +219,14 @@ public partial class MainWindow : Window
     {
         if (!_themeReady || ThemeSelector.SelectedItem is not ComboBoxItem { Tag: string theme }) return;
         _currentTheme = ThemeManager.Normalize(theme);
-        ThemeManager.Apply(_currentTheme);
-        ThemeLightMenuItem.IsChecked = _currentTheme == "Light";
-        ThemeDarkMenuItem.IsChecked = _currentTheme == "Dark";
-        foreach (var pane in _panes) pane?.RefreshThemeColors();
+        ApplySelectedTheme();
         ScheduleSessionSave();
     }
 
-    private void ThemeLight_Click(object sender, RoutedEventArgs e) => ThemeSelector.SelectedIndex = 0;
-    private void ThemeDark_Click(object sender, RoutedEventArgs e) => ThemeSelector.SelectedIndex = 1;
+    private void ThemeSystem_Click(object sender, RoutedEventArgs e) => ThemeSelector.SelectedIndex = 0;
+    private void ThemeLight_Click(object sender, RoutedEventArgs e) => ThemeSelector.SelectedIndex = 1;
+    private void ThemeDark_Click(object sender, RoutedEventArgs e) => ThemeSelector.SelectedIndex = 2;
+    private void ThemeCycle_Click(object sender, RoutedEventArgs e) => ThemeSelector.SelectedIndex = (ThemeSelector.SelectedIndex + 1) % 3;
 
     private void ArrangePanels(int count) => ArrangePanels(count, null);
 
@@ -231,7 +248,10 @@ public partial class MainWindow : Window
             var choices = new[] { OneButton, TwoButton, ThreeButton, FourButton };
             for (int i = 0; i < choices.Length; i++)
             {
-                choices[i].Background = (Brush)FindResource(i + 1 == clampedCount ? "Selected" : "ControlBackground");
+                bool selected = i + 1 == clampedCount;
+                choices[i].SetResourceReference(Control.BackgroundProperty, selected ? "ThemeSplitActive" : "ThemeSplitInactive");
+                choices[i].SetResourceReference(Control.ForegroundProperty, selected ? "ThemeSplitActiveText" : "ThemeSplitText");
+                choices[i].SetResourceReference(Control.BorderBrushProperty, "PanelBorder");
                 choices[i].FontWeight = i + 1 == clampedCount ? FontWeights.SemiBold : FontWeights.Normal;
             }
         }
@@ -615,6 +635,7 @@ public partial class MainWindow : Window
         }
         if (!Inspector.ConfirmLeavingMemo()) { e.Cancel = true; return; }
         _sessionSaveTimer.Stop();
+        Microsoft.Win32.SystemEvents.UserPreferenceChanged -= SystemThemeChanged;
         if (_persistSession) TrySaveSession(showError: true);
         foreach (var pane in _panes) pane.CancelPendingOperations();
         AiPanel.Cancel();

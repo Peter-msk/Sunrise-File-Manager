@@ -37,7 +37,7 @@ class R07UiReleaseContract(unittest.TestCase):
         session=(SRC/'Services/SessionStore.cs').read_text('utf8')
         main=(SRC/'MainWindow.xaml.cs').read_text('utf8')
         xaml=(SRC/'MainWindow.xaml').read_text('utf8')
-        self.assertIn('public string Theme { get; set; } = "Light";',session)
+        self.assertIn('public string Theme { get; set; } = "System";',session)
         self.assertIn('ThemeManager.Apply(_currentTheme)',main)
         self.assertIn('Theme = _currentTheme',main)
         self.assertIn('ThemeSelector_SelectionChanged',xaml)

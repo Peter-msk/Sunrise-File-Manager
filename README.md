@@ -1,4 +1,6 @@
-# Sunrise File Manager 1.0.0 (R19 R17 · Capture 원본 빌드 구조 반영)
+> 1.1.0 UI 개선 소스입니다. 공식 배포는 현재 v1.0.0이며, 새 1.1.0 설치파일은 Windows 서명·실기 검증 및 릴리스 게시 후 제공됩니다. 상세 변경: [1.1.0 인수인계](docs/R20_V110_THEME_ACCESSIBILITY_HANDOVER.md).
+
+# Sunrise File Manager 1.1.0 (차기 버전 소스)
 
 Sunrise Group의 Windows 10/11 x64용 .NET 10 WPF 파일 관리 프로그램입니다. 분할 탐색기, 탭, 폴더 검색, PDF/HWPX/DOCX·이미지 미리보기, 공유 메모 `#memo`, 선택형 Ollama 기능을 포함합니다.
 
