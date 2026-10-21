@@ -58,7 +58,9 @@ try
     var noticeBody = File.ReadAllText(noticeTemplate, new UTF8Encoding(false, true)).Trim();
     if (noticeBody.Length is 0 or > 60_000) throw new InvalidDataException("Invalid notice body");
     var notice = $"Sunrise File Manager {version}\n\n{noticeBody}\n";
-    var releaseNotes = version == "1.1.0"
+    var releaseNotes = version == "1.2.0"
+        ? "Sunrise File Manager 1.2.0 업데이트 및 안정성 개선. 종료 후 설치 실행과 제품별 공지·버전 조회를 보완했습니다"
+        : version == "1.1.0"
         ? "Sunrise File Manager 1.1.0 화면 개선. PC 테마 연동, 파일 유형 아이콘, 공지·업데이트 바로가기와 AI 정리창 사용성이 개선되었습니다"
         : "Sunrise File Manager 정식 버전 출시. 최대 4분할 탐색, 문서·이미지 미리보기, 파일 메모 및 AI 파일 정리 기능을 제공합니다";
     var releaseTag = "v" + version;

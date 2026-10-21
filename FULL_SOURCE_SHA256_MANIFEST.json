@@ -1,11 +1,11 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R23_V110_UPDATER_FILE_STREAM_DISPOSE",
-  "version": "1.1.0",
-  "published_version": "1.1.0",
-  "status": "SOURCE_FIX_WINDOWS_RUNTIME_PENDING_EXISTING_INSTALLER_NOT_MODIFIED",
-  "file_count": 281,
-  "verification": "161 Python regression tests and 15 packaging checks PASS, Windows updater smoke pending",
+  "version": "1.2.0",
+  "revision": "R00",
+  "parent_baseline": "1.1.0 R23",
+  "status": "SOURCE_TESTED_WINDOWS_DYNAMIC_PENDING",
+  "file_count": 284,
+  "verification": "169 Python regression; 15 packaging; 13 XAML XML PASS; Windows actual build pending",
   "files": [
     {
       "path": ".gitattributes",
@@ -79,8 +79,8 @@
     },
     {
       "path": "CURRENT_SOURCE.md",
-      "sha256": "bad7f216320fc071ea4fe9f69a0872d52fe71de96d0da78e9f2d7e64ce93e686",
-      "bytes": 2048
+      "sha256": "d79b735d6b23affb9d61d3b70c63b037d983986fc7ca88b40ca0f57da16a30fa",
+      "bytes": 999
     },
     {
       "path": "INSTALL_OLLAMA.cmd",
@@ -289,8 +289,8 @@
     },
     {
       "path": "build-tools/Sunrise.FileManager.ReleaseMetadata/Program.cs",
-      "sha256": "a2655526824d90650e07b732456faac1072a5534783b48e7cda54fcb755c9e32",
-      "bytes": 12652
+      "sha256": "9dc60623ce255cda2e77dbd9888fea308f2a67e75873d98c68a190f197e418af",
+      "bytes": 12837
     },
     {
       "path": "build-tools/Sunrise.FileManager.ReleaseMetadata/Sunrise.FileManager.ReleaseMetadata.csproj",
@@ -453,13 +453,18 @@
       "bytes": 5974
     },
     {
+      "path": "docs/V120_SUNRISE_GROUP_AUDIT_HANDOVER.md",
+      "sha256": "83601ad42a1771caedc6b387f44aa21be17805bcf63af4a0492934ca66214c7e",
+      "bytes": 6332
+    },
+    {
       "path": "global.json",
       "sha256": "20c93ca7812d0a9825eef71217156f95ab2f4fe5aadfeb22ebc1c24b630018d3",
       "bytes": 111
     },
     {
       "path": "installer/RELEASE_VERSION.txt",
-      "sha256": "1575e1af4a95f12f70b4ee6a6adce8160953d93ea17dc2611b90883ccc3ad3b8",
+      "sha256": "1e5b51cde515396a9fa762909cf8ca6584ccc564b325d2eebeea76175fe95c4d",
       "bytes": 6
     },
     {
@@ -491,6 +496,11 @@
       "path": "release/NOTICE_BODY_1.1.0.txt",
       "sha256": "3020d6ae31d856e74cc96fcf75a8875fa4c9774097c39fb663cf932dd6c911c4",
       "bytes": 562
+    },
+    {
+      "path": "release/NOTICE_BODY_1.2.0.txt",
+      "sha256": "209c142df453957c9ecafee2d689454e0f7d053d90ab9289e401a67df853b439",
+      "bytes": 434
     },
     {
       "path": "release/PUBLISHED_RELEASE.json",
@@ -639,8 +649,8 @@
     },
     {
       "path": "source/Sunrise.FileManager/Controls/SunriseControlWindow.cs",
-      "sha256": "531d62e37ef0008a8713623014017761137c8eea67089b1efba8ca129bdb8ce2",
-      "bytes": 7907
+      "sha256": "b76bd43bf9f17335060eef842b55a55ef26146bb1a11300a5bceed574f3e7e5f",
+      "bytes": 12039
     },
     {
       "path": "source/Sunrise.FileManager/Features/Explorer/ExplorerCommandRouter.cs",
@@ -699,13 +709,13 @@
     },
     {
       "path": "source/Sunrise.FileManager/MainWindow.xaml",
-      "sha256": "d23ab6c9ec7e200ebaa2f59db1a274ec0f3f0d353bac935ae1827bcd0ad3d665",
+      "sha256": "3697ffb8047520250957a35fa76e4775ba14faab9fcc707dabd069d27e6d20f0",
       "bytes": 10175
     },
     {
       "path": "source/Sunrise.FileManager/MainWindow.xaml.cs",
-      "sha256": "09e0db6291a1c19647fa929dfd1ea2aae24b7aa5cdcc1bf996423d15648f7982",
-      "bytes": 34669
+      "sha256": "7b2166a21ca65b1ea155352baaf52d8dc273b390a5d2e328824261b0b85196f6",
+      "bytes": 34962
     },
     {
       "path": "source/Sunrise.FileManager/Models/ExplorerTab.cs",
@@ -849,7 +859,7 @@
     },
     {
       "path": "source/Sunrise.FileManager/Services/SunriseControlService.cs",
-      "sha256": "5027b9f21150fba37ca6039b6d5eb3eb900631ad1895260e7829986a5fdc5e18",
+      "sha256": "1f3fe12829187aba1332fc28cc294c8e7086a6b2eb9c148762bba284b5e2cfb7",
       "bytes": 8514
     },
     {
@@ -894,7 +904,7 @@
     },
     {
       "path": "source/Sunrise.FileManager/Sunrise.FileManager.csproj",
-      "sha256": "0bfb68313355160da3da02205d8bdb6b3ec4db458a2999367267e40a002ef521",
+      "sha256": "53d5392a48225131c44b4bc7c8c66c72264910c85a6fbd73df5d6a940ec11897",
       "bytes": 1403
     },
     {
@@ -1304,12 +1314,12 @@
     },
     {
       "path": "tests/test_r19_r15_control_update_contract.py",
-      "sha256": "5a2517eb58efca1aacf1499fda434d2d596def3e27d35db2a2a0ae0afeabbcaa",
+      "sha256": "83400b8e7ee8ab5a632616a411b683ac40d5bf4293ec72c8d718efb30ef16c06",
       "bytes": 3603
     },
     {
       "path": "tests/test_r19_r16_product_release_contract.py",
-      "sha256": "2517630bdbdd40c6d093576080febf7f005196c3715acf904d6e381476f0f0df",
+      "sha256": "01fc562ddcc0e9d8888f8ee708b5201ff9092e1e141ad9c2ca262d8878b07d70",
       "bytes": 4094
     },
     {
@@ -1334,7 +1344,7 @@
     },
     {
       "path": "tests/test_r19_v110_theme_readability.py",
-      "sha256": "fae1c309456c59f64e72b48bd8faa0007bd65154a6e9d00b724ddc5947ab5e7b",
+      "sha256": "701bdae3ed6b77ecf9057f1a0c032075139ee784a03eb6d24e47522f7caaf893",
       "bytes": 5609
     },
     {
@@ -1354,18 +1364,23 @@
     },
     {
       "path": "tests/test_r21_wpf_io_namespace.py",
-      "sha256": "6317bc2ba0a1153957cce2240a6c1c828fb92b173c6517cc675f8d6f1a6f7c16",
+      "sha256": "16a8efdc7de5a0943f621ec3e48bbb5cb25a16a0593dde5d499acbce10d96d64",
       "bytes": 1423
     },
     {
       "path": "tests/test_r22_company_metadata_host.py",
-      "sha256": "90c8e5f08199217bbc3b9f2cc7767dc775c47a82da830c822d4ba972dde743b2",
+      "sha256": "484340ab6e58269a50a1b6d34b3e996378a5619afa1836fd52fcc2749ea34aec",
       "bytes": 3085
     },
     {
       "path": "tests/test_r23_updater_file_lock.py",
       "sha256": "57ffa0e3e7a16fd79a81510bc56b53efc7a0114addcea1c37c3e692ca3749f5c",
       "bytes": 2480
+    },
+    {
+      "path": "tests/test_v120_group_contract.py",
+      "sha256": "84625d3d957f11209f6447ecc1418cde58b72ef96eea81a6fa7b8d2af74d5c42",
+      "bytes": 4787
     },
     {
       "path": "tests/verify_packaging_contract.py",

@@ -44,7 +44,7 @@ class ProductReleaseContract(unittest.TestCase):
     def test_source_release_is_publishing_gated(self):
         feed=json.loads((ROOT/'latest.json').read_text('utf-8'))
         self.assertEqual(feed['latest_version'], '1.0.0')  # Published public feed; 1.1.0 remains source-only.
-        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text('utf-8').strip(), '1.1.0')
+        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text('utf-8').strip(), '1.2.0')
         self.assertEqual(feed['download_url'], 'https://github.com/Peter-msk/Sunrise-File-Manager/releases/download/v1.0.0/Sunrise_File_Manager_1.0.0_Setup.exe')
         self.assertTrue(feed['update_endpoint_configured'])
         self.assertIn('Sunrise-File-Manager/main/notice.txt',feed['notice_url'])

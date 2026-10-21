@@ -7,10 +7,10 @@ APP=ROOT/'source/Sunrise.FileManager'
 
 class V110ThemeAndRelease(unittest.TestCase):
     def test_version_is_1_1_0_but_public_feed_remains_published_1_0_0(self):
-        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text('ascii').strip(),'1.1.0')
-        self.assertIn('public const string Version = "1.1.0";', (APP/'Services/SunriseControlService.cs').read_text())
-        self.assertIn('Sunrise File Manager 1.1.0',(APP/'MainWindow.xaml').read_text())
-        self.assertIn('1.1.0',(APP/'Sunrise.FileManager.csproj').read_text())
+        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text('ascii').strip(),'1.2.0')
+        self.assertIn('public const string Version = "1.2.0";', (APP/'Services/SunriseControlService.cs').read_text())
+        self.assertIn('Sunrise File Manager 1.2.0',(APP/'MainWindow.xaml').read_text())
+        self.assertIn('1.2.0',(APP/'Sunrise.FileManager.csproj').read_text())
         feed=json.loads((ROOT/'latest.json').read_text())
         self.assertEqual(feed['latest_version'],'1.0.0')
         self.assertEqual(feed['sha256'],'eb866da915459cb1c61df22039957f6e07c9d863293a406a40ea5fcb47d62cdd')

@@ -9,9 +9,9 @@
     <AssemblyName>Sunrise.FileManager</AssemblyName>
     <RootNamespace>Sunrise.FileManager</RootNamespace>
     <Product>Sunrise File Manager</Product>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <Company>Sunrise Group</Company>
     <Authors>Sunrise Group</Authors>
     <Description>Sunrise File Manager Windows Desktop Application</Description>

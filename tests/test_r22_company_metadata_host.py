@@ -49,7 +49,7 @@ class MetadataHostAndReducedPreflight(unittest.TestCase):
             self.assertTrue(b.isascii(),name)
             self.assertIn(b'\r\n',b)
             self.assertNotIn(b'\n',b.replace(b'\r\n',b''),name)
-        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text().strip(),'1.1.0')
+        self.assertEqual((ROOT/'installer/RELEASE_VERSION.txt').read_text().strip(),'1.2.0')
         self.assertIn('1.0.0',(ROOT/'latest.json').read_text('utf8'))
 
 if __name__=='__main__': unittest.main()

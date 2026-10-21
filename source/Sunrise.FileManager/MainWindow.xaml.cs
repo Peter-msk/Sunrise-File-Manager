@@ -612,6 +612,11 @@ public partial class MainWindow : Window
         JobDetail.Text = "현재 작업의 안전한 취소를 요청했습니다.";
     }
 
+    // Do not transfer control to Setup while file jobs are active or a memo is unsaved.
+    // The actual exit path rechecks these conditions in Window_Closing.
+    public bool CanExitForUpdate() => _activeRecycleJobs == 0 && !_working && !_aiBusy &&
+        Inspector.ConfirmLeavingMemo();
+
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         if (_activeRecycleJobs > 0)

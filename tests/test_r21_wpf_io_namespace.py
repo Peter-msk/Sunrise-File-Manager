@@ -23,7 +23,7 @@ class ExplicitIoImports(unittest.TestCase):
                     self.assertRegex(code, r"(?m)^using System\.IO;$")
 
     def test_installer_and_control_release_remain_untouched(self):
-        self.assertEqual((ROOT / "installer/RELEASE_VERSION.txt").read_text(encoding="ascii").strip(), "1.1.0")
+        self.assertEqual((ROOT / "installer/RELEASE_VERSION.txt").read_text(encoding="ascii").strip(), "1.2.0")
         self.assertEqual(__import__("json").loads((ROOT / "latest.json").read_text(encoding="utf-8"))["latest_version"], "1.0.0")
 
 if __name__ == "__main__":

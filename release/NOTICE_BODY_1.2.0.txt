@@ -1,0 +1,9 @@
+Sunrise File Manager 1.2.0
+
+[업데이트 및 안정성 개선]
+- 업데이트 파일의 검증 후 기존 프로그램을 완전히 종료하고 설치를 진행하도록 개선
+- 공지사항과 업데이트 조회 안정성 개선
+- 파일 관리 및 사용자 설정은 기존과 동일하게 유지
+
+최신 설치파일은 공식 GitHub 릴리스에서 제공됩니다.
+https://github.com/Peter-msk/Sunrise-File-Manager/releases
