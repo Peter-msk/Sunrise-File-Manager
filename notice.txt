@@ -12,6 +12,5 @@ Sunrise File Manager 1.3.2은 탐색 패널과 선택·설정 복원을 개선�
 - 파일 목록 선택·포커스의 흰색 표시 경로와 메뉴 구분선 개선
 - 빌드 배포정보 URL 및 업데이트 설정 자동 생성 유지
 
-[다운로드]
-공식 GitHub 릴리스에서 해당 버전의 설치파일을 제공합니다.
-https://github.com/Peter-msk/Sunrise-File-Manager/releases
+[개발문의]
+ceo.k.sunrise@gmail.com
