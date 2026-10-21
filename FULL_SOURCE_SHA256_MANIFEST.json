@@ -1,10 +1,10 @@
 {
   "product": "Sunrise File Manager",
-  "revision": "R20_V110_THEME_ACCESSIBILITY",
+  "revision": "R21_V110_WPF_CS0246_IO_HOTFIX",
   "version": "1.1.0",
   "published_version": "1.0.0",
-  "status": "SOURCE_STATIC_PASS_WINDOWS_WPF_BUILD_PENDING",
-  "file_count": 275,
+  "status": "SOURCE_TEST_PASS_WINDOWS_WPF_REBUILD_PENDING",
+  "file_count": 277,
   "files": [
     {
       "path": ".gitattributes",
@@ -78,8 +78,8 @@
     },
     {
       "path": "CURRENT_SOURCE.md",
-      "sha256": "1273669c4d047f8ad3800acfa43df133c7dffb6203f065f78752c435dbef1d05",
-      "bytes": 843
+      "sha256": "762528a08550b00b4e0d7462cae9d7b0cfaa6fca0bd7678d5f3626e7079c8db0",
+      "bytes": 967
     },
     {
       "path": "INSTALL_OLLAMA.cmd",
@@ -420,6 +420,11 @@
       "path": "docs/R20_V110_THEME_ACCESSIBILITY_HANDOVER.md",
       "sha256": "52c5a93c5bf88b38cd1966d6efa6680219dc91af19b1ef631846ca5c444cf0ed",
       "bytes": 2858
+    },
+    {
+      "path": "docs/R21_V110_WPF_CS0246_IO_HOTFIX.md",
+      "sha256": "a1dbb873e21353f950b1d7ad7876cc29e5146c0f7ec1d40589aaef2a2c96e5c2",
+      "bytes": 1886
     },
     {
       "path": "docs/SIGNING_R14.md",
@@ -843,8 +848,8 @@
     },
     {
       "path": "source/Sunrise.FileManager/Services/ThemeManager.cs",
-      "sha256": "717e53e06de83dac1bf36e9ea29a3a8a4bc3d5231c604a026e70b54a6efd6fc2",
-      "bytes": 5064
+      "sha256": "b04ef03422b24b4fbea0865930458f9d4e002766f3e30ee1ba0f972929a57e63",
+      "bytes": 5081
     },
     {
       "path": "source/Sunrise.FileManager/Services/ThumbnailRetention.cs",
@@ -1337,6 +1342,11 @@
       "bytes": 3289
     },
     {
+      "path": "tests/test_r21_wpf_io_namespace.py",
+      "sha256": "6317bc2ba0a1153957cce2240a6c1c828fb92b173c6517cc675f8d6f1a6f7c16",
+      "bytes": 1423
+    },
+    {
       "path": "tests/verify_packaging_contract.py",
       "sha256": "6dbc69f42eebbf9449735273b8e8357761389dec9eb5f13a7cdeda6c46768fbc",
       "bytes": 2628
@@ -1381,5 +1391,6 @@
       "sha256": "556a9afe499449a5f05e1889084dc9a3cad191b59f74035c4bbcf5cb05d5c154",
       "bytes": 4089
     }
-  ]
+  ],
+  "baseline": "R20_V110_THEME_ACCESSIBILITY"
 }
