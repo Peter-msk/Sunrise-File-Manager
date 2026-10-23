@@ -11,11 +11,6 @@ using Sunrise.FileManager.Services;
 
 internal static class Program
 {
-    // Load the product resources while isolating UI fixtures from network startup dialogs.
-    private sealed class FixtureApp : App
-    {
-        protected override void OnStartup(StartupEventArgs e) { }
-    }
     [STAThread]
     private static void Main(string[] args)
     {
@@ -27,7 +22,15 @@ internal static class Program
         Directory.CreateDirectory(Path.Combine(root, "검토 자료"));
         File.WriteAllText(Path.Combine(root, "보고서.txt"), "UI smoke fixture");
         File.WriteAllText(Path.Combine(root, "검토 메모.md"), "UI smoke fixture");
-        var app = new FixtureApp(); app.InitializeComponent();
+        // Use the exact product resource definitions with an isolated Application host.
+        // Loading App itself would also run the network/update startup gate.
+        var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+        var productXaml = System.Xml.Linq.XDocument.Load(Path.Combine(AppContext.BaseDirectory, "ProductApp.xaml")).Root!;
+        System.Xml.Linq.XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var dictionary = new System.Xml.Linq.XElement(xaml + "ResourceDictionary",
+            productXaml.Attributes().Where(attribute => attribute.IsNamespaceDeclaration),
+            productXaml.Element(xaml + "Application.Resources")!.Elements());
+        app.Resources = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(dictionary.ToString());
         var session = new AppSession { LayoutVersion = 19, VisiblePanels = 1, Panels = Enumerable.Range(0, 4).Select(_ => new PanelSession { TabPaths = [root], DetailsVisible = false }).ToList() };
         if (splitInteractionOnly) session.UiScalePercent = 90;
         UiScaleService.Set(session.UiScalePercent);

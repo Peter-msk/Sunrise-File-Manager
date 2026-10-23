@@ -54,6 +54,18 @@ internal static class NativeUiRegression
                 await SettleAsync(window);
                 var fileScroll = Find<ScrollViewer>(files, _ => true) ?? throw new Exception("File viewer missing.");
                 await ExerciseHorizontalBarAsync(window, fileScroll, $"files-{count}-{index}");
+                var folderLabel = Find<TextBlock>(files, label => label.Name == "InlineNameLabel" && label.Text == "검토 자료")
+                    ?? throw new Exception("Native folder name is not visible.");
+                await ClickAsync(window, folderLabel);
+                if (fileScroll.HorizontalOffset > 1) throw new Exception("Native file selection panned the list right.");
+                await ClickAsync(window, folderLabel);
+                await WaitLocationAsync(pane, Path.Combine(fixtureRoot, "검토 자료"));
+                await ClickAsync(window, (Button)pane.FindName("BackButton"));
+                await WaitLocationAsync(pane, fixtureRoot);
+                await ClickAsync(window, (Button)pane.FindName("ForwardButton"));
+                await WaitLocationAsync(pane, Path.Combine(fixtureRoot, "검토 자료"));
+                await ClickAsync(window, (Button)pane.FindName("UpButton"));
+                await WaitLocationAsync(pane, fixtureRoot);
                 var tree = (FolderTree)pane.FindName("NavigationTree");
                 if (!tree.IsVisible) await ClickAsync(window, (Button)pane.FindName("NavigationToggleButton"));
                 await tree.HighlightPathAsync(longPath);
@@ -82,6 +94,14 @@ internal static class NativeUiRegression
         if (Math.Abs(scroll.HorizontalOffset - offset) > 1) throw new Exception($"Native scroll drift: {name}");
         await DragAsync(window, thumb, -150);
         if (scroll.HorizontalOffset > 1) throw new Exception($"Native drag did not return left: {name} offset={scroll.HorizontalOffset}");
+    }
+
+    private static async Task WaitLocationAsync(ExplorerPane pane, string location)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (pane.CurrentLocation != location && DateTime.UtcNow < deadline) await Task.Delay(30);
+        if (pane.CurrentLocation != location) throw new Exception($"Native navigation failed: expected {location}, actual {pane.CurrentLocation}");
+        await Task.Delay(80);
     }
 
     private static async Task ClickAsync(MainWindow window, FrameworkElement element)
@@ -116,7 +136,8 @@ internal static class NativeUiRegression
         for (int turn = 0; turn < 3; turn++)
         {
             await SettleAsync(window);
-            Point screen = element.PointToScreen(new Point(element.ActualWidth / 2, element.ActualHeight / 2));
+            double localX = element is TextBlock ? Math.Min(40, element.ActualWidth / 2) : element.ActualWidth / 2;
+            Point screen = element.PointToScreen(new Point(localX, element.ActualHeight / 2));
             Point relative = outer.PointFromScreen(screen);
             bool inWorkspace = element.IsDescendantOf(outer);
             if (inWorkspace && (relative.X < 10 || relative.X > outer.ActualWidth - 10 || relative.Y < 10 || relative.Y > outer.ActualHeight - 10))
