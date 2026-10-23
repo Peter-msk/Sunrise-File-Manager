@@ -40,6 +40,9 @@ public static class DocumentContentSearch
         }, () => matchers.Any(m => m.HasText), token);
         return new(matched, result.Status, result.Detail);
     }
+    internal static ContentSearchResult ReadTextChunks(string path, Func<string, bool> append, Func<bool> hasText, CancellationToken token)
+        => ReadCore(path, append, hasText, token);
+
     private static ContentSearchResult ReadCore(string path, Func<string, bool> append, Func<bool> hasText, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();

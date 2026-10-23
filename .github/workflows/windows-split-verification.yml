@@ -1,7 +1,7 @@
-name: Windows WPF split verification
+name: Windows WPF EIASS verification
 on:
   push:
-    branches: [codex/verify-1.5.1-splits]
+    branches: [codex/verify-1.5.3-eiass]
 permissions:
   contents: read
 jobs:
@@ -19,12 +19,12 @@ jobs:
           dotnet --info
           query session
           exit 0
-      - name: Run Windows WPF window and split interactions
+      - name: Run Windows WPF EIASS rename and undo interactions
         timeout-minutes: 5
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force windows-ui-evidence | Out-Null
-          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj --configuration Release -- --split-interaction-only windows-ui-evidence 2>&1 | Tee-Object windows-ui-evidence/execution.log
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj --configuration Release -- --eiass-rename-only windows-ui-evidence 2>&1 | Tee-Object windows-ui-evidence/execution.log
           $testExit = $LASTEXITCODE
           if (Test-Path windows-ui-evidence/UI_RESULT.json) {
             Get-Content windows-ui-evidence/UI_RESULT.json
@@ -36,6 +36,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-wpf-ui-evidence
+          name: windows-eiass-ui-evidence
           path: windows-ui-evidence
           retention-days: 14

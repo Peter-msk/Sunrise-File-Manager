@@ -904,6 +904,35 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         BeginInlineRename(selection[0]);
     }
 
+    public void ExecuteEiassRename()
+    {
+        if (!_actionsEnabled) return;
+        var selected = FilesGrid.SelectedItems.OfType<FileEntry>().ToHashSet();
+        string[] paths = FilesGrid.Items.OfType<FileEntry>().Where(selected.Contains).Select(x => x.FullPath).ToArray();
+        int pdfCount = paths.Count(p => File.Exists(p) && Path.GetExtension(p).Equals(".pdf", StringComparison.OrdinalIgnoreCase));
+        if (pdfCount is < 1 or > 1000)
+        {
+            MessageBox.Show(Window.GetWindow(this), "문서명을 맞출 PDF 파일을 1~1,000개 선택하세요.", "EIASS 제출용 문서명 설정", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        if (BeforeFileChange?.Invoke() == false) return;
+        var dialog = new EiassRenameDialog(paths) { Owner = Window.GetWindow(this) };
+        if (dialog.ShowDialog() != true || dialog.ApprovedRenames.Count == 0) return;
+        try
+        {
+            var pairs = FileActionsService.BatchRenameFilesSafely(dialog.ApprovedRenames);
+            _undoService.RecordBatchRename(pairs, safeFileRename: true);
+            UpdateUndoButtonState();
+            if (pairs.Count > 0) _restoreSelectionPath = pairs[^1].NewPath;
+            if (FileActionCompleted is null) RefreshCurrent(); else FileActionCompleted.Invoke();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            MessageBox.Show(Window.GetWindow(this), ex.Message, "EIASS 문서명 변경 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void EiassRename_Click(object sender, RoutedEventArgs e) => ExecuteEiassRename();
     private void PermanentDelete_Click(object sender, RoutedEventArgs e) => ExecutePermanentDelete();
     private async void Recycle_Click(object sender, RoutedEventArgs e) => await ExecuteRecycleAsync();
 

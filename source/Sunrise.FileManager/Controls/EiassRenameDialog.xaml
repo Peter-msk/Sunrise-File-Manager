@@ -1,0 +1,85 @@
+<Window x:Class="Sunrise.FileManager.Controls.EiassRenameDialog"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Style="{StaticResource AppWindow}" Title="EIASS 제출용 문서명 설정"
+ Width="1120" Height="760" MinWidth="900" MinHeight="640" WindowStartupLocation="CenterOwner">
+ <Grid Margin="16">
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+   <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+  </Grid.RowDefinitions>
+  <StackPanel Margin="0,0,0,12">
+   <TextBlock Text="EIASS 제출용 문서명 설정" FontSize="18" FontWeight="SemiBold"/>
+   <TextBlock x:Name="SubtitleText" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0"/>
+  </StackPanel>
+  <Border Grid.Row="1" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="4" Padding="12">
+   <StackPanel>
+    <WrapPanel>
+     <TextBlock Text="평가 구분" VerticalAlignment="Center" Margin="0,0,8,8"/>
+     <ComboBox x:Name="AssessmentBox" Width="185" SelectedIndex="0" SelectionChanged="Rule_Changed" Margin="0,0,16,8">
+      <ComboBoxItem Content="전략환경영향평가"/><ComboBoxItem Content="소규모환경영향평가"/><ComboBoxItem Content="환경영향평가"/>
+      <ComboBoxItem Content="사후환경영향조사"/><ComboBoxItem Content="약식평가 최종보고서"/><ComboBoxItem Content="기후변화영향평가"/>
+     </ComboBox>
+     <TextBlock Text="말머리" VerticalAlignment="Center" Margin="0,0,8,8"/>
+     <ComboBox x:Name="StageBox" Width="160" IsEditable="True" SelectionChanged="Rule_Changed" Margin="0,0,16,8" ToolTip="보완 3차 등 추가 차수는 직접 입력할 수 있습니다."/>
+     <TextBlock Text="번호 자릿수" VerticalAlignment="Center" Margin="0,0,8,8"/>
+     <ComboBox x:Name="DigitsBox" Width="75" SelectedIndex="0" SelectionChanged="Digits_Changed" Margin="0,0,0,8">
+      <ComboBoxItem Content="4자리"/><ComboBoxItem Content="5자리"/>
+     </ComboBox>
+    </WrapPanel>
+    <WrapPanel>
+     <TextBlock Text="시작 번호" VerticalAlignment="Center" Margin="0,0,8,8"/>
+     <TextBox x:Name="StartBox" Text="0" Width="70" Margin="0,0,16,8"/>
+     <TextBlock Text="증가 간격" VerticalAlignment="Center" Margin="0,0,8,8"/>
+     <TextBox x:Name="StepBox" Text="1" Width="70" Margin="0,0,12,8"/>
+     <Button x:Name="NumberButton" Content="순서대로 번호 다시 부여" Click="Number_Click" Style="{StaticResource ExplorerCommand}" Margin="0,0,12,8"/>
+     <CheckBox x:Name="CleanCheck" Content="제목의 금지 문자 정리" Checked="Rule_Changed" Unchecked="Rule_Changed" VerticalAlignment="Center" Margin="0,0,0,8"
+       ToolTip="★ ● + &amp; ① &lt; * 따옴표 등 금지 예시 문자를 제거합니다. 가운데점·괄호는 유지합니다. 변경 후 이름을 확인하세요."/>
+    </WrapPanel>
+    <TextBlock Text="번호는 아래 파일 순서대로 생성합니다. 시작 0 / 간격 1 → 0000, 0001… · 간격 100 → 0000, 0100…" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource TextMuted}"/>
+   </StackPanel>
+  </Border>
+  <Expander Grid.Row="2" Header="목차로 순서 맞추기 (선택 사항 · 번호 없는 목차도 사용 가능)" Margin="0,10,0,8">
+   <StackPanel Margin="0,8,0,0">
+    <WrapPanel>
+     <Button x:Name="LoadContentsButton" Content="목차 파일 열기…" Click="LoadContents_Click" Style="{StaticResource ExplorerCommand}" Margin="0,0,8,6"/>
+     <Button x:Name="MatchContentsButton" Content="입력한 목차로 순서 맞추기" Click="MatchContents_Click" Style="{StaticResource ExplorerCommand}" Margin="0,0,8,6"/>
+     <TextBlock Text="PDF · DOCX · HWPX · HWP · TXT / 아래에 직접 입력 가능" VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
+    </WrapPanel>
+    <TextBox x:Name="ContentsBox" Height="90" AcceptsReturn="True" AcceptsTab="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+      TextChanged="Contents_Changed" ToolTip="한 줄에 제목 하나씩 입력하세요. 중복·미일치는 자동 추정하지 않습니다. 목차 부분만 지정하세요."/>
+    <TextBlock x:Name="ContentsStatus" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" FontSize="12" Margin="0,4,0,0"/>
+   </StackPanel>
+  </Expander>
+  <DockPanel Grid.Row="3" Margin="0,0,0,8">
+   <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+    <Button x:Name="UpButton" Content="위로 ↑" Click="Up_Click" Style="{StaticResource ExplorerCommand}" Margin="0,0,6,0"/>
+    <Button x:Name="DownButton" Content="아래로 ↓" Click="Down_Click" Style="{StaticResource ExplorerCommand}" Margin="0,0,12,0"/>
+   </StackPanel>
+   <TextBlock Text="행을 선택해 순서를 바꾸세요. 번호·문서 제목은 표에서 직접 수정할 수 있습니다." TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
+  </DockPanel>
+  <DataGrid Grid.Row="4" x:Name="PreviewGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"
+    SelectionMode="Single" HeadersVisibility="Column" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+   <DataGrid.RowStyle><Style TargetType="DataGridRow"><Setter Property="ToolTip" Value="{Binding SourcePath}"/></Style></DataGrid.RowStyle>
+   <DataGrid.Columns>
+    <DataGridTextColumn Header="현재 파일명" Binding="{Binding OldName}" IsReadOnly="True" Width="190"/>
+    <DataGridTextColumn Header="목차번호" Binding="{Binding Code, UpdateSourceTrigger=PropertyChanged}" Width="78"/>
+    <DataGridTextColumn Header="문서 제목 (편집)" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Width="180"/>
+    <DataGridTextColumn Header="변경 후 이름 미리보기" Binding="{Binding NewName}" IsReadOnly="True" Width="*" MinWidth="240"/>
+    <DataGridTextColumn Header="검사 / 목차 일치" Binding="{Binding Status}" IsReadOnly="True" Width="200"/>
+   </DataGrid.Columns>
+  </DataGrid>
+  <StackPanel Grid.Row="5" Margin="0,10,0,0">
+   <CheckBox x:Name="OrderConfirmedCheck" Content="목차 일치 결과와 파일 순서를 확인했습니다 (미일치 항목은 수동 조정)." Visibility="Collapsed"
+     Checked="Rule_Changed" Unchecked="Rule_Changed" Margin="0,0,0,8"/>
+   <TextBlock x:Name="ValidationStatus" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Margin="0,0,0,8"/>
+   <DockPanel>
+    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+     <Button Content="취소" IsCancel="True" Style="{StaticResource ExplorerCommand}" Margin="0,0,8,0"/>
+     <Button x:Name="ApplyButton" Content="파일명 일괄 변경" Click="Apply_Click" Style="{StaticResource PrimaryButton}" Padding="14,5"/>
+    </StackPanel>
+    <TextBlock Text="파일명만 변경하며 PDF 내용은 유지합니다. 적용 후 Ctrl+Z로 실행 취소할 수 있습니다." TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,16,0"/>
+   </DockPanel>
+  </StackPanel>
+ </Grid>
+</Window>

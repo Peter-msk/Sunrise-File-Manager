@@ -4,7 +4,8 @@ namespace Sunrise.FileManager.Services;
 
 public sealed record UndoEntry(
     string Description,
-    IReadOnlyList<(string CurrentPath, string? OriginalPath, bool CreatedNew)> Operations);
+    IReadOnlyList<(string CurrentPath, string? OriginalPath, bool CreatedNew)> Operations,
+    bool SafeFileRename = false);
 
 public sealed class ExplorerUndoService
 {
@@ -27,12 +28,12 @@ public sealed class ExplorerUndoService
             [(newPath, oldPath, false)]));
     }
 
-    public void RecordBatchRename(IReadOnlyList<(string OldPath, string NewPath)> pairs)
+    public void RecordBatchRename(IReadOnlyList<(string OldPath, string NewPath)> pairs, bool safeFileRename = false)
     {
         if (pairs.Count == 0) return;
         _redoHistory.Clear();
         Push(_history, new UndoEntry($"일괄 이름 변경 취소 ({pairs.Count}개 항목)",
-            pairs.Select(p => (p.NewPath, (string?)p.OldPath, false)).ToArray()));
+            pairs.Select(p => (p.NewPath, (string?)p.OldPath, false)).ToArray(), safeFileRename));
     }
 
     public void RecordMovedItems(IReadOnlyList<(string OldPath, string NewPath)> pairs)
@@ -73,6 +74,8 @@ public sealed class ExplorerUndoService
     {
         if (!_history.TryPop(out UndoEntry? entry))
             return (false, "실행 취소할 최근 작업이 없습니다.");
+
+        if (entry.SafeFileRename) return ReplaySafeRename(entry, _history, _redoHistory);
 
         int doneCount = 0;
         var errors = new List<string>();
@@ -137,6 +140,8 @@ public sealed class ExplorerUndoService
         if (!_redoHistory.TryPop(out UndoEntry? entry))
             return (false, "다시 실행할 작업이 없습니다.");
 
+        if (entry.SafeFileRename) return ReplaySafeRename(entry, _redoHistory, _history);
+
         int doneCount = 0;
         var errors = new List<string>();
         var undoOps = new List<(string CurrentPath, string? OriginalPath, bool CreatedNew)>();
@@ -178,5 +183,20 @@ public sealed class ExplorerUndoService
         if (errors.Count > 0)
             return (doneCount > 0, $"{entry.Description} · 완료 {doneCount}건, 제한 {errors.Count}건 ({errors[0]})");
         return (true, $"다시 실행 완료: {entry.Description} ({doneCount}건)");
+    }
+    private static (bool Success, string Message) ReplaySafeRename(UndoEntry entry, Stack<UndoEntry> source, Stack<UndoEntry> destination)
+    {
+        try
+        {
+            var pairs = FileActionsService.BatchRenameFilesSafely(entry.Operations.Select(op =>
+                (op.CurrentPath, Path.GetFileName(op.OriginalPath!))).ToArray());
+            Push(destination, new UndoEntry(entry.Description, pairs.Select(p => (p.NewPath, (string?)p.OldPath, false)).ToArray(), true));
+            return (true, $"일괄 이름 변경 복원 완료 ({pairs.Count}건)");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            Push(source, entry);
+            return (false, ex.Message);
+        }
     }
 }

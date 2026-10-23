@@ -35,6 +35,7 @@
      <MenuItem Header="바로가기 붙여넣기" Click="PasteShortcut_Click"/>
      <MenuItem Header="바로가기 만들기" Click="CreateShortcut_Click"/>
      <MenuItem Header="이름 바꾸기" InputGestureText="F2" Click="Rename_Click"/>
+     <MenuItem x:Name="EiassCommandMenuItem" Header="EIASS 제출용 문서명 설정…" Click="EiassRename_Click"/>
      <MenuItem Header="복제" InputGestureText="Ctrl+D" Click="Duplicate_Click"/>
      <Separator/>
      <MenuItem Header="삭제" InputGestureText="Delete" Click="Recycle_Click"/>
@@ -342,6 +343,7 @@
        <MenuItem Header="새로 만들기 → 폴더" InputGestureText="Ctrl+Shift+N" Click="NewFolder_Click"/>
        <MenuItem Header="새로 만들기 → 텍스트/문서 파일…" InputGestureText="Ctrl+N" Click="NewFile_Click"/>
        <MenuItem Header="이름 바꾸기 / 일괄 이름 바꾸기" InputGestureText="F2" Click="Rename_Click"/>
+       <MenuItem x:Name="EiassRenameMenuItem" Header="EIASS 제출용 문서명 설정…" Click="EiassRename_Click"/>
        <Separator/>
        <MenuItem Header="ZIP으로 압축하기…" Click="ZipCompress_Click"/>
        <MenuItem Header="여기에 ZIP·7z·RAR·TAR 압축 풀기" Click="ZipExtract_Click"/>
