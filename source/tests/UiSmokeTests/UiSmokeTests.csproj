@@ -12,6 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Sunrise.FileManager/Sunrise.FileManager.csproj" />
+    <Compile Include="../LogicTests/WindowsSmokeTests.cs" Link="WindowsSmokeTests.cs" />
     <Content Include="../../Sunrise.FileManager/App.xaml" Link="ProductApp.xaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

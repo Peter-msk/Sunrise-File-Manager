@@ -16,10 +16,12 @@ internal static class Program
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Actual WPF UI checks require Windows.");
         if (args.FirstOrDefault() == "--packaged-smoke") { PackagedSmoke.Run(args[1], args[2]); return; }
+        if (args.FirstOrDefault() == "--native-files-only") { WindowsSmokeTests.RunAsync().GetAwaiter().GetResult(); return; }
         bool fileScrollOnly = args.Contains("--file-scroll-only", StringComparer.Ordinal);
         bool splitInteractionOnly = args.Contains("--split-interaction-only", StringComparer.Ordinal);
         bool eiassOnly = args.Contains("--eiass-rename-only", StringComparer.Ordinal);
-        string output = Path.GetFullPath(args.FirstOrDefault(arg => arg is not ("--file-scroll-only" or "--split-interaction-only" or "--eiass-rename-only")) ?? "ui-check-results"); Directory.CreateDirectory(output);
+        bool currentAudit = args.Contains("--current-ui-audit", StringComparer.Ordinal);
+        string output = Path.GetFullPath(args.FirstOrDefault(arg => arg is not ("--file-scroll-only" or "--split-interaction-only" or "--eiass-rename-only" or "--current-ui-audit")) ?? "ui-check-results"); Directory.CreateDirectory(output);
         using var timeout = new Timer(_ =>
         {
             File.WriteAllText(Path.Combine(output, "TIMEOUT.txt"), "WPF test exceeded 180 seconds.");
@@ -50,6 +52,12 @@ internal static class Program
             var checks = new List<object>(); string? error = null;
             try
             {
+                if (currentAudit)
+                {
+                    await CurrentUiAudit.RunAsync(window, root, output);
+                    checks.Add(new { feature = "Current UI inspector-preview-memo-filter-inline-rename-theme-scale-AI-popup", result = "PASS", assertions = CurrentUiAudit.Assertions });
+                    return;
+                }
                 if (eiassOnly)
                 {
                     await EiassRenameRegression.RunAsync(window, root, output);
