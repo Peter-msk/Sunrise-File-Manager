@@ -64,6 +64,7 @@ internal static class CurrentUiAudit
         using (var stream = File.Create(image)) { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); encoder.Save(stream); }
         await pane.RevealFileAsync(image);
         await Until(() => ((Image)preview.FindName("PreviewImage")).Source is BitmapSource, "WIC image preview failed.");
+        Check(files.Items.Count == 5 && files.Items.OfType<FileEntry>().Any(f => f.Name == "검토 자료"), "Revealing an in-page file hid earlier folder entries.");
         var decoded = (BitmapSource)((Image)preview.FindName("PreviewImage")).Source;
         Check(decoded.PixelWidth <= 1000 && decoded.PixelHeight <= 1500, "Preview exceeded decode budget.");
         NativeUiRegression.CaptureDesktop(Path.Combine(output, "current-preview-light.png"));

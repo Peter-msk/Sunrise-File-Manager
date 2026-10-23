@@ -13,6 +13,8 @@ public sealed record ListingResult(
     public bool HasMore { get; init; }
     public FileEntry? NextCursor { get; init; }
     public int TotalEntries { get; init; }
+    public bool IsRevealPage { get; init; }
+    public FileEntry? RevealBefore { get; init; }
 }
 
 public static class DirectoryScanner
@@ -40,6 +42,8 @@ public static class DirectoryScanner
         if (after is null && revealPath is not null && (File.Exists(revealPath) || Directory.Exists(revealPath)))
             reveal = FileEntry.From(Directory.Exists(revealPath) ? new DirectoryInfo(revealPath) : new FileInfo(revealPath), memos.Contains(Path.GetFileName(revealPath)));
         if (reveal is not null && !FileListView.Matches(reveal, filter, category, showHidden)) reveal = null;
+        var revealQueue = reveal is null ? null : new PriorityQueue<FileEntry, FileEntry>(reverse);
+        FileEntry? revealBefore = null;
         try
         {
             foreach (var info in new DirectoryInfo(path).EnumerateFileSystemInfos())
@@ -51,15 +55,25 @@ public static class DirectoryScanner
                     if (!FileListView.Matches(entry, filter, category, showHidden)) continue;
                     total++;
                     if (after is not null && comparer.Compare(entry, after) <= 0) continue;
-                    if (reveal is not null && comparer.Compare(entry, reveal) < 0) continue;
                     queue.Enqueue(entry, entry);
                     if (queue.Count > PageSize + 1) queue.Dequeue();
+                    if (reveal is not null)
+                    {
+                        if (comparer.Compare(entry, reveal) >= 0)
+                        {
+                            revealQueue!.Enqueue(entry, entry);
+                            if (revealQueue.Count > PageSize + 1) revealQueue.Dequeue();
+                        }
+                        else if (revealBefore is null || comparer.Compare(entry, revealBefore) > 0) revealBefore = entry;
+                    }
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { unreadable++; }
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { error = ex.Message; }
         var rows = queue.UnorderedItems.Select(p => p.Element).ToList(); rows.Sort(comparer);
+        bool revealPage = reveal is not null && !rows.Take(PageSize).Any(row => string.Equals(row.FullPath, reveal.FullPath, StringComparison.OrdinalIgnoreCase)) && revealQueue!.Count > 0;
+        if (revealPage) { rows = revealQueue!.UnorderedItems.Select(p => p.Element).ToList(); rows.Sort(comparer); }
         token.ThrowIfCancellationRequested();
         bool more = rows.Count > PageSize;
         if (more) rows.RemoveAt(rows.Count - 1);
@@ -69,7 +83,7 @@ public static class DirectoryScanner
         if (error is not null) warnings.Add("일부 조회 중단: " + error);
         var (free, size, summary) = GetDriveSpaceSummary(path);
         return new ListingResult(rows, warnings.Count > 0 ? string.Join(" · ", warnings) : null, free, size, summary)
-        { HasMore = more, NextCursor = rows.LastOrDefault(), TotalEntries = total };
+        { HasMore = more, NextCursor = rows.LastOrDefault(), TotalEntries = total, IsRevealPage = revealPage, RevealBefore = revealPage ? revealBefore : null };
     }, token);
 
     public static Task<IReadOnlyList<string>> ReadMatchingPathsAsync(string folder, string query,

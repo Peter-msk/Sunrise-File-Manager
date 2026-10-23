@@ -147,6 +147,14 @@ internal static class EiassRenameRegression
     private static void LogicAndFiles(string root)
     {
         Directory.CreateDirectory(root);
+        string paging = Path.Combine(root, "paging-fixture"); Directory.CreateDirectory(paging);
+        for (int i = 0; i < 2005; i++) File.WriteAllText(Path.Combine(paging, $"f{i:D4}.txt"), "fixture");
+        var firstPage = DirectoryScanner.ReadPageAsync(paging, null, "", "Name", false, "All", false, default, Path.Combine(paging, "f0005.txt")).GetAwaiter().GetResult();
+        Check(firstPage.Entries.Count == 2000 && firstPage.Entries[0].Name == "f0000.txt" && !firstPage.IsRevealPage, "In-page reveal dropped earlier entries.");
+        var boundary = DirectoryScanner.ReadPageAsync(paging, null, "", "Name", false, "All", false, default, Path.Combine(paging, "f2000.txt")).GetAwaiter().GetResult();
+        Check(boundary.IsRevealPage && boundary.Entries[0].Name == "f2000.txt" && boundary.RevealBefore?.Name == "f1999.txt", "Reveal failed at the 2000-row boundary.");
+        var farPage = DirectoryScanner.ReadPageAsync(paging, null, "", "Name", false, "All", false, default, Path.Combine(paging, "f2003.txt")).GetAwaiter().GetResult();
+        Check(farPage.IsRevealPage && farPage.Entries.Count == 2 && farPage.TotalEntries == 2005 && farPage.RevealBefore?.Name == "f2002.txt", "Off-page reveal lost its predecessor cursor.");
         foreach (string stage in EiassFileNameService.Stages)
             Check(EiassFileNameService.MakeName("a.pdf", "0000", "표지 및 목차", 4, stage, false) == $"({stage}) 0000 표지 및 목차.pdf", "Stage formatting failed.");
         Check(EiassFileNameService.MakeName("a.PDF", "00000", "수리·수문 (현황)", 5, null, false) == "00000 수리·수문 (현황).PDF", "Allowed punctuation / extension damaged.");

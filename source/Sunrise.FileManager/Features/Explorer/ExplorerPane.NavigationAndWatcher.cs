@@ -333,7 +333,7 @@ public partial class ExplorerPane
                     _searchScope == ExplorerSearchScope.Current ? SearchBox.Text.Trim() : "",
                     _sortField, _sortDescending, _categoryFilter, _showHidden, cancellation.Token, _restoreSelectionPath);
             if (generation != _listingGeneration || !ReferenceEquals(_activeTab, tab)) return;
-            if (resetPage && preserveSelection && !result.HasMore && !UsesRecursiveResults)
+            if (resetPage && preserveSelection && !result.HasMore && !result.IsRevealPage && !UsesRecursiveResults)
             {
                 var present = result.Entries.Select(entry => entry.FullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 _pagedSelection.ReplaceAll(_pagedSelection.Snapshot().Where(present.Contains));
@@ -344,6 +344,11 @@ public partial class ExplorerPane
                 entry.ColorCoding = _colorCoding;
             }
             _allEntries = result.Entries;
+            if (result.IsRevealPage)
+            {
+                _directoryPageHistory.Push(null);
+                _directoryAfter = result.RevealBefore;
+            }
             _directoryNext = result.NextCursor; _directoryHasMore = result.HasMore;
             _directoryTotal = result.TotalEntries;
             _listingWarning = result.Warning;
