@@ -25,9 +25,11 @@ internal static class NativeUiRegression
     [DllImport("gdi32.dll")] private static extern bool DeleteObject(nint item);
     [DllImport("gdi32.dll")] private static extern bool DeleteDC(nint dc);
     private static int _clicks, _drags;
+    private static string? _output;
 
     internal static async Task RunAsync(MainWindow window, string fixtureRoot, string output)
     {
+        _output = output;
         window.Left = 0; window.Top = 0;
         window.Width = Math.Min(1800, SystemParameters.WorkArea.Width);
         window.Height = Math.Min(1000, SystemParameters.WorkArea.Height);
@@ -87,12 +89,14 @@ internal static class NativeUiRegression
             ?? throw new Exception($"Native horizontal bar missing: {name}");
         bar.ApplyTemplate();
         var thumb = Find<Thumb>(bar, _ => true) ?? throw new Exception($"Native thumb missing: {name}");
-        await DragAsync(window, thumb, 65);
-        if (scroll.HorizontalOffset < 1) throw new Exception($"Native drag did not scroll right: {name}");
+        await DragAsync(window, thumb, 600);
+        if (Math.Abs(scroll.HorizontalOffset - scroll.ScrollableWidth) > 1) throw new Exception($"Native drag did not reach right end: {name}");
+        if (name is "tree-4-3" or "files-2-0")
+            CaptureDesktop(Path.Combine(_output!, $"native-{name}-right-end.png"));
         double offset = scroll.HorizontalOffset;
         await Task.Delay(250); await SettleAsync(window);
         if (Math.Abs(scroll.HorizontalOffset - offset) > 1) throw new Exception($"Native scroll drift: {name}");
-        await DragAsync(window, thumb, -150);
+        await DragAsync(window, thumb, -800);
         if (scroll.HorizontalOffset > 1) throw new Exception($"Native drag did not return left: {name} offset={scroll.HorizontalOffset}");
     }
 
