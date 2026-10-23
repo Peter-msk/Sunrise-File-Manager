@@ -14,8 +14,7 @@ internal static class EiassRenameRegression
 {
     [DllImport("user32.dll")] private static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] private static extern void mouse_event(uint flags, uint dx, uint dy, uint data, nuint extra);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern nint FindWindow(string className, string title);
-    [DllImport("user32.dll")] private static extern bool PostMessage(nint window, uint message, nint wParam, nint lParam);
+    [DllImport("user32.dll")] private static extern void keybd_event(byte key, byte scan, uint flags, nuint extra);
     internal static int Assertions { get; private set; }
     private static void Check(bool condition, string message) { Assertions++; if (!condition) throw new Exception(message); }
     private static void Reject(Action action, string message) { try { action(); } catch (Exception ex) when (ex is ArgumentException or IOException or InvalidDataException) { Assertions++; return; } throw new Exception(message); }
@@ -120,19 +119,16 @@ internal static class EiassRenameRegression
         ((Button)pane.FindName("UndoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Check(busyStarts == 1 && busyEnds == 0, "Undo did not announce its in-flight file work.");
         // Closing a real WPF window during Undo must show the guard and preserve the window.
-        var dismissGuard = Task.Run(() =>
+        var dismissGuard = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        new Thread(() =>
         {
-            var until = DateTime.UtcNow.AddSeconds(8);
-            while (DateTime.UtcNow < until)
-            {
-                nint popup = FindWindow("#32770", "파일 작업 진행 중");
-                if (popup != 0) { PostMessage(popup, 0x111, 1, 0); return true; }
-                Thread.Sleep(40);
-            }
-            return false;
-        });
+            Thread.Sleep(500);
+            NativeUiRegression.CaptureDesktop(Path.Combine(output, "undo-close-guard-native.png"));
+            keybd_event(0x0D, 0, 0, 0); keybd_event(0x0D, 0, 2, 0);
+            dismissGuard.TrySetResult(true);
+        }) { IsBackground = true }.Start();
         window.Close();
-        Check(await dismissGuard && window.IsVisible, "Main window closed during Undo or no close guard was shown.");
+        Check(await dismissGuard.Task && window.IsVisible, "Main window closed during Undo or no close guard was shown.");
         await WaitUntil(() => File.Exists(first) && File.Exists(second) && ((Button)pane.FindName("RedoButton")).IsEnabled);
         Check(busyEnds == 1, "Undo left its close guard active.");
         Check(File.Exists(first) && File.Exists(second) && !File.Exists(renamedFirst), "Pane Undo did not restore filenames.");

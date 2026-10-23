@@ -92,6 +92,7 @@ public partial class ExplorerPane
                 var view = new System.Windows.Data.ListCollectionView(visible);
                 if (_groupField.Length > 0) view.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription(_groupField));
                 FilesGrid.ItemsSource = view;
+                if (_pagedSelection.Count > 0 || _restoreSelectionPath is not null) FilesGrid.SelectedItems.Clear();
                 foreach (FileEntry row in visible)
                     if (_pagedSelection.Contains(row.FullPath))
                     {

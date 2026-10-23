@@ -252,10 +252,22 @@ public partial class ExplorerPane
 
     private async Task LoadFolderAsync(bool resetPage = true)
     {
+        string selectionKey = string.Join("\0", _activeTab?.CurrentPath, SearchBox.Text.Trim(), _categoryFilter, _searchScope.ToString());
+        bool preserveSelection = ReferenceEquals(_selectionListingTab, _activeTab) &&
+            string.Equals(_selectionListingKey, selectionKey, StringComparison.OrdinalIgnoreCase);
+        IReadOnlyList<string> selectedBeforeRefresh = preserveSelection ? _pagedSelection.Snapshot() : [];
+        _selectionListingKey = selectionKey;
+        _selectionListingTab = _activeTab;
         if (resetPage)
         {
             _directoryAfter = null; _directoryPageHistory.Clear(); _searchPageOffset = 0;
             _pagedSelection.Clear(); _selectAllCancellation?.Cancel();
+            if (preserveSelection)
+            {
+                _pagedSelection.ReplaceAll(selectedBeforeRefresh);
+                if (_restoreSelectionPath is null && selectedBeforeRefresh.Count == 1)
+                    _restoreSelectionPath = selectedBeforeRefresh[0];
+            }
         }
         PreviousPageButton.IsEnabled = NextPageButton.IsEnabled = false;
         _searchCache = null; _searchCacheKey = null;
@@ -270,6 +282,9 @@ public partial class ExplorerPane
 
         ExplorerTab tab = _activeTab;
         string path = tab.CurrentPath;
+        if (_restoreSelectionPath is string pendingSelection && !WindowsKnownLocations.IsVirtual(path) &&
+            !string.Equals(Path.GetDirectoryName(pendingSelection), Path.TrimEndingDirectorySeparator(path), StringComparison.OrdinalIgnoreCase))
+            _restoreSelectionPath = null;
         bool newLocation = !string.Equals(_lastListingPath, path, StringComparison.OrdinalIgnoreCase);
         _lastListingPath = path;
         if (newLocation && !_initializing)
@@ -318,6 +333,11 @@ public partial class ExplorerPane
                     _searchScope == ExplorerSearchScope.Current ? SearchBox.Text.Trim() : "",
                     _sortField, _sortDescending, _categoryFilter, _showHidden, cancellation.Token, _restoreSelectionPath);
             if (generation != _listingGeneration || !ReferenceEquals(_activeTab, tab)) return;
+            if (resetPage && preserveSelection && !result.HasMore && !UsesRecursiveResults)
+            {
+                var present = result.Entries.Select(entry => entry.FullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                _pagedSelection.ReplaceAll(_pagedSelection.Snapshot().Where(present.Contains));
+            }
             foreach (FileEntry entry in result.Entries)
             {
                 entry.ShowExtension = _showExtensions;

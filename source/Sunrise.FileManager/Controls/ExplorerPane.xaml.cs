@@ -66,6 +66,8 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
     private FileEntry? _renamingEntry;
     private bool _renameShowsExtension;
     private string? _restoreSelectionPath;
+    private string? _selectionListingKey;
+    private ExplorerTab? _selectionListingTab;
     private bool _initializing;
     private double _savedVerticalOffset, _savedHorizontalOffset;
     private bool _restoreViewportPending;

@@ -31,6 +31,9 @@ internal static class CurrentUiAudit
         var memo = (TextBox)inspector.FindName("MemoEditor"); memo.Text = "Current UI audit memo";
         Click(inspector, "SaveButton");
         Check(FileMemoStore.ListForFile(report).Single().Text == memo.Text, "Memo UI save failed.");
+        await Until(() => pane.SelectedFile?.FullPath == report, "Memo refresh lost the selected file.");
+        await Task.Delay(650);
+        Check(pane.SelectedFile?.FullPath == report, "Watcher refresh lost the selected file.");
         Click(window, "MainPreviewButton");
         await Until(() => preview.IsVisible && preview.CurrentFilePath == report, "Independent preview did not follow selection.");
         Click(window, "InspectorToggleButton");
@@ -39,7 +42,7 @@ internal static class CurrentUiAudit
         Check(inspector.IsVisible && preview.IsVisible, "Inspector cannot reopen with preview.");
         var search = (TextBox)pane.FindName("SearchBox"); search.Text = "보고서";
         await Until(() => files.Items.Count == 1, "Current folder search failed.");
-        search.Text = ""; await Until(() => files.Items.Count == 3, "Clearing search failed.");
+        search.Text = ""; await Until(() => files.Items.OfType<FileEntry>().Any(f => f.Name == "검토 메모.md"), "Clearing search failed.");
         await pane.RevealFileAsync(report);
         Click(pane, "RenameButton");
         await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ContextIdle); window.UpdateLayout();
