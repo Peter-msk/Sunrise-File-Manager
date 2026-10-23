@@ -19,12 +19,18 @@ jobs:
           dotnet --info
           query session
           exit 0
+      - name: Build product and WPF verification host
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force windows-ui-evidence | Out-Null
+          dotnet build source/tests/UiSmokeTests/UiSmokeTests.csproj --configuration Release -warnaserror 2>&1 | Tee-Object windows-ui-evidence/build.log
+          exit $LASTEXITCODE
       - name: Run Windows WPF EIASS rename and undo interactions
         timeout-minutes: 5
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force windows-ui-evidence | Out-Null
-          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj --configuration Release -- --eiass-rename-only windows-ui-evidence 2>&1 | Tee-Object windows-ui-evidence/execution.log
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj --configuration Release --no-build -- --eiass-rename-only windows-ui-evidence 2>&1 | Tee-Object windows-ui-evidence/execution.log
           $testExit = $LASTEXITCODE
           if (Test-Path windows-ui-evidence/UI_RESULT.json) {
             Get-Content windows-ui-evidence/UI_RESULT.json

@@ -38,7 +38,7 @@ internal static class EiassRenameRegression
             timer.Stop();
             try
             {
-                drove = true; await Task.Delay(180);
+                drove = true; UiScaleService.Apply(dialog); await Task.Delay(180);
                 var grid = (DataGrid)dialog.FindName("PreviewGrid");
                 Check(grid.Items.Count == 2, "Dialog lost selected PDF rows.");
                 var rows = grid.Items.OfType<EiassRenameDialog.Row>().ToArray();
@@ -63,7 +63,14 @@ internal static class EiassRenameRegression
                 assessment.SelectedIndex = 5;
                 Check(!((Button)dialog.FindName("ApplyButton")).IsEnabled, "Climate names must be preserved.");
                 assessment.SelectedIndex = 2;
-                ((ComboBox)dialog.FindName("StageBox")).Text = "보완 3차";
+                var stageBox = (ComboBox)dialog.FindName("StageBox");
+                stageBox.ApplyTemplate();
+                var stageEditor = (TextBox)stageBox.Template.FindName("PART_EditableTextBox", stageBox);
+                Check(stageEditor is not null && stageEditor.IsVisible && stageEditor.Text == "초안", "Stage editor is blank or inaccessible.");
+                await Click(Descendants<System.Windows.Controls.Primitives.ToggleButton>(stageBox).Single());
+                Check(stageBox.IsDropDownOpen, "Stage dropdown cannot be opened with the mouse.");
+                stageBox.IsDropDownOpen = false;
+                stageEditor!.Text = "보완 3차";
                 ((ComboBox)dialog.FindName("DigitsBox")).SelectedIndex = 1;
                 Check(((EiassRenameDialog.Row)grid.Items[0]).NewName.StartsWith("(보완 3차) 00000 "), "Editable stage or five digits failed.");
                 ((ComboBox)dialog.FindName("StageBox")).Text = "초안";
@@ -86,6 +93,13 @@ internal static class EiassRenameRegression
                 Check(!((Button)dialog.FindName("ApplyButton")).IsEnabled, "TOC requires order review.");
                 await Click((FrameworkElement)dialog.FindName("OrderConfirmedCheck"));
                 Check(((Button)dialog.FindName("ApplyButton")).IsEnabled, "Reviewed TOC cannot apply.");
+                dialog.Width = 900; dialog.Height = 640; await Settle(dialog);
+                Check(grid.ActualHeight > 100, "Minimum dialog size lost the editable table.");
+                var apply = (Button)dialog.FindName("ApplyButton");
+                var corner = apply.TranslatePoint(new Point(apply.ActualWidth, apply.ActualHeight), dialog);
+                Check(corner.X <= dialog.ActualWidth && corner.Y <= dialog.ActualHeight, "Minimum dialog size clipped Apply.");
+                NativeUiRegression.CaptureDesktop(Path.Combine(output, "eiass-minimum-native.png"));
+                dialog.Width = 1120; dialog.Height = 760; await Settle(dialog);
                 NativeUiRegression.CaptureDesktop(Path.Combine(output, "eiass-preview-native.png"));
                 await Click((FrameworkElement)dialog.FindName("ApplyButton"));
             }

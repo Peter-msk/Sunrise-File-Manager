@@ -21,7 +21,36 @@
       <ComboBoxItem Content="사후환경영향조사"/><ComboBoxItem Content="약식평가 최종보고서"/><ComboBoxItem Content="기후변화영향평가"/>
      </ComboBox>
      <TextBlock Text="말머리" VerticalAlignment="Center" Margin="0,0,8,8"/>
-     <ComboBox x:Name="StageBox" Width="160" IsEditable="True" SelectionChanged="Rule_Changed" Margin="0,0,16,8" ToolTip="보완 3차 등 추가 차수는 직접 입력할 수 있습니다."/>
+     <ComboBox x:Name="StageBox" Width="160" IsEditable="True" SelectionChanged="Rule_Changed" Margin="0,0,16,8" ToolTip="보완 3차 등 추가 차수는 직접 입력할 수 있습니다.">
+      <!-- The shared ComboBox template is selection-only. This editor owns its editable part. -->
+      <ComboBox.Template>
+       <ControlTemplate TargetType="ComboBox">
+        <Grid>
+         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="3"/>
+         <Grid Margin="1">
+          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="25"/></Grid.ColumnDefinitions>
+          <TextBox x:Name="PART_EditableTextBox" Style="{x:Null}" BorderThickness="0" Background="Transparent"
+            Foreground="{DynamicResource TextPrimary}" Padding="7,3" VerticalContentAlignment="Center" IsReadOnly="{TemplateBinding IsReadOnly}"/>
+          <ToggleButton Grid.Column="1" Focusable="False" Background="Transparent" BorderThickness="0"
+            IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+           <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="Transparent">
+            <Path Data="M1,2 L5,6 L9,2" Stroke="{DynamicResource TextPrimary}" StrokeThickness="1.4" Width="10" Height="8" Stretch="None" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+           </Border></ControlTemplate></ToggleButton.Template>
+          </ToggleButton>
+         </Grid>
+         <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" StaysOpen="False" Focusable="False"
+           IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}">
+          <Border Background="{DynamicResource ThemeComboPopup}" BorderBrush="{DynamicResource ThemeInputBorder}" BorderThickness="1"
+            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+           <Border.LayoutTransform><ScaleTransform ScaleX="{DynamicResource UiScaleFactor}" ScaleY="{DynamicResource UiScaleFactor}"/></Border.LayoutTransform>
+           <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/></ScrollViewer>
+          </Border>
+         </Popup>
+        </Grid>
+        <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger></ControlTemplate.Triggers>
+       </ControlTemplate>
+      </ComboBox.Template>
+     </ComboBox>
      <TextBlock Text="번호 자릿수" VerticalAlignment="Center" Margin="0,0,8,8"/>
      <ComboBox x:Name="DigitsBox" Width="75" SelectedIndex="0" SelectionChanged="Digits_Changed" Margin="0,0,0,8">
       <ComboBoxItem Content="4자리"/><ComboBoxItem Content="5자리"/>
