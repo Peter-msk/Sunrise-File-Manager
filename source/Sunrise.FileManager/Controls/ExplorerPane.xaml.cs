@@ -693,6 +693,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         if (!_actionsEnabled || !_undoService.CanUndo) return;
         if (BeforeFileChange?.Invoke() == false) return;
         SetFileActionsEnabled(false);
+        BlockingFileActionChanged?.Invoke(true);
         try
         {
             // A cross-drive undo copies bytes; keep WPF responsive during the operation.
@@ -705,7 +706,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
                 else FileActionCompleted.Invoke();
             }
         }
-        finally { SetFileActionsEnabled(true); }
+        finally { SetFileActionsEnabled(true); BlockingFileActionChanged?.Invoke(false); }
     }
 
     private async void Redo_Click(object sender, RoutedEventArgs e)
@@ -713,6 +714,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         if (!_actionsEnabled || !_undoService.CanRedo) return;
         if (BeforeFileChange?.Invoke() == false) return;
         SetFileActionsEnabled(false);
+        BlockingFileActionChanged?.Invoke(true);
         try
         {
             var (success, message) = await Task.Run(_undoService.RedoLast);
@@ -724,7 +726,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
                 else FileActionCompleted.Invoke();
             }
         }
-        finally { SetFileActionsEnabled(true); }
+        finally { SetFileActionsEnabled(true); BlockingFileActionChanged?.Invoke(false); }
     }
 
     private async void Duplicate_Click(object sender, RoutedEventArgs e)
@@ -889,7 +891,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
             try
             {
                 var pairs = FileActionsService.BatchRename(batchDialog.ApprovedRenames);
-                _undoService.RecordBatchRename(pairs);
+                _undoService.RecordBatchRename(pairs, safeFileRename: pairs.All(p => File.Exists(p.NewPath)));
                 UpdateUndoButtonState();
                 if (pairs.Count > 0) _restoreSelectionPath = pairs[^1].NewPath;
                 if (FileActionCompleted is null) RefreshCurrent();

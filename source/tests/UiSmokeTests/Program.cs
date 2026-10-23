@@ -15,6 +15,7 @@ internal static class Program
     private static void Main(string[] args)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Actual WPF UI checks require Windows.");
+        if (args.FirstOrDefault() == "--packaged-smoke") { PackagedSmoke.Run(args[1], args[2]); return; }
         bool fileScrollOnly = args.Contains("--file-scroll-only", StringComparer.Ordinal);
         bool splitInteractionOnly = args.Contains("--split-interaction-only", StringComparer.Ordinal);
         bool eiassOnly = args.Contains("--eiass-rename-only", StringComparer.Ordinal);

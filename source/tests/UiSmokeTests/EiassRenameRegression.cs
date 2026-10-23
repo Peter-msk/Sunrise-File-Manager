@@ -14,6 +14,8 @@ internal static class EiassRenameRegression
 {
     [DllImport("user32.dll")] private static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] private static extern void mouse_event(uint flags, uint dx, uint dy, uint data, nuint extra);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern nint FindWindow(string className, string title);
+    [DllImport("user32.dll")] private static extern bool PostMessage(nint window, uint message, nint wParam, nint lParam);
     internal static int Assertions { get; private set; }
     private static void Check(bool condition, string message) { Assertions++; if (!condition) throw new Exception(message); }
     private static void Reject(Action action, string message) { try { action(); } catch (Exception ex) when (ex is ArgumentException or IOException or InvalidDataException) { Assertions++; return; } throw new Exception(message); }
@@ -27,6 +29,8 @@ internal static class EiassRenameRegression
         var workspace = (Grid)window.FindName("Workspace");
         var pane = (ExplorerPane)((Grid)workspace.Children[0]).Children[0];
         var files = (DataGrid)pane.FindName("FilesGrid");
+        int busyStarts = 0, busyEnds = 0;
+        pane.BlockingFileActionChanged += busy => { if (busy) busyStarts++; else busyEnds++; };
         await WaitUntil(() => files.Items.OfType<FileEntry>().Count(r => r.FullPath == first || r.FullPath == second) == 2);
         foreach (var entry in files.Items.OfType<FileEntry>().Where(r => r.FullPath == first || r.FullPath == second)) files.SelectedItems.Add(entry);
         Exception? driverError = null; bool drove = false;
@@ -114,11 +118,29 @@ internal static class EiassRenameRegression
         Check(File.ReadAllText(renamedFirst) == "first document content" && File.ReadAllText(renamedSecond) == "second document content", "Actual apply lost content or names.");
         Check(FileMemoStore.ListForFile(renamedFirst).Single().Text == "EIASS rename memo", "Memo did not follow apply.");
         ((Button)pane.FindName("UndoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(busyStarts == 1 && busyEnds == 0, "Undo did not announce its in-flight file work.");
+        // Closing a real WPF window during Undo must show the guard and preserve the window.
+        var dismissGuard = Task.Run(() =>
+        {
+            var until = DateTime.UtcNow.AddSeconds(8);
+            while (DateTime.UtcNow < until)
+            {
+                nint popup = FindWindow("#32770", "파일 작업 진행 중");
+                if (popup != 0) { PostMessage(popup, 0x111, 1, 0); return true; }
+                Thread.Sleep(40);
+            }
+            return false;
+        });
+        window.Close();
+        Check(await dismissGuard && window.IsVisible, "Main window closed during Undo or no close guard was shown.");
         await WaitUntil(() => File.Exists(first) && File.Exists(second) && ((Button)pane.FindName("RedoButton")).IsEnabled);
+        Check(busyEnds == 1, "Undo left its close guard active.");
         Check(File.Exists(first) && File.Exists(second) && !File.Exists(renamedFirst), "Pane Undo did not restore filenames.");
         Check(FileMemoStore.ListForFile(first).Single().Text == "EIASS rename memo", "Memo did not follow Undo.");
         ((Button)pane.FindName("RedoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(busyStarts == 2 && busyEnds == 1, "Redo did not announce its in-flight file work.");
         await WaitUntil(() => File.Exists(renamedFirst) && File.Exists(renamedSecond) && ((Button)pane.FindName("UndoButton")).IsEnabled);
+        Check(busyEnds == 2, "Redo left its close guard active.");
         Check(File.Exists(renamedFirst) && File.Exists(renamedSecond), "Pane Redo failed.");
         ((Button)pane.FindName("UndoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await WaitUntil(() => File.Exists(first) && File.Exists(second) && ((Button)pane.FindName("RedoButton")).IsEnabled);
@@ -181,6 +203,13 @@ internal static class EiassRenameRegression
             Reject(() => FileActionsService.BatchRenameFilesSafely(new[] { (a, "NewA.pdf"), (b, "NewB.pdf") }), "Locked file did not stop batch.");
         Check(File.Exists(a) && File.Exists(b) && FileMemoStore.ListForFile(a).Single().Text == "memo A", "Staging failure rollback failed.");
         Check(!Directory.EnumerateFiles(root).Any(p => Path.GetFileName(p).StartsWith(".sunrise-eiass-")), "Staging files leaked.");
+        using (var locked = new FileStream(b, FileMode.Open, FileAccess.Read, FileShare.None))
+            Reject(() => FileActionsService.BatchRename(new[] { (a, "GenericA.pdf"), (b, "GenericB.pdf") }), "Generic rename did not stop on a locked file.");
+        Check(File.ReadAllText(a) == "AAA" && File.ReadAllText(b) == "BBB" && !File.Exists(Path.Combine(root, "GenericA.pdf")), "Generic rename partially applied before failure.");
+        Check(FileMemoStore.ListForFile(a).Single().Text == "memo A", "Generic rollback lost its memo.");
+        string folder = Path.Combine(root, "Folder"); Directory.CreateDirectory(folder);
+        Reject(() => FileActionsService.BatchRename(new[] { (folder, "RenamedFolder"), (a, "Occupied.pdf") }), "Mixed rename failed to preflight an occupied target.");
+        Check(Directory.Exists(folder) && !Directory.Exists(Path.Combine(root, "RenamedFolder")), "Mixed rename changed a folder before preflight finished.");
         string blockedTarget = Path.Combine(root, "BlockedByMemo.pdf");
         File.WriteAllText(blockedTarget, "temporary fixture");
         var orphan = FileMemoStore.Save(blockedTarget, "KEEP EXISTING MEMO", userName: "Regression");

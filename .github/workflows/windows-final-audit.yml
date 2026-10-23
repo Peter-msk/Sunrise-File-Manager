@@ -1,0 +1,96 @@
+name: Windows final code and package audit
+on:
+  push:
+    branches: [codex/audit-1.5.4]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare isolated desktop evidence
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force audit-evidence | Out-Null
+          if (Get-Command Set-DisplayResolution -ErrorAction SilentlyContinue) { Set-DisplayResolution -Width 1920 -Height 1080 -Force }
+          dotnet --info | Out-File audit-evidence/environment.log
+          query session
+          exit 0
+      - name: Build WPF application and native verification projects
+        shell: pwsh
+        run: |
+          dotnet build source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release -warnaserror 2>&1 | Tee-Object audit-evidence/wpf-build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build source/tests/LogicTests/LogicTests.csproj -c Release 2>&1 | Tee-Object audit-evidence/logic-build.log
+          exit $LASTEXITCODE
+      - name: Execute native file and journal checks
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          dotnet run --project source/tests/LogicTests/LogicTests.csproj -c Release --no-build -- --windows-smoke 2>&1 | Tee-Object audit-evidence/native-files.log
+          exit $LASTEXITCODE
+      - name: Execute EIASS and actual in-flight close protection
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --eiass-rename-only audit-evidence/eiass 2>&1 | Tee-Object audit-evidence/eiass.log
+          exit $LASTEXITCODE
+      - name: Execute general application UI
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- audit-evidence/general 2>&1 | Tee-Object audit-evidence/general.log
+          exit $LASTEXITCODE
+      - name: Execute all split presets and native scroll drags
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --split-interaction-only audit-evidence/splits 2>&1 | Tee-Object audit-evidence/splits.log
+          exit $LASTEXITCODE
+      - name: Build and sign Setup through the actual company entrypoint
+        if: ${{ !cancelled() }}
+        timeout-minutes: 12
+        shell: pwsh
+        run: |
+          $inno = @('C:\Program Files (x86)\Inno Setup 6\ISCC.exe','C:\Program Files (x86)\Inno Setup 7\ISCC.exe') | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $inno) {
+            choco install innosetup --yes --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          cmd /d /c BUILD_ON_WINDOWS_COMPANY.cmd 2>&1 | Tee-Object audit-evidence/company-build.log
+          exit $LASTEXITCODE
+      - name: Install run and uninstall in the isolated Windows VM
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          $setup = Join-Path $PWD 'dist/Sunrise_File_Manager_1.5.4_Setup.exe'
+          if (-not (Test-Path $setup)) { throw 'Company Setup was not created.' }
+          $target = Join-Path $env:RUNNER_TEMP ('SunriseAuditInstall_' + [guid]::NewGuid().ToString('N'))
+          $installLog = Join-Path $PWD 'audit-evidence/install.log'
+          $p = Start-Process -FilePath $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',"/DIR=$target","/LOG=$installLog") -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Setup installation failed: $($p.ExitCode)" }
+          $exe = Join-Path $target 'Sunrise.FileManager.exe'
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --packaged-smoke $exe audit-evidence/installed 2>&1 | Tee-Object audit-evidence/installed.log
+          $smokeExit = $LASTEXITCODE
+          $uninstall = Get-ChildItem $target -Filter 'unins*.exe' | Select-Object -First 1
+          if (-not $uninstall) { throw 'Uninstaller missing.' }
+          $p = Start-Process -FilePath $uninstall.FullName -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+          @{ installExit=0; smokeExit=$smokeExit; uninstallExit=$p.ExitCode; mainExeRemoved=(-not (Test-Path $exe)); signerScope='Isolated CI VM test certificate; not the existing company publisher identity' } | ConvertTo-Json | Out-File audit-evidence/install-result.json
+          if ($p.ExitCode -ne 0 -or (Test-Path $exe)) { throw 'Uninstallation failed.' }
+          exit $smokeExit
+      - name: Preserve execution logs and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-final-audit
+          path: |
+            audit-evidence
+            build-logs
+          retention-days: 14
+

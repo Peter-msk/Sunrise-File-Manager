@@ -8,6 +8,7 @@ public static partial class FileActionsService
     public static IReadOnlyList<(string OldPath, string NewPath)> BatchRenameFilesSafely(
         IReadOnlyList<(string SourcePath, string NewName)> operations)
     {
+        ArgumentNullException.ThrowIfNull(operations);
         if (operations.Count > 1000) throw new ArgumentException("한 번에 최대 1,000개 파일을 변경할 수 있습니다.");
         var pairs = operations.Select(op => (OldPath: Path.GetFullPath(op.SourcePath),
             NewPath: Path.Combine(Path.GetDirectoryName(Path.GetFullPath(op.SourcePath))!, ValidateName(op.NewName))))
