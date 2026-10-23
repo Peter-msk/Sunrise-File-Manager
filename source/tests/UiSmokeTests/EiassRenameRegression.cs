@@ -43,6 +43,9 @@ internal static class EiassRenameRegression
                 Check(grid.Items.Count == 2, "Dialog lost selected PDF rows.");
                 var rows = grid.Items.OfType<EiassRenameDialog.Row>().ToArray();
                 Check(rows.Select(r => r.Code).SequenceEqual(new[] { "0000", "0001" }), "Default numbering failed.");
+                rows[1].Code = "0000";
+                Check(!((Button)dialog.FindName("ApplyButton")).IsEnabled, "Duplicate code accepted.");
+                rows[1].Code = "0001";
                 grid.SelectedIndex = 1;
                 string moved = rows[1].SourcePath;
                 await Click((FrameworkElement)dialog.FindName("UpButton"));
@@ -97,11 +100,14 @@ internal static class EiassRenameRegression
         Check(File.ReadAllText(renamedFirst) == "first document content" && File.ReadAllText(renamedSecond) == "second document content", "Actual apply lost content or names.");
         Check(FileMemoStore.ListForFile(renamedFirst).Single().Text == "EIASS rename memo", "Memo did not follow apply.");
         ((Button)pane.FindName("UndoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await WaitUntil(() => File.Exists(first) && File.Exists(second) && ((Button)pane.FindName("RedoButton")).IsEnabled);
         Check(File.Exists(first) && File.Exists(second) && !File.Exists(renamedFirst), "Pane Undo did not restore filenames.");
         Check(FileMemoStore.ListForFile(first).Single().Text == "EIASS rename memo", "Memo did not follow Undo.");
         ((Button)pane.FindName("RedoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await WaitUntil(() => File.Exists(renamedFirst) && File.Exists(renamedSecond) && ((Button)pane.FindName("UndoButton")).IsEnabled);
         Check(File.Exists(renamedFirst) && File.Exists(renamedSecond), "Pane Redo failed.");
         ((Button)pane.FindName("UndoButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await WaitUntil(() => File.Exists(first) && File.Exists(second) && ((Button)pane.FindName("RedoButton")).IsEnabled);
         await Task.Delay(200); NativeUiRegression.CaptureDesktop(Path.Combine(output, "eiass-restored-native.png"));
         Console.WriteLine($"EIASS_ASSERTIONS={Assertions} native dialog reorder/clean/number/match/review/apply PASS; pane undo/redo PASS");
     }
@@ -161,6 +167,14 @@ internal static class EiassRenameRegression
             Reject(() => FileActionsService.BatchRenameFilesSafely(new[] { (a, "NewA.pdf"), (b, "NewB.pdf") }), "Locked file did not stop batch.");
         Check(File.Exists(a) && File.Exists(b) && FileMemoStore.ListForFile(a).Single().Text == "memo A", "Staging failure rollback failed.");
         Check(!Directory.EnumerateFiles(root).Any(p => Path.GetFileName(p).StartsWith(".sunrise-eiass-")), "Staging files leaked.");
+        string blockedTarget = Path.Combine(root, "BlockedByMemo.pdf");
+        File.WriteAllText(blockedTarget, "temporary fixture");
+        var orphan = FileMemoStore.Save(blockedTarget, "KEEP EXISTING MEMO", userName: "Regression");
+        File.Delete(blockedTarget);
+        Reject(() => FileActionsService.BatchRenameFilesSafely(new[] { (a, "PublishedA.pdf"), (b, "BlockedByMemo.pdf") }), "Destination memo collision accepted.");
+        Check(File.ReadAllText(a) == "AAA" && File.ReadAllText(b) == "BBB" && !File.Exists(Path.Combine(root, "PublishedA.pdf")), "Publish-phase failure did not restore both files.");
+        Check(FileMemoStore.ListForFile(a).Single().Text == "memo A" && File.Exists(orphan.Path), "Publish rollback lost a source or existing target memo.");
+        Check(!Directory.EnumerateFiles(root).Any(p => Path.GetFileName(p).StartsWith(".sunrise-eiass-")), "Publish rollback left staging files.");
         var renamed = FileActionsService.BatchRenameFilesSafely(new[] { (a, "NewA.pdf") }); undo.RecordBatchRename(renamed, true);
         File.WriteAllText(a, "EXTERNAL");
         Check(!undo.UndoLast().Success && undo.CanUndo && File.ReadAllText(a) == "EXTERNAL", "Undo collision lost history or overwrote external file.");

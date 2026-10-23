@@ -22,6 +22,7 @@ public partial class EiassRenameDialog : Window
         public string Status { get => _status; set { _status = value; Changed(); } }
         public string ContentsMatch { get; set; } = "";
         public bool CanApply { get; set; }
+        public bool HasError { get; set; }
         public event PropertyChangedEventHandler? PropertyChanged;
         private void Changed([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new(name));
     }
@@ -89,6 +90,7 @@ public partial class EiassRenameDialog : Window
         foreach (var row in _rows)
         {
             row.CanApply = false;
+            row.HasError = false;
             try
             {
                 if (climate) { row.NewName = row.OldName; row.Status = "이름 유지"; continue; }
@@ -98,20 +100,20 @@ public partial class EiassRenameDialog : Window
                 row.Status = row.OldName == row.NewName ? "변경 없음" : "변경 가능";
                 row.CanApply = row.OldName != row.NewName;
             }
-            catch (ArgumentException ex) { row.NewName = ""; row.Status = ex.Message; }
+            catch (ArgumentException ex) { row.NewName = ""; row.Status = ex.Message; row.HasError = true; }
         }
         var activeSources = names.Where(p => p.Key.CanApply).Select(p => p.Key.SourcePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in names)
         {
             var row = pair.Key;
             if (_rows.Count(r => r.Code == row.Code) > 1)
-            { row.CanApply = false; row.Status = "목차번호 중복 · 수정 필요"; }
+            { row.CanApply = false; row.HasError = true; row.Status = "목차번호 중복 · 수정 필요"; }
             if (names.Values.Count(p => p.Equals(pair.Value, StringComparison.OrdinalIgnoreCase)) > 1 ||
                 ((File.Exists(pair.Value) || Directory.Exists(pair.Value)) && !pair.Value.Equals(row.SourcePath, StringComparison.OrdinalIgnoreCase) && !activeSources.Contains(pair.Value)))
-            { row.CanApply = false; row.Status = "이름 충돌 · 덮어쓰지 않음"; }
-            if (!File.Exists(row.SourcePath)) { row.CanApply = false; row.Status = "원본 파일 없음"; }
+            { row.CanApply = false; row.HasError = true; row.Status = "이름 충돌 · 덮어쓰지 않음"; }
+            if (!File.Exists(row.SourcePath)) { row.CanApply = false; row.HasError = true; row.Status = "원본 파일 없음"; }
         }
-        int errors = _rows.Count(r => !climate && (r.NewName.Length == 0 || (!r.CanApply && r.OldName != r.NewName) || !File.Exists(r.SourcePath)));
+        int errors = _rows.Count(r => r.HasError);
         foreach (var row in _rows) if (row.ContentsMatch.Length > 0) row.Status += " / " + row.ContentsMatch;
         int changes = _rows.Count(r => r.CanApply);
         bool confirmed = !_contentsUsed || OrderConfirmedCheck.IsChecked == true;
