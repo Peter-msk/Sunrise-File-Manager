@@ -84,7 +84,7 @@ public sealed class ExplorerUndoService
             {
                 if (createdNew)
                 {
-                    if ((File.GetAttributes(currentPath) & FileAttributes.ReparsePoint) != 0)
+                    if (ReparsePointPolicy.IsBlocked(currentPath))
                         throw new IOException("연결·접합점은 실행 취소에서 삭제하지 않습니다.");
                     if (Directory.Exists(currentPath))
                     {

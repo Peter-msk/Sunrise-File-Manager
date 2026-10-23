@@ -9,9 +9,9 @@
     <AssemblyName>Sunrise.FileManager</AssemblyName>
     <RootNamespace>Sunrise.FileManager</RootNamespace>
     <Product>Sunrise File Manager</Product>
-    <Version>1.3.0</Version>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
-    <FileVersion>1.3.0.0</FileVersion>
+    <Version>1.5.1</Version>
+    <AssemblyVersion>1.5.1.0</AssemblyVersion>
+    <FileVersion>1.5.1.0</FileVersion>
     <Company>Sunrise Group</Company>
     <Authors>Sunrise Group</Authors>
     <Description>Sunrise File Manager Windows Desktop Application</Description>
@@ -23,9 +23,16 @@
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Prefer32Bit>false</Prefer32Bit>
+    <!-- Release payload: preserve WPF reflection and all language resources, skip diagnostic-only PDBs. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishDocumentationFiles>false</PublishDocumentationFiles>
+    <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
+    <PublishReferencesSymbols>false</PublishReferencesSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="Assets/SunriseFileManager.ico" />
     <PackageReference Include="PdfPig" Version="0.1.15" />
+    <PackageReference Include="SharpCompress" Version="0.50.6" />
   </ItemGroup>
 </Project>

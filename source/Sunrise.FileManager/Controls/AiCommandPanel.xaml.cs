@@ -25,6 +25,38 @@ public partial class AiCommandPanel : UserControl
     public Action<string>? RevealResultFile { get; set; }
     public Action<bool>? SetBusy { get; set; }
     public event Action? CloseRequested;
+    public event Action? PreferencesChanged;
+    public AiPanelSettings GetPreferences() => new()
+    {
+        PlanColumnSettings = PlanGrid.Columns.Select(x => SessionStore.CaptureColumnWidth(x.Width.UnitType.ToString(), x.Width.Value)).ToList(),
+        PlanColumnOrder = SessionStore.CaptureDisplayOrder(PlanGrid.Columns.Select(x => x.DisplayIndex)),
+        Scope = Math.Clamp(ScopeMode.SelectedIndex, 0, 1), QuickAction = Math.Clamp(QuickAction.SelectedIndex, 0, 7), Provider = Math.Clamp(Provider.SelectedIndex, 0, 1),
+        Collision = Math.Clamp(Collision.SelectedIndex, 0, 1), DataGrade = Math.Clamp(DataGrade.SelectedIndex, 0, 2), ContentReadAllowed = ContentReadApproval.IsChecked == true,
+        Command = CommandBox.Text, Destination = _destination ?? "", EngineExpanded = EngineExpander.IsExpanded, HelpExpanded = HelpExpander.IsExpanded
+    };
+    public void RestorePreferences(AiPanelSettings settings)
+    {
+        _suppressProviderPrompt = true;
+        try
+        {
+            for (int i = 0; i < Math.Min(settings.PlanColumnSettings.Count, PlanGrid.Columns.Count); i++)
+                if (Enum.TryParse<DataGridLengthUnitType>(settings.PlanColumnSettings[i].Unit, out var unit)) PlanGrid.Columns[i].Width = new DataGridLength(settings.PlanColumnSettings[i].Value, unit);
+            if (settings.PlanColumnOrder.Count <= PlanGrid.Columns.Count && settings.PlanColumnOrder.All(x => x < PlanGrid.Columns.Count))
+                for (int i = 0; i < settings.PlanColumnOrder.Count; i++) PlanGrid.Columns[i].DisplayIndex = settings.PlanColumnOrder[i];
+            ScopeMode.SelectedIndex = Math.Clamp(settings.Scope, 0, 1);
+            QuickAction.SelectedIndex = Math.Clamp(settings.QuickAction, 0, QuickAction.Items.Count - 1);
+            Provider.SelectedIndex = Math.Clamp(settings.Provider, 0, 1);
+            Collision.SelectedIndex = Math.Clamp(settings.Collision, 0, 1);
+            DataGrade.SelectedIndex = Math.Clamp(settings.DataGrade, 0, 2);
+            CommandBox.Text = settings.Command;
+            _destination = string.IsNullOrWhiteSpace(settings.Destination) ? null : settings.Destination;
+            DestinationLabel.Text = _destination ?? "대상 폴더 미선택";
+            ContentReadApproval.IsChecked = settings.ContentReadAllowed;
+            EngineExpander.IsExpanded = settings.EngineExpanded; HelpExpander.IsExpanded = settings.HelpExpanded;
+            _plan = null; _planContext = null; ExecuteButton.IsEnabled = false;
+        }
+        finally { _suppressProviderPrompt = false; }
+    }
     private void CloseAiPanel_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) { Status.Text = "작업 중에는 닫을 수 없습니다. 작업 완료 후 다시 시도하세요."; return; }
@@ -100,6 +132,7 @@ public partial class AiCommandPanel : UserControl
         if (_busy) _cancellation?.Cancel();
         _plan = null; _planContext = null;
         if (ExecuteButton is not null) ExecuteButton.IsEnabled = false;
+        PreferencesChanged?.Invoke();
     }
 
     private void Destination_Click(object sender, RoutedEventArgs e)

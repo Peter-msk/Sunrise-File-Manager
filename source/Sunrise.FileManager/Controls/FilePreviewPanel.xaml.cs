@@ -21,6 +21,10 @@ public partial class FilePreviewPanel : UserControl
     private bool _fitWidth = true;
     private double _zoom = 1d;
     public event Action? CloseRequested;
+    public event Action? PreferencesChanged;
+    public bool FitWidthPreference => _fitWidth;
+    public double ZoomPreference => _zoom;
+    public void RestorePreferences(bool fitWidth, double zoom) { _fitWidth = fitWidth; _zoom = Math.Clamp(zoom, .1, 4); }
     public string? CurrentFilePath => _selected?.FullPath;
 
     public FilePreviewPanel()
@@ -174,10 +178,11 @@ public partial class FilePreviewPanel : UserControl
         _fitWidth = false;
         _zoom = Math.Clamp(zoom, .1, 4);
         ApplyZoom();
+        PreferencesChanged?.Invoke();
     }
     private void ZoomIn_Click(object sender, RoutedEventArgs e) => SetManualZoom(_zoom + .1);
     private void ZoomOut_Click(object sender, RoutedEventArgs e) => SetManualZoom(_zoom - .1);
-    private void FitWidth_Click(object sender, RoutedEventArgs e) { _fitWidth = true; ApplyZoom(); }
+    private void FitWidth_Click(object sender, RoutedEventArgs e) { _fitWidth = true; ApplyZoom(); PreferencesChanged?.Invoke(); }
     private void PreviewScroll_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         if (_fitWidth) ApplyZoom();
@@ -195,7 +200,7 @@ public partial class FilePreviewPanel : UserControl
             if (e.Key is Key.Add or Key.OemPlus) SetManualZoom(_zoom + .1);
             else if (e.Key is Key.Subtract or Key.OemMinus) SetManualZoom(_zoom - .1);
             else if (e.Key is Key.D0 or Key.NumPad0) SetManualZoom(1);
-            else if (e.Key is Key.D1 or Key.NumPad1) { _fitWidth = true; ApplyZoom(); }
+            else if (e.Key is Key.D1 or Key.NumPad1) { _fitWidth = true; ApplyZoom(); PreferencesChanged?.Invoke(); }
             else return;
             e.Handled = true;
         }

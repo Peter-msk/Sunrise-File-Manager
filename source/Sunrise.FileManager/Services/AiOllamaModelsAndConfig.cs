@@ -21,6 +21,7 @@ public sealed class OllamaUserConfig
     public bool OllamaEnabled { get; set; }
     public string Endpoint { get; set; } = AiOllamaService.DefaultEndpoint;
     public string Model { get; set; } = AiOllamaService.DefaultModel;
+    public string PreferredSetupModel { get; set; } = "";
     public DateTimeOffset? LastUpdatedUtc { get; set; }
 }
 

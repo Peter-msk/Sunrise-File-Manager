@@ -4,6 +4,9 @@ namespace Sunrise.FileManager.Services;
 
 public static class WindowsKnownLocations
 {
+    public const string ThisPc = "shell:MyComputerFolder";
+    public static bool IsThisPc(string? path) => string.Equals(path, ThisPc, StringComparison.OrdinalIgnoreCase);
+    public static bool IsVirtual(string? path) => IsRecycleBin(path) || IsThisPc(path);
     public const string RecycleBin = "shell:RecycleBinFolder";
     private static readonly (string Key, string Label, string Id, Environment.SpecialFolder Fallback)[] Folders =
     [
@@ -15,10 +18,11 @@ public static class WindowsKnownLocations
         ("Videos", "동영상", "18989B1D-99B5-455B-841C-AB7C74E4DDFC", Environment.SpecialFolder.MyVideos)
     ];
     public static bool IsRecycleBin(string? path) => string.Equals(path, RecycleBin, StringComparison.OrdinalIgnoreCase);
-    public static bool Exists(string? path) => IsRecycleBin(path) || Directory.Exists(path);
+    public static bool Exists(string? path) => IsVirtual(path) || Directory.Exists(path);
     public static string Resolve(string key)
     {
         if (key == "RecycleBin") return RecycleBin;
+        if (key == "ThisPc") return ThisPc;
         foreach (var f in Folders)
         {
             if (f.Key != key) continue;
@@ -54,12 +58,14 @@ public static class WindowsKnownLocations
     public static string DisplayPath(string path)
     {
         if (IsRecycleBin(path)) return "휴지통";
+        if (IsThisPc(path)) return "내 PC";
         var match = Match(path);
         return match is { } folder ? folder.Label + path[folder.Path.Length..] : path;
     }
     public static string ExpandDisplayPath(string path)
     {
         if (path == "휴지통") return RecycleBin;
+        if (path is "내 PC" or "이 PC") return ThisPc;
         foreach (var folder in Folders)
         {
             if (path == folder.Label || path.StartsWith(folder.Label + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
@@ -74,6 +80,7 @@ public static class WindowsKnownLocations
     public static string Title(string path)
     {
         if (IsRecycleBin(path)) return "휴지통";
+        if (IsThisPc(path)) return "내 PC";
         var match = Match(path);
         if (match is { } f && path.TrimEnd('\\', '/').Equals(f.Path, StringComparison.OrdinalIgnoreCase)) return f.Label;
         return Path.GetFileName(path.TrimEnd('\\', '/')) is { Length: > 0 } name ? name : path;

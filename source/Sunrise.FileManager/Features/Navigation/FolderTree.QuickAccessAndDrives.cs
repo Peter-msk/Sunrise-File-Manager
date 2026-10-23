@@ -21,7 +21,7 @@ public partial class FolderTree
         _pinnedFolders.Clear();
         if (paths is not null)
         {
-            foreach (string p in paths.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).Take(20))
+            foreach (string p in paths.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).Take(50))
                 _pinnedFolders.Add(p);
         }
         RenderPinnedFolders();
@@ -33,6 +33,7 @@ public partial class FolderTree
         string full = Path.GetFullPath(path);
         if (!_pinnedFolders.Contains(full, StringComparer.OrdinalIgnoreCase))
         {
+            if (_pinnedFolders.Count >= 50) { MessageBox.Show("즐겨찾기는 최대 50개까지 저장할 수 있습니다.", "즐겨찾기"); return; }
             _pinnedFolders.Add(full);
             RenderPinnedFolders();
             PinnedFoldersChanged?.Invoke(_pinnedFolders);
@@ -73,7 +74,7 @@ public partial class FolderTree
             };
             navBtn.Click += (_, _) =>
             {
-                if (Directory.Exists(folder)) PathChosen?.Invoke(folder);
+                if (Directory.Exists(folder)) QuickPathChosen?.Invoke(folder);
                 else MessageBox.Show("고정된 폴더를 찾을 수 없습니다.", "즐겨찾기", MessageBoxButton.OK, MessageBoxImage.Information);
             };
             AttachFolderDropTarget(navBtn, folder);
@@ -105,7 +106,7 @@ public partial class FolderTree
         string trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         string title = Path.GetFileName(trimmed);
         if (string.IsNullOrEmpty(title)) title = path;
-        var item = new TreeViewItem { Header = MakeHeader(title, false), Tag = path, AllowDrop = true };
+        var item = new TreeViewItem { Header = MakeHeader(title, false), Tag = path, ToolTip = path, AllowDrop = true };
         item.Items.Add(new TreeViewItem { Header = "읽는 중...", IsEnabled = false });
         AttachFolderDropTarget(item, path);
         return item;
@@ -155,14 +156,15 @@ public partial class FolderTree
             Fill = new System.Windows.Media.SolidColorBrush(drive ? System.Windows.Media.Color.FromRgb(9, 107, 148) : System.Windows.Media.Color.FromRgb(211, 158, 49)),
             Data = System.Windows.Media.Geometry.Parse(drive ? "M0,1 L18,1 18,14 0,14 Z M3,10 L5,10 5,12 3,12 Z" : "M0,2 L6,2 9,5 20,5 20,17 0,17 Z")
         });
-        header.Children.Add(new TextBlock { Text = title, VerticalAlignment = VerticalAlignment.Center, FontWeight = drive ? FontWeights.SemiBold : FontWeights.Normal });
+        // Keep the full label in the scroll extent so deep/long names remain reachable.
+        header.Children.Add(new TextBlock { Text = title, TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.None, ToolTip = title, VerticalAlignment = VerticalAlignment.Center, FontWeight = drive ? FontWeights.SemiBold : FontWeights.Normal });
         outer.Children.Add(header);
 
         if (drive && !string.IsNullOrWhiteSpace(subtitle))
         {
             var capacityLabel = new TextBlock
             {
-                Text = subtitle,
+                Text = subtitle, TextWrapping = TextWrapping.Wrap, MaxWidth = 205,
                 FontSize = 10.5,
                 Margin = new Thickness(22, 1, 0, 2)
             };
@@ -186,11 +188,12 @@ public partial class FolderTree
         return outer;
     }
 
-    private void ReloadRoots()
+    public void ReloadRoots()
     {
         CancelPendingOperations();
         _loaded.Clear();
         _loading.Clear();
+        _pageCursors.Clear();
         FolderItems.Items.Clear();
         foreach (DriveInfo drive in DriveInfo.GetDrives())
         {
@@ -214,6 +217,7 @@ public partial class FolderTree
                 }
                 catch { }
                 root.Header = MakeHeader(title, true, subtitle, pct);
+                root.ToolTip = drive.RootDirectory.FullName;
                 FolderItems.Items.Add(root);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -226,13 +230,13 @@ public partial class FolderTree
 
     private void NavigateKnownFolder(string key)
     {
-        if (key == "RecycleBin")
+        if (key is "RecycleBin" or "ThisPc")
         {
-            PathChosen?.Invoke(WindowsKnownLocations.RecycleBin);
+            QuickPathChosen?.Invoke(WindowsKnownLocations.Resolve(key));
             return;
         }
         string path = ResolveKnownFolderPath(key);
-        if (Directory.Exists(path)) PathChosen?.Invoke(path);
+        if (Directory.Exists(path)) QuickPathChosen?.Invoke(path);
         else MessageBox.Show("폴더를 찾을 수 없습니다.", "폴더 이동", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }

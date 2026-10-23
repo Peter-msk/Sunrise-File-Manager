@@ -1,0 +1,42 @@
+name: Windows WPF split verification
+on:
+  push:
+    branches: [codex/verify-1.5.1-splits]
+permissions:
+  contents: read
+jobs:
+  wpf-ui:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Display environment
+        shell: pwsh
+        run: |
+          if (Get-Command Set-DisplayResolution -ErrorAction SilentlyContinue) {
+            Set-DisplayResolution -Width 1920 -Height 1080 -Force
+          }
+          dotnet --info
+          query session
+      - name: Run Windows WPF window and split interactions
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force windows-ui-evidence | Out-Null
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj --configuration Release -- --split-interaction-only windows-ui-evidence 2>&1 | Tee-Object windows-ui-evidence/execution.log
+          $testExit = $LASTEXITCODE
+          if (Test-Path windows-ui-evidence/UI_RESULT.json) {
+            Get-Content windows-ui-evidence/UI_RESULT.json
+          } else {
+            throw 'UI result was not produced.'
+          }
+          exit $testExit
+      - name: Save execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-wpf-ui-evidence
+          path: windows-ui-evidence
+          retention-days: 14

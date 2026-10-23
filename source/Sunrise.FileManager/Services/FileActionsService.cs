@@ -123,6 +123,17 @@ public static partial class FileActionsService
         EnsureOrdinaryEntry(source);
         if (File.Exists(destination) || Directory.Exists(destination))
             throw new IOException("대상에 같은 이름이 존재합니다. 덮어쓰지 않습니다.");
+        if (TransferService.IsDifferentVolume(source, destination))
+        {
+            // Undo/redo and direct file actions use the same safe cross-volume move owner.
+            string parent = Path.GetDirectoryName(destination)!;
+            var exact = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [source] = destination };
+            TransferResult result = TransferService.RunAsync([source], parent, TransferKind.Move,
+                null, CancellationToken.None, CollisionPolicy.Skip, exact).GetAwaiter().GetResult();
+            if (result.Failed != 0 || result.Completed != 1)
+                throw new IOException(result.Errors.FirstOrDefault() ?? "다른 드라이브로 이동하지 못했습니다.");
+            return;
+        }
         if (Directory.Exists(source)) Directory.Move(source, destination);
         else FileMemoStore.MoveFileWithMemos(source, destination);
     }
@@ -179,7 +190,7 @@ public static partial class FileActionsService
         return completion.Task;
     }
 
-    private static void EnsureOrdinaryEntry(string path)
+    internal static void EnsureOrdinaryEntry(string path)
     {
         if (!File.Exists(path) && !Directory.Exists(path))
             throw new FileNotFoundException("선택한 항목이 존재하지 않습니다.", path);
@@ -187,7 +198,7 @@ public static partial class FileActionsService
         if (string.Equals(Path.TrimEndingDirectorySeparator(path), Path.TrimEndingDirectorySeparator(root),
                 StringComparison.OrdinalIgnoreCase))
             throw new IOException("드라이브 루트는 수정 또는 삭제할 수 없습니다.");
-        if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+        if (ReparsePointPolicy.IsBlocked(path))
             throw new IOException("연결·접합점은 수정 또는 삭제 대상이 아닙니다.");
     }
 }

@@ -13,6 +13,12 @@ namespace Sunrise.FileManager.Controls;
 /// </summary>
 public partial class FileInspector : UserControl
 {
+    public double DetailSectionRatio
+    {
+        get { double a = InspectorLayout.RowDefinitions[1].Height.Value, b = InspectorLayout.RowDefinitions[3].Height.Value; return Math.Clamp(a / (a + b), .05, .95); }
+        set { double ratio = Math.Clamp(value, .05, .95); InspectorLayout.RowDefinitions[1].Height = new GridLength(ratio, GridUnitType.Star); InspectorLayout.RowDefinitions[3].Height = new GridLength(1 - ratio, GridUnitType.Star); }
+    }
+    public string PreferredAuthor { get => MemoAuthorInput.Text; set => MemoAuthorInput.Text = value; }
     public event Action? CloseRequested;
     private void CloseInspector_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke();
     private FileEntry? _selected;

@@ -57,12 +57,17 @@ public partial class ExplorerPane
             string[] paths = Clipboard.GetFileDropList().Cast<string>().ToArray();
             if (paths.Length == 0) return;
             TransferKind kind = TransferKind.Copy;
-            if (Clipboard.GetData("Preferred DropEffect") is MemoryStream effect && effect.Length >= 4)
+            // Windows Explorer writes a DWORD preferred effect; clipboard providers may
+            // expose it as a stream or as a byte array. Never rely on stream Position.
+            object? rawEffect = Clipboard.GetData("Preferred DropEffect");
+            byte[]? effectBytes = rawEffect switch
             {
-                byte[] bytes = new byte[4];
-                if (effect.Read(bytes, 0, 4) == 4 && (BitConverter.ToInt32(bytes, 0) & 2) != 0)
-                    kind = TransferKind.Move;
-            }
+                MemoryStream stream when stream.Length >= 4 => stream.ToArray(),
+                byte[] bytes when bytes.Length >= 4 => bytes,
+                _ => null
+            };
+            if (effectBytes is not null && (BitConverter.ToInt32(effectBytes, 0) & 2) != 0)
+                kind = TransferKind.Move;
             string normalizedTarget = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder));
             if (kind == TransferKind.Copy)
             {
@@ -131,7 +136,7 @@ public partial class ExplorerPane
 
     private bool ExecuteShortcutAction(ExplorerShortcutAction action, RoutedEventArgs e)
     {
-        if (IsRecycleBin && action is ExplorerShortcutAction.Undo or ExplorerShortcutAction.Redo or
+        if ((IsRecycleBin || IsThisPc) && action is ExplorerShortcutAction.Undo or ExplorerShortcutAction.Redo or
             ExplorerShortcutAction.Copy or ExplorerShortcutAction.Cut or ExplorerShortcutAction.Paste or
             ExplorerShortcutAction.CopyPath or ExplorerShortcutAction.Duplicate or ExplorerShortcutAction.Rename or
             ExplorerShortcutAction.RecycleDelete or ExplorerShortcutAction.PermanentDelete or

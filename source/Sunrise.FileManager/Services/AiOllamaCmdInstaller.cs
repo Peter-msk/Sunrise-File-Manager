@@ -39,6 +39,7 @@ public sealed partial class AiOllamaService
             if (!Uri.TryCreate(cfg.Endpoint, UriKind.Absolute, out Uri? uri) || !IsAllowedLoopback(uri))
                 cfg.Endpoint = DefaultEndpoint;
             if (string.IsNullOrWhiteSpace(cfg.Model)) cfg.Model = DefaultModel;
+            if (cfg.PreferredSetupModel is null || cfg.PreferredSetupModel.Length > 200) cfg.PreferredSetupModel = "";
             return cfg;
         }
         catch

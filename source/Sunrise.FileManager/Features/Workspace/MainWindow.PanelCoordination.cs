@@ -69,6 +69,7 @@ public partial class MainWindow
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch
         };
+        splitter.DragCompleted += (_, _) => { CaptureWorkspaceRatios(); ScheduleSessionSave(); };
         Grid.SetRow(splitter, row);
         Grid.SetColumn(splitter, column);
         Grid.SetRowSpan(splitter, vertical ? span : 1);
@@ -90,8 +91,8 @@ public partial class MainWindow
             bool isSplitterCol = c % 2 == 1;
             Workspace.ColumnDefinitions.Add(new ColumnDefinition
             {
-                Width = isSplitterCol ? new GridLength(11) : new GridLength(1, GridUnitType.Star),
-                MinWidth = isSplitterCol ? 11 : (blueprint.StarColumns >= 3 ? 185 : 240)
+                Width = isSplitterCol ? new GridLength(WorkspaceSplitLayoutEngine.SplitterThickness) : new GridLength(1, GridUnitType.Star),
+                MinWidth = isSplitterCol ? WorkspaceSplitLayoutEngine.SplitterThickness : WorkspaceSplitLayoutEngine.MinimumPaneWidth
             });
         }
 
@@ -100,11 +101,12 @@ public partial class MainWindow
             bool isSplitterRow = r % 2 == 1;
             Workspace.RowDefinitions.Add(new RowDefinition
             {
-                Height = isSplitterRow ? new GridLength(11) : new GridLength(1, GridUnitType.Star),
-                MinHeight = isSplitterRow ? 11 : (blueprint.StarRows >= 3 ? 150 : 210)
+                Height = isSplitterRow ? new GridLength(WorkspaceSplitLayoutEngine.SplitterThickness) : new GridLength(1, GridUnitType.Star),
+                MinHeight = isSplitterRow ? WorkspaceSplitLayoutEngine.SplitterThickness : WorkspaceSplitLayoutEngine.MinimumPaneHeight
             });
         }
 
+        RestoreWorkspaceRatios();
         foreach (PaneGridPlacement p in blueprint.Panes)
         {
             AttachPaneToWorkspace(_hosts[p.PaneIndex], p.Row, p.Column, p.RowSpan, p.ColumnSpan);
@@ -206,5 +208,6 @@ public partial class MainWindow
         _activePane = index;
         SyncDockPreview();
         AiPanel.UpdateSelectionSummary(pane.ActiveFolder, pane.SelectedPaths);
+        ScheduleSessionSave();
     }
 }

@@ -1,16 +1,76 @@
 <UserControl x:Class="Sunrise.FileManager.Controls.FolderTree" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" MinWidth="135" Foreground="{DynamicResource TextPrimary}">
+ <UserControl.Resources>
+  <DrawingImage x:Key="QuickHome"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M1,8 L9,1 17,8 15,8 15,17 11,17 11,11 7,11 7,17 3,17 3,8 Z"/></DrawingImage.Drawing></DrawingImage>
+  <DrawingImage x:Key="QuickThisPc"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M1,1 H17 V12 H10 V15 H14 V17 H4 V15 H8 V12 H1 Z"/></DrawingImage.Drawing></DrawingImage>
+  <DrawingImage x:Key="QuickDesktop"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M1,2 H17 V13 H10 V15 H14 V17 H4 V15 H8 V13 H1 Z"/></DrawingImage.Drawing></DrawingImage>
+  <DrawingImage x:Key="QuickDownloads"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M7,1 H11 V9 H16 L9,16 2,9 H7 Z M1,17 H17 V19 H1 Z"/></DrawingImage.Drawing></DrawingImage>
+  <DrawingImage x:Key="QuickDocuments"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M3,1 H12 L17,6 V19 H3 Z M11,2 V7 H16 M6,10 H14 M6,13 H14 M6,16 H12"/></DrawingImage.Drawing></DrawingImage>
+  <DrawingImage x:Key="QuickPictures"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M1,2 H19 V17 H1 Z M3,14 L8,8 12,12 15,9 18,14 Z M12,5 A1,1 0 1 0 14,5 A1,1 0 1 0 12,5"/></DrawingImage.Drawing></DrawingImage>
+  <DrawingImage x:Key="QuickMusic"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M7,3 L17,1 V13 A3,3 0 1 1 15,10 V5 L9,7 V16 A3,3 0 1 1 7,13 Z"/></DrawingImage.Drawing></DrawingImage>
+  <DrawingImage x:Key="QuickVideos"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M1,3 H14 V8 L19,4 V17 L14,13 V18 H1 Z"/></DrawingImage.Drawing></DrawingImage>
+  <DrawingImage x:Key="QuickRecycleBin"><DrawingImage.Drawing><GeometryDrawing Brush="{DynamicResource Accent}" Geometry="M5,5 H15 L14,19 H6 Z M3,2 H8 V1 H12 V2 H17 V4 H3 Z M8,7 V16 M12,7 V16"/></DrawingImage.Drawing></DrawingImage>
+  <!-- Folder-tree-only layout; shared theme keeps semantic palette tokens. -->
+ <Style TargetType="TreeViewItem">
+  <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+  <Setter Property="Background" Value="Transparent"/>
+  <Setter Property="Padding" Value="3,2"/>
+  <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TreeViewItem">
+   <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid Grid.Row="0" MinHeight="38"><Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+     <Border x:Name="TreeRow" Grid.ColumnSpan="2" Background="{TemplateBinding Background}" CornerRadius="3"/>
+     <ToggleButton x:Name="ExpandToggle" Grid.Column="0" Width="40" Height="36" Background="Transparent"
+       BorderThickness="0" Focusable="False" Cursor="Hand" ToolTip="폴더 펼치기/접기"
+       IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
+      <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
+       <Border x:Name="ArrowHitTarget" Background="Transparent" CornerRadius="3">
+        <Path x:Name="Glyph" Data="M3,1 L11,7 L3,13 Z" Fill="{DynamicResource TextPrimary}"
+              Width="14" Height="17" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
+              RenderTransformOrigin="0.5,0.5"/>
+       </Border>
+       <ControlTemplate.Triggers>
+        <Trigger Property="IsChecked" Value="True"><Setter TargetName="Glyph" Property="RenderTransform"><Setter.Value><RotateTransform Angle="90"/></Setter.Value></Setter></Trigger>
+        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ArrowHitTarget" Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>
+       </ControlTemplate.Triggers>
+      </ControlTemplate></ToggleButton.Template>
+     </ToggleButton>
+     <ContentPresenter Grid.Column="1" ContentSource="Header" Margin="3,1" VerticalAlignment="Center"/>
+     <!-- Selection remains legible in light and dark themes without covering the arrow. -->
+     <Border x:Name="SelectedMarker" Grid.Column="0" Width="3" HorizontalAlignment="Left"
+             Background="{DynamicResource Accent}" Visibility="Collapsed" IsHitTestVisible="False"/>
+    </Grid>
+    <!-- Compact nesting does not shrink the 40x36 DIP arrow hit target. -->
+    <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Margin="16,0,0,0"/>
+   </Grid>
+   <ControlTemplate.Triggers>
+    <Trigger Property="IsExpanded" Value="False"><Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/></Trigger>
+    <Trigger Property="HasItems" Value="False"><Setter TargetName="ExpandToggle" Property="Visibility" Value="Hidden"/></Trigger>
+    <Trigger Property="IsSelected" Value="True"><Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource Selected}"/>
+     <Setter TargetName="SelectedMarker" Property="Visibility" Value="Visible"/></Trigger>
+    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>
+    <MultiTrigger><MultiTrigger.Conditions><Condition Property="IsMouseOver" Value="True"/><Condition Property="IsSelected" Value="True"/></MultiTrigger.Conditions>
+       <Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource Selected}"/></MultiTrigger>
+   </ControlTemplate.Triggers>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+ </UserControl.Resources>
  <Border Background="{DynamicResource ThemeTreeCanvas}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,1,0">
-  <ScrollViewer x:Name="NavigationScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" PreviewMouseWheel="NavigationScroll_PreviewMouseWheel" PanningMode="VerticalOnly">
-   <StackPanel Margin="8,6,6,8">
+  <ScrollViewer x:Name="NavigationScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" CanContentScroll="False" PreviewMouseWheel="NavigationScroll_PreviewMouseWheel" PanningMode="Both">
+   <StackPanel>
+    <!-- Keep quick actions within the viewport; long tree rows own the horizontal extent. -->
+    <Border HorizontalAlignment="Left" Width="{Binding ViewportWidth, ElementName=NavigationScroll}" Padding="8,6,6,0">
+     <Border.RenderTransform><TranslateTransform X="{Binding HorizontalOffset, ElementName=NavigationScroll}"/></Border.RenderTransform>
+     <StackPanel>
      <TextBlock Text="빠른 이동 · 기본 폴더" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" Margin="6,2,0,6"/>
-     <Button Content="홈 (사용자 폴더)" Tag="Home" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
-     <Button Content="바탕화면" Tag="Desktop" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
-     <Button Content="다운로드" Tag="Downloads" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
-     <Button Content="문서" Tag="Documents" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
-     <Button Content="사진" Tag="Pictures" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
-     <Button Content="음악" Tag="Music" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
-     <Button Content="동영상" Tag="Videos" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
-     <Button Content="휴지통" Tag="RecycleBin" Click="KnownFolder_Click" HorizontalContentAlignment="Left" Padding="8,4"/>
+     <Button Tag="Home" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickHome}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="홈 (사용자 폴더)" VerticalAlignment="Center"/></StackPanel></Button>
+     <Button Tag="Desktop" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickDesktop}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="바탕화면" VerticalAlignment="Center"/></StackPanel></Button>
+     <Button Tag="Downloads" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickDownloads}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="다운로드" VerticalAlignment="Center"/></StackPanel></Button>
+     <Button Tag="Documents" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickDocuments}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="문서" VerticalAlignment="Center"/></StackPanel></Button>
+     <Button Tag="Pictures" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickPictures}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="사진" VerticalAlignment="Center"/></StackPanel></Button>
+     <Button Tag="Music" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickMusic}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="음악" VerticalAlignment="Center"/></StackPanel></Button>
+     <Button Tag="Videos" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickVideos}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="동영상" VerticalAlignment="Center"/></StackPanel></Button>
+     <Button Tag="RecycleBin" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickRecycleBin}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="휴지통" VerticalAlignment="Center"/></StackPanel></Button>
+     <Button Tag="ThisPc" Click="KnownFolder_Click" HorizontalContentAlignment="Stretch" Padding="8,4"><StackPanel Orientation="Horizontal"><Image Source="{StaticResource QuickThisPc}" Width="16" Height="16" Margin="0,0,8,0"/><TextBlock Text="내 PC"/></StackPanel></Button>
      <Separator Margin="4,8"/>
      <DockPanel Margin="0,0,0,4">
       <Button DockPanel.Dock="Right" x:Name="PinCurrentButton" Content="+ 고정" ToolTip="현재 열린 폴더를 즐겨찾기에 고정" Padding="6,2" MinHeight="22" FontSize="11" Click="PinCurrent_Click"/>
@@ -20,9 +80,15 @@
      <Separator Margin="4,8"/>
      <DockPanel>
       <Button DockPanel.Dock="Right" Content="⟳" ToolTip="드라이브 및 트리 다시 읽기" Width="28" Padding="0" Click="Reload_Click"/>
+      <!-- Locate is explicit: Quick Access never expands a physical C: path automatically. -->
+      <Button DockPanel.Dock="Right" x:Name="LocateCurrentButton" Content="위치 찾기"
+              ToolTip="현재 폴더를 왼쪽 폴더 트리에서 찾아 표시" MinWidth="56" MinHeight="26"
+              Padding="4,1" FontSize="10.5" Click="LocateCurrent_Click"/>
       <TextBlock Text="이 PC (드라이브 및 폴더)" Foreground="{DynamicResource TextMuted}" FontSize="11" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"/>
      </DockPanel>
-    <TreeView x:Name="FolderItems" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextPrimary}" FontSize="12" Padding="6,2" SelectedItemChanged="FolderItems_SelectedItemChanged" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+     </StackPanel>
+    </Border>
+    <TreeView x:Name="FolderItems" Margin="8,0,6,8" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextPrimary}" FontSize="12" Padding="6,2" SelectedItemChanged="FolderItems_SelectedItemChanged" ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
    </StackPanel>
   </ScrollViewer>
  </Border>
