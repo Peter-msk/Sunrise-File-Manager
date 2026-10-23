@@ -21,6 +21,7 @@ internal static class PackagedSmoke
         nint main = 0;
         var until = DateTime.UtcNow.AddSeconds(90);
         string observedTitle = "";
+        bool noticeDismissed = false;
         while (!process.HasExited && DateTime.UtcNow < until && main == 0)
         {
             EnumWindows((handle, _) =>
@@ -29,14 +30,20 @@ internal static class PackagedSmoke
                 if (id != process.Id || !IsWindowVisible(handle)) return true;
                 var title = new StringBuilder(512); GetWindowText(handle, title, title.Capacity);
                 observedTitle = title.ToString();
-                if (observedTitle.StartsWith("Sunrise File Manager 1.5.4", StringComparison.Ordinal)) main = handle;
+                if (observedTitle == "Sunrise File Manager 1.5.4") main = handle;
+                else if (!noticeDismissed && observedTitle == "Sunrise File Manager 1.5.4 · 공지사항 및 업데이트")
+                {
+                    NativeUiRegression.CaptureDesktop(Path.Combine(output, "packaged-startup-notice.png"));
+                    noticeDismissed = true;
+                    PostMessage(handle, 0x10, 0, 0); // Normal close respects the product's required-update exit policy.
+                }
                 return true;
             }, 0);
             Thread.Sleep(100);
         }
         try
         {
-            if (main == 0) throw new Exception("Packaged startup did not reach the main window: " + observedTitle);
+            if (main == 0) { NativeUiRegression.CaptureDesktop(Path.Combine(output, "packaged-startup-failure.png")); throw new Exception("Packaged startup did not reach the main window: " + observedTitle); }
             SetForegroundWindow(main); Thread.Sleep(1000);
             NativeUiRegression.CaptureDesktop(Path.Combine(output, "packaged-single.png"));
             foreach (byte key in new byte[] { 0x32, 0x34, 0x31 })

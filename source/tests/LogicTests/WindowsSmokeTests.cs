@@ -1,4 +1,5 @@
 using System.Text;
+using System.IO;
 using Sunrise.FileManager.Services;
 
 static class WindowsSmokeTests
