@@ -210,6 +210,16 @@ internal static class EiassRenameRegression
         string folder = Path.Combine(root, "Folder"); Directory.CreateDirectory(folder);
         Reject(() => FileActionsService.BatchRename(new[] { (folder, "RenamedFolder"), (a, "Occupied.pdf") }), "Mixed rename failed to preflight an occupied target.");
         Check(Directory.Exists(folder) && !Directory.Exists(Path.Combine(root, "RenamedFolder")), "Mixed rename changed a folder before preflight finished.");
+        string movedFolder = FileActionsService.Rename(folder, "RenamedFolder");
+        var folderUndo = new ExplorerUndoService(); folderUndo.RecordRename(folder, movedFolder);
+        Directory.CreateDirectory(folder);
+        Check(!folderUndo.UndoLast().Success && folderUndo.CanUndo, "Folder Undo collision discarded its history.");
+        Directory.Delete(folder);
+        Check(folderUndo.UndoLast().Success && Directory.Exists(folder), "Folder Undo retry failed.");
+        Directory.CreateDirectory(movedFolder);
+        Check(!folderUndo.RedoLast().Success && folderUndo.CanRedo, "Folder Redo collision discarded its history.");
+        Directory.Delete(movedFolder);
+        Check(folderUndo.RedoLast().Success && Directory.Exists(movedFolder), "Folder Redo retry failed.");
         string blockedTarget = Path.Combine(root, "BlockedByMemo.pdf");
         File.WriteAllText(blockedTarget, "temporary fixture");
         var orphan = FileMemoStore.Save(blockedTarget, "KEEP EXISTING MEMO", userName: "Regression");

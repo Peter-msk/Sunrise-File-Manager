@@ -42,7 +42,7 @@ public partial class MainWindow : Window
 
     internal bool ConfirmUpdateExit()
     {
-        if (_working || _aiBusy || _activeFileJobs > 0)
+        if (_working || _aiBusy || _activeRecycleJobs > 0)
         {
             foreach (var pane in _panes) pane?.CancelLocalFileJob();
             _transferCancellation?.Cancel();
@@ -88,7 +88,7 @@ public partial class MainWindow : Window
     };
     private CancellationTokenSource? _transferCancellation;
     private bool _working;
-    private int _activeFileJobs;
+    private int _activeRecycleJobs;
 
     public MainWindow() : this(null) { }
 
@@ -165,7 +165,7 @@ public partial class MainWindow : Window
             pane.PasteRequested += Pane_PasteRequested;
             pane.FileActionCompleted += RefreshAllPanes;
             pane.SettingsChanged += ScheduleSessionSave;
-            pane.BeforeFileChange = () => _activeFileJobs == 0 && (!_inspectorOpen || Inspector.ConfirmLeavingMemo());
+            pane.BeforeFileChange = () => _activeRecycleJobs == 0 && (!_inspectorOpen || Inspector.ConfirmLeavingMemo());
             pane.PreviewRequested += source => { ActivatePane(source); SetDockPreview(!_dockPreviewOpen); };
             pane.InspectorRequested += source => { ActivatePane(source); SetInspectorVisible(!_inspectorOpen); };
             pane.AiRequested += source =>
@@ -186,8 +186,8 @@ public partial class MainWindow : Window
             };
             pane.BlockingFileActionChanged += busy =>
             {
-                _activeFileJobs += busy ? 1 : -1;
-                if (!_working) CopyButton.IsEnabled = MoveButton.IsEnabled = _activeFileJobs == 0;
+                _activeRecycleJobs += busy ? 1 : -1;
+                if (!_working) CopyButton.IsEnabled = MoveButton.IsEnabled = _activeRecycleJobs == 0;
             };
             _panes[i] = pane;
             pane.GotKeyboardFocus += (_, _) => ActivatePane(pane);
@@ -227,13 +227,13 @@ public partial class MainWindow : Window
         {
             _aiBusy = busy;
             foreach (var pane in _panes) { pane.SetFileActionsEnabled(!busy); pane.IsEnabled = !busy; }
-            CopyButton.IsEnabled = MoveButton.IsEnabled = !busy && !_working && _activeFileJobs == 0;
+            CopyButton.IsEnabled = MoveButton.IsEnabled = !busy && !_working && _activeRecycleJobs == 0;
             OneButton.IsEnabled = TwoButton.IsEnabled = ThreeButton.IsEnabled = FourButton.IsEnabled = !busy;
             if (AiConnectButton is not null) AiConnectButton.IsEnabled = !busy;
         };
         if (_persistSession) Loaded += async (_, _) => await AiPanel.CheckInterruptedAsync();
         AiPanel.FileWorkCompleted = RefreshAllPanes;
-        AiPanel.CanStart = () => !_working && _activeFileJobs == 0 && !_aiBusy;
+        AiPanel.CanStart = () => !_working && _activeRecycleJobs == 0 && !_aiBusy;
         AiPanel.BeforeFileChange = () => !_inspectorOpen || Inspector.ConfirmLeavingMemo();
         if (settingsWarning is not null)
             Dispatcher.BeginInvoke(new Action(() =>
@@ -510,7 +510,7 @@ public partial class MainWindow : Window
 
     private async Task StartTransferAsync(TransferKind kind)
     {
-        if (_working || _aiBusy || _activeFileJobs > 0) return;
+        if (_working || _aiBusy || _activeRecycleJobs > 0) return;
         int sourceIndex = SourceSelector.SelectedIndex;
         int targetIndex = DestinationSelector.SelectedIndex;
         if (sourceIndex < 0 || targetIndex < 0 || sourceIndex == targetIndex ||
@@ -533,7 +533,7 @@ public partial class MainWindow : Window
 
     private async void Pane_DropRequested(ExplorerPane.ExplorerDropRequest request)
     {
-        if (_working || _aiBusy || _activeFileJobs > 0) return;
+        if (_working || _aiBusy || _activeRecycleJobs > 0) return;
         int source = Array.IndexOf(_panes, request.Source);
         int target = Array.IndexOf(_panes, request.Destination);
         if (source < 0 || target < 0 || source >= _visiblePanels || target >= _visiblePanels) return;
@@ -543,20 +543,20 @@ public partial class MainWindow : Window
     private async void Pane_PasteRequested(ExplorerPane.ClipboardPasteRequest request)
     {
         int pane = Array.IndexOf(_panes, request.Pane);
-        if (pane < 0 || pane >= _visiblePanels || _working || _aiBusy || _activeFileJobs > 0) return;
+        if (pane < 0 || pane >= _visiblePanels || _working || _aiBusy || _activeRecycleJobs > 0) return;
         await RunTransferAsync(request.Paths, request.TargetFolder, request.Kind, pane, pane);
     }
 
     private void RefreshAllPanes()
     {
-        if (_working || _aiBusy || _activeFileJobs > 0) return;
+        if (_working || _aiBusy || _activeRecycleJobs > 0) return;
         foreach (ExplorerPane pane in _panes) pane.RefreshCurrent();
     }
 
     private async Task RunTransferAsync(IReadOnlyList<string> paths, string target, TransferKind kind,
         int sourceIndex, int targetIndex)
     {
-        if (_working || _aiBusy || _activeFileJobs > 0 || paths.Count == 0) return;
+        if (_working || _aiBusy || _activeRecycleJobs > 0 || paths.Count == 0) return;
         if (kind == TransferKind.Move)
         {
             string normalizedTarget = Path.TrimEndingDirectorySeparator(Path.GetFullPath(target));
@@ -674,7 +674,7 @@ public partial class MainWindow : Window
             PauseJobButton.Visibility = Visibility.Collapsed;
             _transferCancellation = null;
             _working = false;
-            CopyButton.IsEnabled = MoveButton.IsEnabled = _activeFileJobs == 0;
+            CopyButton.IsEnabled = MoveButton.IsEnabled = _activeRecycleJobs == 0;
             SourceSelector.IsEnabled = DestinationSelector.IsEnabled = true;
             CollisionSelector.IsEnabled = true;
             OneButton.IsEnabled = TwoButton.IsEnabled = ThreeButton.IsEnabled = FourButton.IsEnabled = true;
@@ -713,7 +713,7 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        if (_activeFileJobs > 0)
+        if (_activeRecycleJobs > 0)
         {
             foreach (var pane in _panes) pane?.CancelLocalFileJob();
             e.Cancel = true;

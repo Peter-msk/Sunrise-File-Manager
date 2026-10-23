@@ -19,6 +19,7 @@ jobs:
           query session
           exit 0
       - name: Build WPF application and native verification projects
+        id: compile
         shell: pwsh
         run: |
           dotnet build source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release -warnaserror 2>&1 | Tee-Object audit-evidence/wpf-build.log
@@ -26,34 +27,35 @@ jobs:
           dotnet build source/tests/LogicTests/LogicTests.csproj -c Release 2>&1 | Tee-Object audit-evidence/logic-build.log
           exit $LASTEXITCODE
       - name: Execute native file and journal checks
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         shell: pwsh
         run: |
           dotnet run --project source/tests/LogicTests/LogicTests.csproj -c Release --no-build -- --windows-smoke 2>&1 | Tee-Object audit-evidence/native-files.log
           exit $LASTEXITCODE
       - name: Execute EIASS and actual in-flight close protection
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         timeout-minutes: 5
         shell: pwsh
         run: |
           dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --eiass-rename-only audit-evidence/eiass 2>&1 | Tee-Object audit-evidence/eiass.log
           exit $LASTEXITCODE
       - name: Execute general application UI
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         timeout-minutes: 5
         shell: pwsh
         run: |
           dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- audit-evidence/general 2>&1 | Tee-Object audit-evidence/general.log
           exit $LASTEXITCODE
       - name: Execute all split presets and native scroll drags
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         timeout-minutes: 5
         shell: pwsh
         run: |
           dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --split-interaction-only audit-evidence/splits 2>&1 | Tee-Object audit-evidence/splits.log
           exit $LASTEXITCODE
       - name: Build and sign Setup through the actual company entrypoint
-        if: ${{ !cancelled() }}
+        id: company
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         timeout-minutes: 12
         shell: pwsh
         run: |
@@ -65,7 +67,7 @@ jobs:
           cmd /d /c BUILD_ON_WINDOWS_COMPANY.cmd 2>&1 | Tee-Object audit-evidence/company-build.log
           exit $LASTEXITCODE
       - name: Install run and uninstall in the isolated Windows VM
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.company.outcome == 'success' }}
         timeout-minutes: 5
         shell: pwsh
         run: |

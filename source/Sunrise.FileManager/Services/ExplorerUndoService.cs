@@ -80,9 +80,11 @@ public sealed class ExplorerUndoService
         int doneCount = 0;
         var errors = new List<string>();
         var redoOps = new List<(string CurrentPath, string? OriginalPath, bool CreatedNew)>();
+        var retryOps = new List<(string CurrentPath, string? OriginalPath, bool CreatedNew)>();
 
         foreach (var (currentPath, originalPath, createdNew) in entry.Operations.Reverse())
         {
+            int before = doneCount, errorsBefore = errors.Count;
             try
             {
                 if (createdNew)
@@ -118,11 +120,21 @@ public sealed class ExplorerUndoService
                     }
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.ComponentModel.Win32Exception or OperationCanceledException)
+            catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.ComponentModel.Win32Exception or OperationCanceledException or System.Security.Cryptography.CryptographicException)
             {
                 errors.Add($"{Path.GetFileName(currentPath)}: {ex.Message}");
             }
+            finally
+            {
+                if (doneCount == before)
+                {
+                    retryOps.Add((currentPath, originalPath, createdNew));
+                    if (errors.Count == errorsBefore) errors.Add($"{Path.GetFileName(currentPath)}: 작업 대상이 없어 복원하지 못했습니다.");
+                }
+            }
         }
+
+        if (retryOps.Count > 0) { retryOps.Reverse(); Push(_history, new UndoEntry(entry.Description, retryOps)); }
 
         if (redoOps.Count > 0)
         {
@@ -145,9 +157,11 @@ public sealed class ExplorerUndoService
         int doneCount = 0;
         var errors = new List<string>();
         var undoOps = new List<(string CurrentPath, string? OriginalPath, bool CreatedNew)>();
+        var retryOps = new List<(string CurrentPath, string? OriginalPath, bool CreatedNew)>();
 
         foreach (var (currentPath, targetPath, recreateDir) in entry.Operations)
         {
+            int before = doneCount, errorsBefore = errors.Count;
             try
             {
                 if (recreateDir)
@@ -169,11 +183,21 @@ public sealed class ExplorerUndoService
                     }
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.ComponentModel.Win32Exception or OperationCanceledException)
+            catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.ComponentModel.Win32Exception or OperationCanceledException or System.Security.Cryptography.CryptographicException)
             {
                 errors.Add($"{Path.GetFileName(currentPath)}: {ex.Message}");
             }
+            finally
+            {
+                if (doneCount == before)
+                {
+                    retryOps.Add((currentPath, targetPath, recreateDir));
+                    if (errors.Count == errorsBefore) errors.Add($"{Path.GetFileName(currentPath)}: 대상이 없거나 같은 이름이 있어 다시 실행하지 못했습니다.");
+                }
+            }
         }
+
+        if (retryOps.Count > 0) Push(_redoHistory, new UndoEntry(entry.Description, retryOps));
 
         if (undoOps.Count > 0)
         {
