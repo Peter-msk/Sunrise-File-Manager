@@ -11,6 +11,11 @@ using Sunrise.FileManager.Services;
 
 internal static class Program
 {
+    // Load the product resources while isolating UI fixtures from network startup dialogs.
+    private sealed class FixtureApp : App
+    {
+        protected override void OnStartup(StartupEventArgs e) { }
+    }
     [STAThread]
     private static void Main(string[] args)
     {
@@ -22,9 +27,10 @@ internal static class Program
         Directory.CreateDirectory(Path.Combine(root, "검토 자료"));
         File.WriteAllText(Path.Combine(root, "보고서.txt"), "UI smoke fixture");
         File.WriteAllText(Path.Combine(root, "검토 메모.md"), "UI smoke fixture");
-        var app = new App(); app.InitializeComponent(); app.StartupUri = null;
+        var app = new FixtureApp(); app.InitializeComponent();
         var session = new AppSession { LayoutVersion = 19, VisiblePanels = 1, Panels = Enumerable.Range(0, 4).Select(_ => new PanelSession { TabPaths = [root], DetailsVisible = false }).ToList() };
         if (splitInteractionOnly) session.UiScalePercent = 90;
+        UiScaleService.Set(session.UiScalePercent);
         var window = new MainWindow(session);
         window.Loaded += async (_, _) =>
         {
@@ -37,6 +43,8 @@ internal static class Program
                     Console.WriteLine($"WINDOWS_UI os={Environment.OSVersion} interactive={Environment.UserInteractive} screen={SystemParameters.PrimaryScreenWidth}x{SystemParameters.PrimaryScreenHeight} dpi={VisualTreeHelper.GetDpi(window).DpiScaleX}");
                     await FileScrollRegression.RunAllSplitsAsync(window, root);
                     checks.Add(new { feature = "V151-R02-all-14-split-presets-interaction", result = "PASS", layouts = 14, scale = 90 });
+                    await NativeUiRegression.RunAsync(window, root, output);
+                    checks.Add(new { feature = "V151-R03-native-mouse-split-and-file-tree-scroll", result = "PASS" });
                     return;
                 }
                 if (fileScrollOnly)
@@ -215,7 +223,7 @@ internal static class Program
                 checks.Add(new { feature = "V135-folder-back-horizontal-scroll-stability", result = "PASS" });
 
             }
-            catch (Exception ex) { error = ex.ToString(); Console.WriteLine(error); }
+            catch (Exception ex) { error = ex.ToString(); Console.WriteLine(error); NativeUiRegression.CaptureDesktop(Path.Combine(output, "failure-desktop.png")); }
             finally
             {
                 File.WriteAllText(Path.Combine(output, "UI_RESULT.json"), JsonSerializer.Serialize(new { status = error is null ? "PASS" : "FAIL", checks, error }, new JsonSerializerOptions { WriteIndented = true }));
