@@ -40,7 +40,14 @@ public partial class EiassRenameDialog : Window
         foreach (string path in pdfs)
         {
             var row = new Row(Path.GetFullPath(path));
-            row.PropertyChanged += (_, e) => { if (e.PropertyName is nameof(Row.Code) or nameof(Row.Title) && !_updating) { InvalidateOrder(); Rebuild(); } };
+            row.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is nameof(Row.Code) or nameof(Row.Title) && !_updating)
+                {
+                    if (_contentsUsed && e.PropertyName == nameof(Row.Title)) row.ContentsMatch = "제목 수정 · 재확인";
+                    InvalidateOrder(); Rebuild();
+                }
+            };
             _rows.Add(row);
         }
         PreviewGrid.ItemsSource = _rows;
@@ -97,6 +104,8 @@ public partial class EiassRenameDialog : Window
         foreach (var pair in names)
         {
             var row = pair.Key;
+            if (_rows.Count(r => r.Code == row.Code) > 1)
+            { row.CanApply = false; row.Status = "목차번호 중복 · 수정 필요"; }
             if (names.Values.Count(p => p.Equals(pair.Value, StringComparison.OrdinalIgnoreCase)) > 1 ||
                 ((File.Exists(pair.Value) || Directory.Exists(pair.Value)) && !pair.Value.Equals(row.SourcePath, StringComparison.OrdinalIgnoreCase) && !activeSources.Contains(pair.Value)))
             { row.CanApply = false; row.Status = "이름 충돌 · 덮어쓰지 않음"; }

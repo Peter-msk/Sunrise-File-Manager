@@ -16,7 +16,7 @@ internal static class EiassRenameRegression
     [DllImport("user32.dll")] private static extern void mouse_event(uint flags, uint dx, uint dy, uint data, nuint extra);
     internal static int Assertions { get; private set; }
     private static void Check(bool condition, string message) { Assertions++; if (!condition) throw new Exception(message); }
-    private static void Reject(Action action, string message) { try { action(); } catch (Exception ex) when (ex is ArgumentException or IOException) { Assertions++; return; } throw new Exception(message); }
+    private static void Reject(Action action, string message) { try { action(); } catch (Exception ex) when (ex is ArgumentException or IOException or InvalidDataException) { Assertions++; return; } throw new Exception(message); }
 
     internal static async Task RunAsync(MainWindow window, string root, string output)
     {

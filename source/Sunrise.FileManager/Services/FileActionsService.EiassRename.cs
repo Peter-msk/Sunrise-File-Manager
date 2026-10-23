@@ -31,7 +31,7 @@ public static partial class FileActionsService
             for (int i = 0; i < pairs.Length; i++) { MoveEntry(current[i], staged[i]); current[i] = staged[i]; }
             for (int i = 0; i < pairs.Length; i++) { MoveEntry(current[i], pairs[i].NewPath); current[i] = pairs[i].NewPath; published++; }
         }
-        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        catch (Exception failure)
         {
             var recoveryErrors = new List<Exception>();
             // Vacate all published names before restoring originals (including name swaps).
