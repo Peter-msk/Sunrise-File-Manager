@@ -98,7 +98,9 @@ internal static class FileScrollRegression
                 AssertPaneBounds(workspace, option.Preset);
                 foreach (ExplorerPane pane in Panes(workspace))
                 {
+                    Console.WriteLine($"UI_CHECK_FILES {option.Preset} {pane.CurrentLocation}");
                     await CheckPaneAsync(window, pane, fixtureRoot);
+                    Console.WriteLine($"UI_CHECK_NAV_TABS {option.Preset}");
                     await ExerciseFolderAndTabAsync(window, pane, fixtureRoot);
                 }
                 // Native GridSplitter keyboard handling, including safe clamping at limits.
@@ -194,17 +196,20 @@ internal static class FileScrollRegression
         var folder = grid.Items.OfType<FileEntry>().Single(entry => entry.IsDirectory && entry.Name == "검토 자료");
         pane.RestoreSelection(folder.FullPath);
         await SettleAsync(window);
+        Console.WriteLine("UI_FOLDER_DOUBLECLICK");
         var row = grid.ItemContainerGenerator.ContainerFromItem(folder) as DataGridRow ?? throw new Exception("Folder row not realized.");
         grid.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left)
             { RoutedEvent = Control.MouseDoubleClickEvent, Source = row });
         await WaitListingAsync(window, pane, folder.FullPath, 0);
         ((Button)pane.FindName("BackButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Console.WriteLine("UI_FOLDER_BACK");
         await WaitListingAsync(window, pane, fixtureRoot, 3);
         ((Button)pane.FindName("ForwardButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await WaitListingAsync(window, pane, folder.FullPath, 0);
         ((Button)pane.FindName("UpButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await WaitListingAsync(window, pane, fixtureRoot, 3);
         int originalTabs = pane.GetSession().TabPaths.Count;
+        Console.WriteLine("UI_TAB_OPEN");
         var menu = (MenuItem)pane.FindName("FileCommandMenu");
         menu.Items.OfType<MenuItem>().First(item => item.InputGestureText == "Ctrl+T")
             .RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));

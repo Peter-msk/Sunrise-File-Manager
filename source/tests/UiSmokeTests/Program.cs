@@ -18,6 +18,13 @@ internal static class Program
         bool fileScrollOnly = args.Contains("--file-scroll-only", StringComparer.Ordinal);
         bool splitInteractionOnly = args.Contains("--split-interaction-only", StringComparer.Ordinal);
         string output = Path.GetFullPath(args.FirstOrDefault(arg => arg is not ("--file-scroll-only" or "--split-interaction-only")) ?? "ui-check-results"); Directory.CreateDirectory(output);
+        using var timeout = new Timer(_ =>
+        {
+            File.WriteAllText(Path.Combine(output, "TIMEOUT.txt"), "WPF test exceeded 180 seconds.");
+            try { NativeUiRegression.CaptureDesktop(Path.Combine(output, "timeout-desktop.png")); }
+            catch (Exception ex) { File.AppendAllText(Path.Combine(output, "TIMEOUT.txt"), ex.ToString()); }
+            Environment.Exit(2);
+        }, null, TimeSpan.FromSeconds(180), Timeout.InfiniteTimeSpan);
         string root = Path.Combine(Path.GetTempPath(), "SunriseUiFixture_" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
         Directory.CreateDirectory(Path.Combine(root, "검토 자료"));
         File.WriteAllText(Path.Combine(root, "보고서.txt"), "UI smoke fixture");
