@@ -25,6 +25,7 @@ internal static class Program
         // Use the exact product resource definitions with an isolated Application host.
         // Loading App itself would also run the network/update startup gate.
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+        SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(app.Dispatcher));
         var productXaml = System.Xml.Linq.XDocument.Load(Path.Combine(AppContext.BaseDirectory, "ProductApp.xaml")).Root!;
         System.Xml.Linq.XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         var dictionary = new System.Xml.Linq.XElement(xaml + "ResourceDictionary",

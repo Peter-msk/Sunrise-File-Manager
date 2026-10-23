@@ -52,7 +52,7 @@ internal static class FileScrollRegression
         var grid = (DataGrid)pane.FindName("FilesGrid");
         var deadline = DateTime.UtcNow.AddSeconds(10);
         while (grid.Items.Count != 3 && DateTime.UtcNow < deadline) await Task.Delay(25);
-        if (grid.Items.Count != 3) throw new Exception("Synthetic listing did not load.");
+        if (grid.Items.Count != 3) throw new Exception($"Synthetic listing did not load: count={grid.Items.Count}, location={pane.CurrentLocation}, status={((TextBlock)pane.FindName("PaneStatus")).Text}, footer={((TextBlock)pane.FindName("FooterText")).Text}.");
         // Force overflow independently of the machine font/DPI/previous settings.
         grid.Columns[1].Width = new DataGridLength(1200);
         await SettleAsync(window);
