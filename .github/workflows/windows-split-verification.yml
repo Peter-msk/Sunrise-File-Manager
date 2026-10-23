@@ -21,6 +21,7 @@ jobs:
           }
           dotnet --info
           query session
+          exit 0
       - name: Run Windows WPF window and split interactions
         shell: pwsh
         run: |
