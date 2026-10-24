@@ -84,6 +84,13 @@ internal static class ContextMenuAudit
         var edit = (MenuItem)pane.FindName("EditCommandMenu");
         Check(edit.Items.OfType<MenuItem>().Any(m => m.Header.ToString() == "복사" && m.InputGestureText == "Ctrl+C"), "Main Edit copy command was removed.");
         Check(edit.Items.OfType<MenuItem>().Any(m => m.Header.ToString() == "삭제" && m.InputGestureText == "Delete"), "Main Edit delete command was removed.");
+        // Restore an ample file viewport after testing preview at 125% app scale.
+        // Native coordinates on a clipped row would hit the inspector, not the file list.
+        var normalScale = (ComboBox)window.FindName("UiScaleSelector");
+        normalScale.SelectedItem = normalScale.Items.OfType<ComboBoxItem>().Single(x => (int)x.Tag == 80);
+        window.Width = 1700; window.Height = 900;
+        if (preview.IsVisible) ((Button)window.FindName("MainPreviewButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await Task.Delay(200); window.UpdateLayout();
         // Native selection of the direct EIASS command must still reach its modal dialog.
         string pdf = Path.Combine(root, "검토보고서.pdf"); File.WriteAllText(pdf, "%PDF-1.4\nfixture");
         pane.RefreshCurrent(); await Until(() => files.Items.OfType<FileEntry>().Any(f => f.FullPath == pdf), "PDF menu fixture did not load.");
@@ -103,7 +110,6 @@ internal static class ContextMenuAudit
         timer.Start();
         try { await Click(menu.Items.OfType<MenuItem>().First()); await Until(() => dialogSeen, "EIASS context command did not open its dialog."); }
         finally { timer.Stop(); menu.IsOpen = false; }
-        await NavigationRecycleAudit.RunAsync(window, pane, root, output);
         Console.WriteLine("CONTEXT_MENU_PASS: native right-click, all 7 submenus, light/dark 80/125% app scale, moved preview action, EIASS entry and Edit-menu isolation");
     }
     private static IEnumerable<MenuItem> AllItems(ItemsControl owner)

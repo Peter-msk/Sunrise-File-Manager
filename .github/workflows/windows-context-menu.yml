@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build current application and focused UI host
+        id: compile
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force menu-evidence | Out-Null
@@ -21,6 +22,12 @@ jobs:
         shell: pwsh
         run: |
           dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --context-menu-only menu-evidence/ui 2>&1 | Tee-Object menu-evidence/ui.log
+          exit $LASTEXITCODE
+      - name: Exercise drive first-click and recycle Delete independently
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --navigation-recycle-only menu-evidence/navigation-recycle 2>&1 | Tee-Object menu-evidence/navigation-recycle.log
           exit $LASTEXITCODE
       - name: Build self-contained installer and check installed startup
         shell: pwsh
