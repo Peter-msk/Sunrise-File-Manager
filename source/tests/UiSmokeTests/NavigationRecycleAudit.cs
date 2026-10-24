@@ -64,59 +64,6 @@ internal static class NavigationRecycleAudit
         }
         else Console.WriteLine("REUSED_PASS: drive first-click 3 native cycles and same-folder refresh from run 40073498262; production inputs unchanged");
 
-        // Only this uniquely named synthetic item is recycled; never empty the bin.
-        string name = "sunrise-delete-key-" + Guid.NewGuid().ToString("N") + ".txt";
-        string path = Path.Combine(root, name); File.WriteAllText(path, "synthetic recycle keyboard fixture");
-        FileActionsService.Recycle(path);
-        bool IsFixture(FileEntry item) => item.Name == name || item.Name == Path.GetFileNameWithoutExtension(name);
-        pane.SyncToFolder(WindowsKnownLocations.RecycleBin);
-        await Until(() => pane.IsRecycleBin && files.Items.OfType<FileEntry>().Any(IsFixture), "Recycled fixture not visible.");
-        // Shell display names follow the Windows extension preference; identity does not.
-        string fixtureIdentity = files.Items.OfType<FileEntry>().Single(IsFixture).FullPath;
-        foreach (bool approve in new[] { false, true })
-        {
-            var entry = files.Items.OfType<FileEntry>().Single(f => f.FullPath == fixtureIdentity);
-            files.SelectedItem = entry; files.ScrollIntoView(entry); files.Focus();
-            bool confirmation = false, resultSeen = false;
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
-            timer.Tick += (_, _) =>
-            {
-                nint ask = FindWindow("#32770", "휴지통 영구 삭제");
-                if (ask != 0 && !confirmation)
-                {
-                    confirmation = true; NativeUiRegression.CaptureDesktop(Path.Combine(output, approve ? "recycle-delete-confirm.png" : "recycle-delete-cancel.png"));
-                    PostMessage(ask, 0x111, approve ? 6 : 7, 0);
-                }
-                nint result = FindWindow("#32770", "휴지통 영구 삭제 요청 결과");
-                if (result != 0) { resultSeen = true; PostMessage(result, 0x111, 1, 0); }
-                // Windows may ask for an additional Shell confirmation for this one selected fixture.
-                if (approve && confirmation)
-                    foreach (string title in new[] { "Delete File", "Delete Item", "Delete Multiple Items" })
-                    { nint shell = FindWindow("#32770", title); if (shell != 0) PostMessage(shell, 0x111, 6, 0); }
-            };
-            timer.Start();
-            try
-            {
-                keybd_event(0x2E, 0, 0, 0); keybd_event(0x2E, 0, 2, 0);
-                await Until(() => confirmation, "Native Delete key failed to reach recycle confirmation.");
-                if (!approve)
-                {
-                    await Task.Delay(150); var listing = await RecycleBinService.ReadAsync(default);
-                    Check(listing.Entries.Any(e => e.FullPath == fixtureIdentity), "Cancel deleted the recycle fixture.");
-                }
-                else
-                {
-                    await Until(() => resultSeen, "Approved Delete did not finish its Shell request.");
-                    bool gone = false;
-                    for (int i = 0; i < 30; i++)
-                    { var listing = await RecycleBinService.ReadAsync(default); gone = !listing.Entries.Any(e => e.FullPath == fixtureIdentity); if (gone) break; await Task.Delay(100); }
-                    Check(gone, "Approved native Delete did not remove its uniquely selected recycle item.");
-
-                }
-            }
-            finally { timer.Stop(); }
-        }
-        Check(!File.Exists(path), "Recycle deletion unexpectedly restored the source file.");
-        Console.WriteLine("RECYCLE_DELETE_KEY_PASS: native Delete opens confirmation; No preserves item; Yes removes ONLY synthetic selected item");
+        await RecycleBatchAudit.RunAsync(window, pane, root, output);
     }
 }

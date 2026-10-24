@@ -81,7 +81,7 @@ internal static class RecycleBatchAudit
         Invoke(pane, title);
         await Until(() => seen && !Busy(pane), "Native properties window did not appear/finish: " + title);
     }
-    private static void CheckNativeMenu(Action show, string output, string name)
+    private static async Task CheckNativeMenuAsync(Action show, string output, string name, ExplorerPane? pane = null)
     {
         bool seen = false;
         using var timer = new System.Threading.Timer(_ => EnumWindows((hwnd, _) =>
@@ -93,7 +93,7 @@ internal static class RecycleBatchAudit
             }
             return true;
         }, 0), null, 50, 80);
-        show(); Check(seen, "Native menu did not appear: " + name);
+        show(); await Until(() => seen && (pane is null || !Busy(pane)), "Native menu did not appear/finish: " + name);
     }
     internal static async Task RunAsync(MainWindow window, ExplorerPane pane, string root, string output)
     {
@@ -182,15 +182,15 @@ internal static class RecycleBatchAudit
         await CheckPropertiesAsync(pane, "휴지통 속성·설정…", output, "recycle-bin-properties");
         await Until(() => files.Items.Count == 1, "Bin property refresh failed.");
         Select(files, files.Items.OfType<FileEntry>().Select(e => e.FullPath).ToArray());
-        CheckNativeMenu(() => Invoke(pane, "Windows 기본 메뉴…"), output, "recycle-native-menu");
+        await CheckNativeMenuAsync(() => Invoke(pane, "Windows 기본 메뉴…"), output, "recycle-native-menu", pane);
         string ordinary = Path.Combine(group, "normal-menu.txt"); File.WriteAllText(ordinary, "normal menu regression");
-        CheckNativeMenu(() => WindowsShellContextMenu.Show(window, new[] { ordinary }), output, "normal-native-menu");
+        await CheckNativeMenuAsync(() => WindowsShellContextMenu.Show(window, new[] { ordinary }), output, "normal-native-menu");
         Console.WriteLine("NATIVE_PROPERTIES_AND_MENUS_PASS: actual recycle item/bin property windows, native recycle and ordinary file context menus");
         // Restore to another location through the Windows clipboard, including its recycle identity.
         await Until(() => files.Items.Count == 1, "Cut fixture missing after native menu refresh.");
         Select(files, files.Items.OfType<FileEntry>().Select(e => e.FullPath).ToArray());
         keybd_event(0x11, 0, 0, 0); Key(0x58); keybd_event(0x11, 0, 2, 0);
-        Check(Clipboard.ContainsData("Shell IDList Array"), "Native recycle cut did not preserve Shell clipboard identities.");
+        await Until(() => Clipboard.ContainsData("Shell IDList Array") && !Busy(pane), "Native recycle cut did not preserve Shell clipboard identities.");
         string alternate = Path.Combine(group, "alternate-restore"); Directory.CreateDirectory(alternate);
         pane.SyncToFolder(alternate); await Until(() => pane.ActiveFolder == alternate && files.Items.Count == 0, "Paste destination failed.");
         files.Focus(); keybd_event(0x11, 0, 0, 0); Key(0x56); keybd_event(0x11, 0, 2, 0);

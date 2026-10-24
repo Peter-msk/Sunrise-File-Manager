@@ -9,18 +9,7 @@ public static class RecycleBinService
 {
     private static string Key(string identity) => "recycle-item:" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(identity));
     private static Task<T> Sta<T>(Func<T> action, CancellationToken token)
-    {
-        var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var thread = new Thread(() =>
-        {
-            try { token.ThrowIfCancellationRequested(); completion.TrySetResult(action()); }
-            catch (OperationCanceledException) { completion.TrySetCanceled(token); }
-            catch (Exception ex) { completion.TrySetException(ex); }
-        }) { IsBackground = true, Name = "Sunrise Recycle Shell" };
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        return completion.Task;
-    }
+        => WindowsShellApartment.RunAsync(action, token);
     public static Task<ListingResult> ReadAsync(CancellationToken token) => Sta(() =>
     {
         object? shell = null, folder = null, items = null;
@@ -88,17 +77,21 @@ public static class RecycleBinService
         finally { Marshal.FreeCoTaskMem(root); }
     }, CancellationToken.None);
 
-    public static void ShowWindowsMenu(System.Windows.Window owner, IReadOnlyList<string> keys)
-        => WithSelection(keys, CancellationToken.None, (pidls, missing) =>
+    public static async Task ShowWindowsMenuAsync(System.Windows.Window owner, IReadOnlyList<string> keys)
+    {
+        // Only owned native PIDL copies cross apartments. Automation objects stay on the worker.
+        IntPtr[] selected = await Sta(() => WithSelection(keys, CancellationToken.None, (pidls, missing) =>
+            pidls.Select(ILCloneFull).ToArray()), CancellationToken.None);
+        try
         {
-            if (pidls.Count == 0) throw new IOException("선택한 휴지통 항목을 찾을 수 없습니다. 새로 고침하세요.");
-            WindowsShellContextMenu.ShowItems(owner, pidls);
-            return true;
-        });
-
-    public static bool CutToClipboard(IReadOnlyList<string> keys, IntPtr owner)
-        => WithSelection(keys, CancellationToken.None, (pidls, missing) =>
-            pidls.Count > 0 && WindowsShellContextMenu.InvokeItems(owner, pidls, "cut"));
+            if (selected.Length == 0) throw new IOException("선택한 휴지통 항목을 찾을 수 없습니다. 새로 고침하세요.");
+            WindowsShellContextMenu.ShowItems(owner, selected);
+        }
+        finally { foreach (IntPtr pidl in selected) Marshal.FreeCoTaskMem(pidl); }
+    }
+    public static Task<bool> CutToClipboardAsync(IReadOnlyList<string> keys, IntPtr owner)
+        => Sta(() => WithSelection(keys, CancellationToken.None, (pidls, missing) =>
+            pidls.Count > 0 && WindowsShellContextMenu.InvokeItems(owner, pidls, "cut")), CancellationToken.None);
 
     public static Task<bool> PasteShellClipboardAsync(string destination, IntPtr owner) => Sta(() =>
     {
@@ -161,6 +154,7 @@ public static class RecycleBinService
         return pidl;
     }
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern int SHParseDisplayName(string path, IntPtr bind, out IntPtr pidl, uint attributes, out uint result);
+    [DllImport("shell32.dll")] private static extern IntPtr ILCloneFull(IntPtr pidl);
     [DllImport("shell32.dll")] private static extern int SHGetIDListFromObject([MarshalAs(UnmanagedType.IUnknown)] object value, out IntPtr pidl);
     [DllImport("shell32.dll")] private static extern int SHGetKnownFolderIDList(ref Guid id, uint flags, IntPtr token, out IntPtr pidl);
     [DllImport("shell32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool ILIsParent(IntPtr parent, IntPtr child, [MarshalAs(UnmanagedType.Bool)] bool immediate);

@@ -12,9 +12,7 @@ public static class WindowsCollectionsService
     // Shell.Application automation may share RCWs with RecycleBinService.
     // Keep lifetime under CLR ownership so this query cannot invalidate another pane's refresh.
     public static Task<IReadOnlyList<ShellLocation>> ReadAsync(string location, CancellationToken token)
-    {
-        var completion = new TaskCompletionSource<IReadOnlyList<ShellLocation>>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var thread = new Thread(() =>
+        => WindowsShellApartment.RunAsync(() =>
         {
             object? shell = null, folder = null, items = null;
             try
@@ -56,15 +54,10 @@ public static class WindowsCollectionsService
                         .Select(g => new ShellLocation($"최근 파일이 많은 폴더 · 파일 {g.Count()}개 · {System.IO.Path.GetFileName(g.Key)}", g.Key, true));
                     rows = frequent.Concat(rows).ToList();
                 }
-                completion.TrySetResult(rows);
+                return (IReadOnlyList<ShellLocation>)rows;
             }
-            catch (OperationCanceledException) { completion.TrySetCanceled(token); }
-            catch (Exception ex) { completion.TrySetException(ex); }
             finally { GC.KeepAlive(items); GC.KeepAlive(folder); GC.KeepAlive(shell); }
-        }) { IsBackground = true, Name = "Sunrise Windows Locations" };
-        thread.SetApartmentState(ApartmentState.STA); thread.Start();
-        return completion.Task;
-    }
+        }, token);
     public static void ConnectDrive(IntPtr hwnd)
     {
         int result = WNetConnectionDialog(hwnd, 1);

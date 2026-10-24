@@ -119,25 +119,24 @@ public partial class ExplorerPane
     }
     private async void RecycleBinProperties_Click(object sender, RoutedEventArgs e) =>
         await RunRecycleActionAsync("휴지통 속성", async owner => { await RecycleBinService.BinPropertiesAsync(owner); }, changesFiles: false);
-    private void RecycleWindowsMenu_Click(object sender, RoutedEventArgs e)
+    private async void RecycleWindowsMenu_Click(object sender, RoutedEventArgs e)
     {
         string[] selected = RecycleSelection();
         if (!IsRecycleBin || !_actionsEnabled || _restoringRecycle || selected.Length == 0 || BeforeFileChange?.Invoke() == false) return;
         _restoringRecycle = true; BlockingFileActionChanged?.Invoke(true);
-        try { RecycleBinService.ShowWindowsMenu(Window.GetWindow(this), selected); FileActionCompleted?.Invoke(); RefreshCurrent(); }
+        try { await RecycleBinService.ShowWindowsMenuAsync(Window.GetWindow(this), selected); FileActionCompleted?.Invoke(); RefreshCurrent(); }
         catch (Exception ex) { MessageBox.Show(Window.GetWindow(this), ex.Message, "Windows 휴지통 메뉴", MessageBoxButton.OK, MessageBoxImage.Warning); }
         finally { _restoringRecycle = false; BlockingFileActionChanged?.Invoke(false); }
     }
-    private void CutRecycle_Click(object sender, RoutedEventArgs e)
+    private async void CutRecycle_Click(object sender, RoutedEventArgs e)
     {
         string[] selected = RecycleSelection();
         if (!IsRecycleBin || !_actionsEnabled || _restoringRecycle || selected.Length == 0) return;
-        try
+        await RunRecycleActionAsync("휴지통 잘라내기", async owner =>
         {
-            if (RecycleBinService.CutToClipboard(selected, RecycleOwner))
+            if (await RecycleBinService.CutToClipboardAsync(selected, owner))
                 FooterText.Text = $"{selected.Length:N0}개 항목 잘라내기 준비 — 복원할 폴더에서 붙여넣기 하세요.";
-        }
-        catch (Exception ex) { MessageBox.Show(Window.GetWindow(this), ex.Message, "휴지통 잘라내기", MessageBoxButton.OK, MessageBoxImage.Warning); }
+        }, changesFiles: false);
     }
     private void OpenNativeRecycle_Click(object sender, RoutedEventArgs e)
     {
