@@ -1,0 +1,47 @@
+name: Windows context menu verification
+on:
+  push:
+    branches: [codex/context-menu-1.5.5]
+permissions:
+  contents: read
+jobs:
+  menu:
+    runs-on: windows-2025
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build current application and focused UI host
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force menu-evidence | Out-Null
+          if (Get-Command Set-DisplayResolution -ErrorAction SilentlyContinue) { Set-DisplayResolution -Width 1920 -Height 1080 -Force }
+          dotnet build source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release -warnaserror 2>&1 | Tee-Object menu-evidence/build.log
+          exit $LASTEXITCODE
+      - name: Exercise grouped context menus through native mouse input
+        shell: pwsh
+        run: |
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --context-menu-only menu-evidence/ui 2>&1 | Tee-Object menu-evidence/ui.log
+          exit $LASTEXITCODE
+      - name: Build self-contained installer and check installed startup
+        shell: pwsh
+        run: |
+          cmd /d /c BUILD_ON_WINDOWS_COMPANY.cmd 2>&1 | Tee-Object menu-evidence/company-build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $setup = Join-Path $PWD 'dist/Sunrise_File_Manager_1.5.5_Setup.exe'
+          $target = Join-Path $env:RUNNER_TEMP ('SunriseMenuInstall_' + [guid]::NewGuid().ToString('N'))
+          $p = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',"/DIR=$target") -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw 'Setup failed.' }
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --packaged-smoke (Join-Path $target 'Sunrise.FileManager.exe') menu-evidence/installed 2>&1 | Tee-Object menu-evidence/installed.log
+          $smoke = $LASTEXITCODE
+          $uninstaller = Get-ChildItem $target -Filter 'unins*.exe' | Select-Object -First 1
+          $p = Start-Process $uninstaller.FullName -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw 'Uninstall failed.' }
+          exit $smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-context-menu
+          path: |
+            menu-evidence
+            build-logs
+          retention-days: 14
