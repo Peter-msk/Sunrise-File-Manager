@@ -68,7 +68,7 @@ public partial class ExplorerPane
     private async Task RunRecycleActionAsync(string title, Func<IntPtr, Task> action, bool changesFiles = true)
     {
         if (!IsRecycleBin || !_actionsEnabled || _restoringRecycle || (changesFiles && BeforeFileChange?.Invoke() == false)) return;
-        string location = CurrentLocation;
+        string? location = CurrentLocation;
         _restoringRecycle = true; BlockingFileActionChanged?.Invoke(true);
         try
         {
