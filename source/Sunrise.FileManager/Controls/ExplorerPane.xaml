@@ -46,6 +46,22 @@
      <MenuItem Header="선택 해제" InputGestureText="Esc" Click="ClearSelection_Click"/>
      <MenuItem Header="선택 반전 (현재 페이지)" Click="InvertSelection_Click"/>
     </MenuItem>
+    <MenuItem x:Name="RecycleCommandMenu" Header="휴지통(_R)" Visibility="Collapsed" SubmenuOpened="RecycleMenu_Opened">
+     <MenuItem Header="원래 위치로 복원" Tag="RecycleSelection" Click="RestoreRecycle_Click"/>
+     <MenuItem Header="영구 삭제…" Tag="RecycleSelection" InputGestureText="Delete" Click="PermanentDeleteRecycle_Click"/>
+     <MenuItem Header="속성" Tag="RecycleSelection" InputGestureText="Alt+Enter" Click="RecycleProperties_Click"/>
+     <MenuItem Header="Windows 기본 메뉴…" Tag="RecycleSelection" Click="RecycleWindowsMenu_Click"/>
+     <Separator/>
+     <MenuItem Header="모든 항목 복원…" Click="RestoreAllRecycle_Click"/>
+     <MenuItem Header="휴지통 비우기…" Click="EmptyRecycle_Click"/>
+     <Separator/>
+     <MenuItem Header="모두 선택" InputGestureText="Ctrl+A" Click="SelectAll_Click"/>
+     <MenuItem Header="선택 반전" Click="InvertSelection_Click"/>
+     <MenuItem Header="선택 해제" Click="ClearSelection_Click"/>
+     <MenuItem Header="새로 고침" InputGestureText="F5" Click="Refresh_Click"/>
+     <MenuItem Header="휴지통 속성·설정…" Click="RecycleBinProperties_Click"/>
+     <MenuItem Header="Windows 휴지통 열기" Click="OpenNativeRecycle_Click"/>
+    </MenuItem>
     <MenuItem Header="보기(_V)">
      <MenuItem Header="현재 폴더 고급 필터…" Click="AdvancedFilter_Click"/>
      <MenuItem Header="검색 범위">

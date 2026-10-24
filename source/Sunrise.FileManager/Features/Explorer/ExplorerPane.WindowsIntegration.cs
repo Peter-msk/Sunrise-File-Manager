@@ -115,6 +115,7 @@ public partial class ExplorerPane
     }
     private void WindowsMenu_Click(object sender, RoutedEventArgs e)
     {
+        if (IsRecycleBin) { RecycleWindowsMenu_Click(sender, e); return; }
         if (!_actionsEnabled || BeforeFileChange?.Invoke() == false) return;
         try { WindowsShellContextMenu.Show(Window.GetWindow(this), SelectedPaths); RefreshCurrent(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or COMException or System.ComponentModel.Win32Exception)

@@ -758,7 +758,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void ContextProperties_Click(object sender, RoutedEventArgs e)
     {
-        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
+        if (IsRecycleBin) { RecycleProperties_Click(sender, e); return; }
         string? targetPath = (FilesGrid.SelectedItem as FileEntry)?.FullPath ?? ActiveFolder;
         if (string.IsNullOrWhiteSpace(targetPath)) return;
         try
@@ -779,7 +779,7 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void OpenWindowsExplorer_Click(object sender, RoutedEventArgs e)
     {
-        if (IsRecycleBin) { ShowRecycleItemHint(); return; }
+        if (IsRecycleBin) { OpenNativeRecycle_Click(sender, e); return; }
         string? target = (FilesGrid.SelectedItem as FileEntry)?.FullPath ?? ActiveFolder;
         if (string.IsNullOrWhiteSpace(target)) return;
         try { FileActionsService.OpenInWindowsExplorer(target); }
@@ -938,7 +938,11 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
 
     private void EiassRename_Click(object sender, RoutedEventArgs e) => ExecuteEiassRename();
     private void PermanentDelete_Click(object sender, RoutedEventArgs e) => ExecutePermanentDelete();
-    private async void Recycle_Click(object sender, RoutedEventArgs e) => await ExecuteRecycleAsync();
+    private async void Recycle_Click(object sender, RoutedEventArgs e)
+    {
+        if (IsRecycleBin) { PermanentDeleteRecycle_Click(sender, e); return; }
+        await ExecuteRecycleAsync();
+    }
 
     private void FilesGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {

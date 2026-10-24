@@ -60,51 +60,96 @@ public static class RecycleBinService
         }
         finally { Release(items); Release(folder); Release(shell); }
     }, token);
-    public static Task<RecycleRestoreResult> RestoreAsync(IReadOnlyList<string> keys, CancellationToken token)
-        => ExecuteVerbAsync(keys, token, "undelete");
-    public static Task<RecycleRestoreResult> PermanentlyDeleteAsync(IReadOnlyList<string> keys, CancellationToken token)
-        => ExecuteVerbAsync(keys, token, "delete");
-    private static Task<RecycleRestoreResult> ExecuteVerbAsync(IReadOnlyList<string> keys, CancellationToken token, string verb) => Sta(() =>
+    public static Task<RecycleRestoreResult> RestoreAsync(IReadOnlyList<string> keys, CancellationToken token, IntPtr owner = default)
+        => ExecuteVerbAsync(keys, token, "undelete", owner);
+    public static Task<RecycleRestoreResult> RestoreAllAsync(CancellationToken token, IntPtr owner = default)
+        => ExecuteVerbAsync(null, token, "undelete", owner);
+    public static Task<RecycleRestoreResult> PermanentlyDeleteAsync(IReadOnlyList<string> keys, CancellationToken token, IntPtr owner = default)
+        => ExecuteVerbAsync(keys, token, "delete", owner);
+    public static Task<RecycleRestoreResult> PropertiesAsync(IReadOnlyList<string> keys, IntPtr owner)
+        => ExecuteVerbAsync(keys, CancellationToken.None, "properties", owner);
+
+    public static Task<bool> EmptyAsync(IntPtr owner, CancellationToken token) => Sta(() =>
     {
-        var requestedKeys = keys.ToHashSet(StringComparer.Ordinal);
-        if (requestedKeys.Count > (verb == "delete" ? 100 : 20000)) throw new IOException(verb == "delete" ? "휴지통 영구 삭제는 한 번에 100개 이하를 선택하세요." : "한 번에 20,000개 이하를 선택하세요.");
+        // Native aggregate confirmation, progress and errors; no preceding duplicate app dialog.
+        int hr = SHEmptyRecycleBin(owner, null, 0);
+        if (hr is unchecked((int)0x800704C7) or unchecked((int)0x80004004)) return false;
+        Marshal.ThrowExceptionForHR(hr);
+        return true;
+    }, token);
+
+    public static Task<bool> BinPropertiesAsync(IntPtr owner) => Sta(() =>
+    {
+        IntPtr root = RecyclePidl();
+        try { return WindowsShellContextMenu.InvokeItems(owner, new[] { root }, "properties"); }
+        finally { Marshal.FreeCoTaskMem(root); }
+    }, CancellationToken.None);
+
+    public static void ShowWindowsMenu(System.Windows.Window owner, IReadOnlyList<string> keys)
+        => WithSelection(keys, CancellationToken.None, (pidls, missing) =>
+        {
+            if (pidls.Count == 0) throw new IOException("선택한 휴지통 항목을 찾을 수 없습니다. 새로 고침하세요.");
+            WindowsShellContextMenu.ShowItems(owner, pidls);
+            return true;
+        });
+
+    private static Task<RecycleRestoreResult> ExecuteVerbAsync(IReadOnlyList<string>? keys, CancellationToken token, string verb, IntPtr owner)
+        => Sta(() => WithSelection(keys, token, (pidls, missing) =>
+        {
+            bool invoked = pidls.Count > 0 && WindowsShellContextMenu.InvokeItems(owner, pidls, verb);
+            return new RecycleRestoreResult(invoked ? pidls.Count : 0, missing, Array.Empty<string>());
+        }), token);
+
+    private static T WithSelection<T>(IReadOnlyList<string>? keys, CancellationToken token, Func<IReadOnlyList<IntPtr>, int, T> action)
+    {
+        var requested = keys?.ToHashSet(StringComparer.Ordinal);
         object? shell = null, folder = null, items = null;
-        var matched = new List<object>();
-        var errors = new List<string>();
+        var pidls = new List<IntPtr>();
+        IntPtr root = RecyclePidl();
         try
         {
-            shell = Activator.CreateInstance(Type.GetTypeFromProgID("Shell.Application")!);
-            folder = ((dynamic)shell!).NameSpace(10);
-            if (folder is null) throw new IOException("휴지통을 열 수 없습니다.");
+            shell = Activator.CreateInstance(Type.GetTypeFromProgID("Shell.Application") ?? throw new IOException("Windows Shell을 사용할 수 없습니다."));
+            folder = ((dynamic)shell!).NameSpace(10) ?? throw new IOException("휴지통을 열 수 없습니다.");
             items = ((dynamic)folder).Items();
             int count = ((dynamic)items).Count;
-            for (int i = 0; i < count && matched.Count < requestedKeys.Count; i++)
+            // Resolve opaque keys against the live namespace immediately before the single batch.
+            // A display-name match or a physical filesystem PIDL is never an acceptable substitute.
+            for (int i = 0; i < count; i++)
             {
                 token.ThrowIfCancellationRequested();
                 object? item = null;
                 try
                 {
                     item = ((dynamic)items).Item(i);
-                    if (!requestedKeys.Contains(Key((string)((dynamic)item!).Path))) continue;
-                    matched.Add(item!); item = null;
+                    if (requested is not null && !requested.Contains(Key((string)((dynamic)item!).Path))) continue;
+                    Marshal.ThrowExceptionForHR(SHGetIDListFromObject(item!, out IntPtr pidl));
+                    if (!ILIsParent(root, pidl, true))
+                    {
+                        Marshal.FreeCoTaskMem(pidl);
+                        throw new IOException("Windows 휴지통 항목 식별자를 확인하지 못했습니다. 작업을 중단했습니다.");
+                    }
+                    pidls.Add(pidl);
                 }
-                catch (COMException ex) { if (errors.Count < 20) errors.Add("목록 변경 또는 접근 제한: " + ex.Message); }
                 finally { Release(item); }
             }
-            // Snapshot COM identities before invoking verbs; each action changes the live collection.
-            int requested = 0;
-            foreach (object item in matched)
-            {
-                token.ThrowIfCancellationRequested();
-                try { ((dynamic)item).InvokeVerb(verb); requested++; }
-                catch (COMException ex) { if (errors.Count < 20) errors.Add("Windows Shell 작업 실패: " + ex.Message); }
-            }
-            return new RecycleRestoreResult(requested, requestedKeys.Count - matched.Count, errors);
+            token.ThrowIfCancellationRequested();
+            return action(pidls, requested is null ? 0 : requested.Count - pidls.Count);
         }
         finally
         {
-            foreach (object item in matched) Release(item);
+            foreach (IntPtr pidl in pidls) Marshal.FreeCoTaskMem(pidl);
+            Marshal.FreeCoTaskMem(root);
             Release(items); Release(folder); Release(shell);
         }
-    }, token);
+    }
+    private static IntPtr RecyclePidl()
+    {
+        Guid id = new("B7534046-3ECB-4C18-BE4E-64CD4CB7D6AC");
+        Marshal.ThrowExceptionForHR(SHGetKnownFolderIDList(ref id, 0, IntPtr.Zero, out IntPtr pidl));
+        return pidl;
+    }
+    [DllImport("shell32.dll")] private static extern int SHGetIDListFromObject([MarshalAs(UnmanagedType.IUnknown)] object value, out IntPtr pidl);
+    [DllImport("shell32.dll")] private static extern int SHGetKnownFolderIDList(ref Guid id, uint flags, IntPtr token, out IntPtr pidl);
+    [DllImport("shell32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool ILIsParent(IntPtr parent, IntPtr child, [MarshalAs(UnmanagedType.Bool)] bool immediate);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern int SHEmptyRecycleBin(IntPtr owner, string? root, uint flags);
 }

@@ -15,6 +15,21 @@ public static class WindowsShellContextMenu
         if (paths.Any(p => !string.Equals(Path.GetDirectoryName(p), parentPath, StringComparison.OrdinalIgnoreCase)))
             throw new IOException("Windows 메뉴는 같은 폴더의 항목을 선택한 경우에 지원합니다.");
         var pidls = new List<IntPtr>();
+        try
+        {
+            foreach (string path in paths)
+            {
+                Marshal.ThrowExceptionForHR(SHParseDisplayName(path, IntPtr.Zero, out IntPtr pidl, 0, out _));
+                pidls.Add(pidl);
+            }
+            ShowItems(owner, pidls);
+        }
+        finally { foreach (IntPtr pidl in pidls) Marshal.FreeCoTaskMem(pidl); }
+    }
+
+    // PIDLs are borrowed for this synchronous call, never reconstructed from physical recycle paths.
+    internal static void ShowItems(Window owner, IReadOnlyList<IntPtr> pidls)
+    {
         IShellFolder? folder = null;
         object? context = null;
         IntPtr menu = IntPtr.Zero;
@@ -23,11 +38,6 @@ public static class WindowsShellContextMenu
         IntPtr hwnd = new WindowInteropHelper(owner).Handle;
         try
         {
-            foreach (string path in paths)
-            {
-                Marshal.ThrowExceptionForHR(SHParseDisplayName(path, IntPtr.Zero, out IntPtr pidl, 0, out _));
-                pidls.Add(pidl);
-            }
             Guid folderId = typeof(IShellFolder).GUID;
             Marshal.ThrowExceptionForHR(SHBindToParent(pidls[0], ref folderId, out folder, out _));
             IntPtr[] children = pidls.Select(ILFindLastID).ToArray();
@@ -66,7 +76,40 @@ public static class WindowsShellContextMenu
             if (menu != IntPtr.Zero) DestroyMenu(menu);
             if (context is not null) Marshal.FinalReleaseComObject(context);
             if (folder is not null) Marshal.FinalReleaseComObject(folder);
-            foreach (IntPtr pidl in pidls) Marshal.FreeCoTaskMem(pidl);
+        }
+    }
+
+    internal static bool InvokeItems(IntPtr hwnd, IReadOnlyList<IntPtr> pidls, string verb)
+    {
+        if (pidls.Count == 0) return false;
+        IShellFolder? folder = null; object? context = null;
+        IntPtr menu = IntPtr.Zero, verbPtr = IntPtr.Zero;
+        try
+        {
+            Guid folderId = typeof(IShellFolder).GUID;
+            Marshal.ThrowExceptionForHR(SHBindToParent(pidls[0], ref folderId, out folder, out _));
+            Guid contextId = typeof(IContextMenu).GUID;
+            Marshal.ThrowExceptionForHR(folder.GetUIObjectOf(hwnd, (uint)pidls.Count,
+                pidls.Select(ILFindLastID).ToArray(), ref contextId, IntPtr.Zero, out context));
+            var commands = (IContextMenu)context;
+            menu = CreatePopupMenu();
+            if (menu == IntPtr.Zero) throw new System.ComponentModel.Win32Exception();
+            Marshal.ThrowExceptionForHR(commands.QueryContextMenu(menu, 0, 1, 0x7FFF, 0));
+            verbPtr = Marshal.StringToCoTaskMemAnsi(verb);
+            var info = new CommandInfo { Size = Marshal.SizeOf<CommandInfo>(), Window = hwnd, Verb = verbPtr, Show = 1 };
+            // One invocation owns the complete selection. Windows owns its aggregate confirmation,
+            // conflict/error UI and operation. Never invoke a delete verb in an item loop.
+            int hr = commands.InvokeCommand(ref info);
+            if (hr is unchecked((int)0x800704C7) or unchecked((int)0x80004004)) return false;
+            Marshal.ThrowExceptionForHR(hr);
+            return true;
+        }
+        finally
+        {
+            if (verbPtr != IntPtr.Zero) Marshal.FreeCoTaskMem(verbPtr);
+            if (menu != IntPtr.Zero) DestroyMenu(menu);
+            if (context is not null) Marshal.FinalReleaseComObject(context);
+            if (folder is not null) Marshal.FinalReleaseComObject(folder);
         }
     }
 
