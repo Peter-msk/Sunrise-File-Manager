@@ -154,7 +154,7 @@ public static class RecycleBinService
         return pidl;
     }
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern int SHParseDisplayName(string path, IntPtr bind, out IntPtr pidl, uint attributes, out uint result);
-    [DllImport("shell32.dll")] private static extern IntPtr ILCloneFull(IntPtr pidl);
+    [DllImport("shell32.dll", EntryPoint = "ILClone")] private static extern IntPtr ILCloneFull(IntPtr pidl);
     [DllImport("shell32.dll")] private static extern int SHGetIDListFromObject([MarshalAs(UnmanagedType.IUnknown)] object value, out IntPtr pidl);
     [DllImport("shell32.dll")] private static extern int SHGetKnownFolderIDList(ref Guid id, uint flags, IntPtr token, out IntPtr pidl);
     [DllImport("shell32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool ILIsParent(IntPtr parent, IntPtr child, [MarshalAs(UnmanagedType.Bool)] bool immediate);
