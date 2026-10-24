@@ -270,6 +270,15 @@ internal static class Program
             finally
             {
                 File.WriteAllText(Path.Combine(output, "UI_RESULT.json"), JsonSerializer.Serialize(new { status = error is null ? "PASS" : "FAIL", checks, error }, new JsonSerializerOptions { WriteIndented = true }));
+                if (contextMenuOnly || navigationRecycleOnly)
+                {
+                    // Focused source-UI assertions can finish inside a modal Windows
+                    // message loop. Do not reenter the product close guard from that loop.
+                    // Normal app shutdown is checked separately on the installed EXE.
+                    timeout.Dispose();
+                    try { Directory.Delete(root, true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+                    Environment.Exit(error is null ? 0 : 1);
+                }
                 window.Close(); app.Shutdown(error is null ? 0 : 1);
             }
         };
