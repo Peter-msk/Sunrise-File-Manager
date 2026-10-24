@@ -87,9 +87,11 @@ internal static class ContextMenuAudit
         // Native selection of the direct EIASS command must still reach its modal dialog.
         string pdf = Path.Combine(root, "검토보고서.pdf"); File.WriteAllText(pdf, "%PDF-1.4\nfixture");
         pane.RefreshCurrent(); await Until(() => files.Items.OfType<FileEntry>().Any(f => f.FullPath == pdf), "PDF menu fixture did not load.");
+        await Task.Delay(850); // Wait for the fixture creation watcher refresh before native menu input.
         var pdfEntry = files.Items.OfType<FileEntry>().Single(f => f.FullPath == pdf);
         files.ScrollIntoView(pdfEntry); files.UpdateLayout();
         await Click((DataGridRow)files.ItemContainerGenerator.ContainerFromItem(pdfEntry), true);
+        await Until(() => menu.IsOpen && menu.Items.OfType<MenuItem>().First().IsVisible, "PDF right-click menu did not open.");
         bool dialogSeen = false;
         var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
         timer.Tick += (_, _) =>
