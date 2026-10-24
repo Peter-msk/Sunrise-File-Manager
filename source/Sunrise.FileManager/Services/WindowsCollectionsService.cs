@@ -9,6 +9,8 @@ public sealed record ShellLocation(string Name, string Path, bool IsFolder, bool
 }
 public static class WindowsCollectionsService
 {
+    // Shell.Application automation may share RCWs with RecycleBinService.
+    // Keep lifetime under CLR ownership so this query cannot invalidate another pane's refresh.
     public static Task<IReadOnlyList<ShellLocation>> ReadAsync(string location, CancellationToken token)
     {
         var completion = new TaskCompletionSource<IReadOnlyList<ShellLocation>>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -44,7 +46,7 @@ public static class WindowsCollectionsService
                             !File.Exists(path) && !Directory.Exists(path) || path.EndsWith(".library-ms", StringComparison.OrdinalIgnoreCase)));
                     }
                     catch (Exception ex) when (ex is COMException or IOException or UnauthorizedAccessException) { }
-                    finally { Release(link); Release(item); }
+                    finally { GC.KeepAlive(link); GC.KeepAlive(item); }
                 }
                 if (location == "shell:Recent")
                 {
@@ -58,12 +60,11 @@ public static class WindowsCollectionsService
             }
             catch (OperationCanceledException) { completion.TrySetCanceled(token); }
             catch (Exception ex) { completion.TrySetException(ex); }
-            finally { Release(items); Release(folder); Release(shell); }
+            finally { GC.KeepAlive(items); GC.KeepAlive(folder); GC.KeepAlive(shell); }
         }) { IsBackground = true, Name = "Sunrise Windows Locations" };
         thread.SetApartmentState(ApartmentState.STA); thread.Start();
         return completion.Task;
     }
-    private static void Release(object? value) { if (value is not null && Marshal.IsComObject(value)) Marshal.FinalReleaseComObject(value); }
     public static void ConnectDrive(IntPtr hwnd)
     {
         int result = WNetConnectionDialog(hwnd, 1);

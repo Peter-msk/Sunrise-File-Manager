@@ -49,6 +49,8 @@ internal static class RecycleBatchAudit
                 var cls = new StringBuilder(100); GetClassName(hwnd, cls, cls.Capacity);
                 if (!IsWindowVisible(hwnd) || cls.ToString() != "#32770") return true;
                 string title = Text(hwnd);
+                // The hosted VM can display an unrelated boot-time paging-file notice.
+                if (title == "System Properties") { PostMessage(hwnd, 0x111, 1, 0); return true; }
                 if (!seen.Add(hwnd)) return true;
                 string details = title;
                 EnumChildWindows(hwnd, (child, _) => { details += " | " + Text(child); return true; }, 0);
@@ -68,7 +70,7 @@ internal static class RecycleBatchAudit
         bool seen = false;
         using var timer = new System.Threading.Timer(_ => EnumWindows((hwnd, _) =>
         {
-            if (IsWindowVisible(hwnd) && Text(hwnd).Contains("Properties", StringComparison.OrdinalIgnoreCase))
+            if (IsWindowVisible(hwnd) && Text(hwnd) != "System Properties" && Text(hwnd).EndsWith(" Properties", StringComparison.OrdinalIgnoreCase))
             {
                 seen = true;
                 NativeUiRegression.CaptureDesktop(Path.Combine(output, name + ".png"));
@@ -127,6 +129,9 @@ internal static class RecycleBatchAudit
             Check(result.Entries.Count(e => selected.Contains(e.FullPath)) == (approve ? 0 : 103), "Cancel/approve batch result is incorrect.");
             await Until(() => files.Items.Count == (approve ? 1 : 104), "UI did not refresh the actual batch result.");
         }
+        for (int i = 0; i < 3; i++)
+            await Task.WhenAll(RecycleBinService.ReadAsync(default), WindowsCollectionsService.ReadAsync("shell:Recent", default));
+        Console.WriteLine("SHELL_CONCURRENT_READ_PASS: recycle refresh and Windows recent-items enumeration");
         Console.WriteLine("BATCH_DELETE_PASS: 103 items, one native confirmation per action, cancel preserves all, approve removes selected only, unselected guard survives");
 
         // Same names from different original folders plus a folder with its child.
