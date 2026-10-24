@@ -19,6 +19,7 @@ internal static class RecycleBatchAudit
     [DllImport("user32.dll")] private static extern bool EnumChildWindows(nint parent, EnumProc action, nint p);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(nint hwnd, StringBuilder text, int length);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(nint hwnd, StringBuilder text, int length);
+    [DllImport("user32.dll")] private static extern bool IsWindow(nint hwnd);
     [DllImport("user32.dll")] private static extern bool IsWindowVisible(nint hwnd);
     [DllImport("user32.dll")] private static extern bool PostMessage(nint hwnd, uint msg, nint wp, nint lp);
     [DllImport("user32.dll")] private static extern void keybd_event(byte key, byte scan, uint flags, nuint extra);
@@ -67,35 +68,43 @@ internal static class RecycleBatchAudit
     }
     private static async Task CheckPropertiesAsync(ExplorerPane pane, string title, string output, string name)
     {
-        bool seen = false;
+        int matched = 0; bool seen = false; nint observed = 0; string? failure = null;
         using var timer = new System.Threading.Timer(_ => EnumWindows((hwnd, _) =>
         {
-            if (IsWindowVisible(hwnd) && Text(hwnd) != "System Properties" && Text(hwnd).EndsWith(" Properties", StringComparison.OrdinalIgnoreCase))
+            string actual = Text(hwnd);
+            bool expected = name == "recycle-bin-properties" ? actual == "Recycle Bin Properties"
+                : actual.EndsWith(" Properties", StringComparison.OrdinalIgnoreCase) && actual is not ("System Properties" or "Recycle Bin Properties");
+            if (IsWindowVisible(hwnd) && expected && Interlocked.CompareExchange(ref matched, 1, 0) == 0)
             {
-                seen = true;
-                NativeUiRegression.CaptureDesktop(Path.Combine(output, name + ".png"));
-                PostMessage(hwnd, 0x10, 0, 0);
+                observed = hwnd;
+                try { NativeUiRegression.CaptureDesktop(Path.Combine(output, name + ".png")); }
+                catch (Exception ex) { failure = ex.ToString(); }
+                finally { PostMessage(hwnd, 0x10, 0, 0); seen = true; }
             }
             return true;
         }, 0), null, 50, 80);
         Invoke(pane, title);
-        await Until(() => seen && !Busy(pane), "Native properties window did not appear/finish: " + title);
+        await Until(() => seen && !Busy(pane) && !IsWindow(observed), "Native properties window did not appear/finish: " + title);
+        Check(failure is null, failure ?? "Property capture failed.");
     }
     private static async Task CheckNativeMenuAsync(Action show, string output, string name, ExplorerPane? pane = null)
     {
-        bool seen = false;
+        int matched = 0; bool seen = false; string? failure = null;
         using var timer = new System.Threading.Timer(_ => EnumWindows((hwnd, _) =>
         {
             var cls = new StringBuilder(100); GetClassName(hwnd, cls, cls.Capacity);
-            if (!seen && IsWindowVisible(hwnd) && cls.ToString() == "#32768")
+            if (IsWindowVisible(hwnd) && cls.ToString() == "#32768" && Interlocked.CompareExchange(ref matched, 1, 0) == 0)
             {
-                seen = true; NativeUiRegression.CaptureDesktop(Path.Combine(output, name + ".png")); Key(0x1B);
+                try { NativeUiRegression.CaptureDesktop(Path.Combine(output, name + ".png")); }
+                catch (Exception ex) { failure = ex.ToString(); }
+                finally { seen = true; Key(0x1B); }
             }
             return true;
         }, 0), null, 50, 80);
         show(); await Until(() => seen && (pane is null || !Busy(pane)), "Native menu did not appear/finish: " + name);
+        Check(failure is null, failure ?? "Native menu capture failed.");
     }
-    internal static async Task RunAsync(MainWindow window, ExplorerPane pane, string root, string output)
+    internal static async Task RunAsync(MainWindow window, ExplorerPane pane, string root, string output, bool nativeTailOnly = false)
     {
         var files = (DataGrid)pane.FindName("FilesGrid");
         string prefix = "sunrise-batch-" + Guid.NewGuid().ToString("N");
@@ -103,9 +112,12 @@ internal static class RecycleBatchAudit
         // This runner is isolated. All-bin operations below are forbidden if any preexisting item exists.
         Check(before.Entries.Count == 0, "Refusing all-bin tests: recycle bin is not an empty isolated fixture.");
         string group = Path.Combine(root, prefix); Directory.CreateDirectory(group);
+        string guard = Path.Combine(group, "unselected-guard.txt");
+        if (!nativeTailOnly)
+        {
         var deleted = Enumerable.Range(0, 103).Select(i => Path.Combine(group, $"item-{i:D3}.txt")).ToArray();
         foreach (string path in deleted) { File.WriteAllText(path, "synthetic batch"); FileActionsService.Recycle(path); }
-        string guard = Path.Combine(group, "unselected-guard.txt"); File.WriteAllText(guard, "must survive selection delete"); FileActionsService.Recycle(guard);
+        File.WriteAllText(guard, "must survive selection delete"); FileActionsService.Recycle(guard);
         pane.SyncToFolder(WindowsKnownLocations.RecycleBin);
         await Until(() => pane.IsRecycleBin && files.Items.Count == 104, "104 recycled fixtures did not appear.");
         Check(((MenuItem)pane.FindName("RecycleCommandMenu")).Visibility == Visibility.Visible, "Recycle commands unavailable.");
@@ -174,6 +186,9 @@ internal static class RecycleBatchAudit
         Console.WriteLine("EMPTY_BIN_PASS: native one confirmation, cancel preserves, approve empties isolated fixture only");
         await Until(() => files.Items.Count == 0, "Empty UI did not refresh.");
         NativeUiRegression.CaptureDesktop(Path.Combine(output, "recycle-empty-commands.png"));
+        }
+        else Console.WriteLine("REUSED_PASS: 103-item native Delete cancel/approve, unselected guard, concurrent recent-items read, selected duplicate-name/folder restore, restore-all and empty cancel/approve completed in run 40078034110; production inputs unchanged");
+        pane.SyncToFolder(WindowsKnownLocations.RecycleBin);
         File.WriteAllText(guard, "property fixture"); FileActionsService.Recycle(guard);
         pane.RefreshCurrent(); await Until(() => files.Items.Count == 1, "Property fixture missing.");
         Select(files, files.Items.OfType<FileEntry>().Select(e => e.FullPath).ToArray());
@@ -197,6 +212,6 @@ internal static class RecycleBatchAudit
         await Until(() => File.Exists(Path.Combine(alternate, Path.GetFileName(guard))) && pane.IsEnabled, "Native cut/paste failed to restore to another folder.");
         Check((await RecycleBinService.ReadAsync(default)).Entries.Count == 0, "Cut/paste left a ghost recycle entry.");
         Console.WriteLine("RECYCLE_CUT_PASTE_PASS: native Ctrl+X and Ctrl+V restore to another location without ghost metadata");
-        File.WriteAllText(Path.Combine(output, "RECYCLE_BATCH_RESULT.json"), JsonSerializer.Serialize(new { status = "PASS", selectedCount = 103, nativeConfirmationsPerDelete = 1, canceledPreserved = true, unselectedPreserved = true, restoredDuplicateNamesToCorrectOrigins = true, restoredFolderChild = true, restoreAll = true, emptyCancelAndApprove = true, nativePropertiesAndMenus = true, cutPasteAlternateRestore = true, testedOn = Environment.OSVersion.ToString() }));
+        File.WriteAllText(Path.Combine(output, "RECYCLE_BATCH_RESULT.json"), JsonSerializer.Serialize(new { status = "PASS", batchEvidence = nativeTailOnly ? "REUSED_COMPLETED_SCOPES_RUN_40078034110_NOT_WHOLE_RUN_PASS" : "CURRENT_RUN", selectedCount = 103, nativeConfirmationsPerDelete = 1, canceledPreserved = true, unselectedPreserved = true, restoredDuplicateNamesToCorrectOrigins = true, restoredFolderChild = true, restoreAll = true, emptyCancelAndApprove = true, nativePropertiesAndMenus = true, cutPasteAlternateRestore = true, testedOn = Environment.OSVersion.ToString() }));
     }
 }

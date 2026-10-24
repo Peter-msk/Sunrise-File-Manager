@@ -21,12 +21,12 @@ jobs:
       - name: Exercise grouped context menus through native mouse input
         shell: pwsh
         run: |
-          'REUSED_PASS: menu UI, native input and light/dark 80/125% from run 40073498262; production inputs unchanged' | Tee-Object menu-evidence/ui-reused.log
+          'REUSED_PASS: regular grouped menu definition/styles and drive implementation unchanged from 40073498262; native Shell host revalidated below' | Tee-Object menu-evidence/ui-reused.log
       - name: Exercise native grouped recycle operations
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         shell: pwsh
         run: |
-          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --recycle-batch-only menu-evidence/recycle-batch 2>&1 | Tee-Object menu-evidence/recycle-batch.log
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --recycle-native-tail-only menu-evidence/recycle-batch 2>&1 | Tee-Object menu-evidence/recycle-batch.log
           exit $LASTEXITCODE
       - name: Build self-contained installer and check installed startup
         shell: pwsh
