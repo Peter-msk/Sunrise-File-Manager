@@ -181,6 +181,17 @@ internal static class RecycleBatchAudit
         string ordinary = Path.Combine(group, "normal-menu.txt"); File.WriteAllText(ordinary, "normal menu regression");
         CheckNativeMenu(() => WindowsShellContextMenu.Show(window, new[] { ordinary }), output, "normal-native-menu");
         Console.WriteLine("NATIVE_PROPERTIES_AND_MENUS_PASS: actual recycle item/bin property windows, native recycle and ordinary file context menus");
-        File.WriteAllText(Path.Combine(output, "RECYCLE_BATCH_RESULT.json"), JsonSerializer.Serialize(new { status = "PASS", selectedCount = 103, nativeConfirmationsPerDelete = 1, canceledPreserved = true, unselectedPreserved = true, restoredDuplicateNamesToCorrectOrigins = true, restoredFolderChild = true, restoreAll = true, emptyCancelAndApprove = true, testedOn = Environment.OSVersion.ToString() }));
+        // Restore to another location through the Windows clipboard, including its recycle identity.
+        await Until(() => files.Items.Count == 1, "Cut fixture missing after native menu refresh.");
+        Select(files, files.Items.OfType<FileEntry>().Select(e => e.FullPath).ToArray());
+        keybd_event(0x11, 0, 0, 0); Key(0x58); keybd_event(0x11, 0, 2, 0);
+        Check(Clipboard.ContainsData("Shell IDList Array"), "Native recycle cut did not preserve Shell clipboard identities.");
+        string alternate = Path.Combine(group, "alternate-restore"); Directory.CreateDirectory(alternate);
+        pane.SyncToFolder(alternate); await Until(() => pane.ActiveFolder == alternate && files.Items.Count == 0, "Paste destination failed.");
+        files.Focus(); keybd_event(0x11, 0, 0, 0); Key(0x56); keybd_event(0x11, 0, 2, 0);
+        await Until(() => File.Exists(Path.Combine(alternate, Path.GetFileName(guard))) && pane.IsEnabled, "Native cut/paste failed to restore to another folder.");
+        Check((await RecycleBinService.ReadAsync(default)).Entries.Count == 0, "Cut/paste left a ghost recycle entry.");
+        Console.WriteLine("RECYCLE_CUT_PASTE_PASS: native Ctrl+X and Ctrl+V restore to another location without ghost metadata");
+        File.WriteAllText(Path.Combine(output, "RECYCLE_BATCH_RESULT.json"), JsonSerializer.Serialize(new { status = "PASS", selectedCount = 103, nativeConfirmationsPerDelete = 1, canceledPreserved = true, unselectedPreserved = true, restoredDuplicateNamesToCorrectOrigins = true, restoredFolderChild = true, restoreAll = true, emptyCancelAndApprove = true, nativePropertiesAndMenus = true, cutPasteAlternateRestore = true, testedOn = Environment.OSVersion.ToString() }));
     }
 }

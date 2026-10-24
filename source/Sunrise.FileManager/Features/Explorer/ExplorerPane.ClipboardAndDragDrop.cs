@@ -29,6 +29,7 @@ public partial class ExplorerPane
 
     private void PutSelectionOnClipboard(bool cut)
     {
+        if (IsRecycleBin) { if (cut) CutRecycle_Click(this, new RoutedEventArgs()); return; }
         string[] paths = SelectedPaths.ToArray();
         if (paths.Length == 0) return;
         try
@@ -53,6 +54,24 @@ public partial class ExplorerPane
         if (!_actionsEnabled || ActiveFolder is not string folder) return;
         try
         {
+            // Native Recycle cut carries Shell identities. Keep those formats with Windows;
+            // never feed physical $Recycle.Bin payloads to the ordinary path transfer engine.
+            bool shellOnly = Clipboard.ContainsData("Shell IDList Array") && !Clipboard.ContainsFileDropList();
+            bool recycledPaths = Clipboard.ContainsFileDropList() && Clipboard.GetFileDropList().Cast<string>()
+                .Any(p => p.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar })
+                    .Any(part => part.Equals("$Recycle.Bin", StringComparison.OrdinalIgnoreCase) || part.Equals("RECYCLER", StringComparison.OrdinalIgnoreCase)));
+            if (shellOnly || recycledPaths)
+            {
+                if (BeforeFileChange?.Invoke() == false) return;
+                if (recycledPaths && !Clipboard.ContainsData("Shell IDList Array"))
+                    throw new IOException("휴지통 원본 경로는 직접 이동할 수 없습니다. 휴지통에서 다시 잘라내기 하세요.");
+                BlockingFileActionChanged?.Invoke(true);
+                bool wasEnabled = IsEnabled; IsEnabled = false;
+                try { await RecycleBinService.PasteShellClipboardAsync(folder, new System.Windows.Interop.WindowInteropHelper(Window.GetWindow(this)).Handle); }
+                finally { IsEnabled = wasEnabled; BlockingFileActionChanged?.Invoke(false); }
+                if (FileActionCompleted is null) RefreshCurrent(); else FileActionCompleted.Invoke();
+                return;
+            }
             if (!Clipboard.ContainsFileDropList()) { FooterText.Text = "붙여넣을 파일이 없습니다."; return; }
             string[] paths = Clipboard.GetFileDropList().Cast<string>().ToArray();
             if (paths.Length == 0) return;
@@ -143,6 +162,10 @@ public partial class ExplorerPane
             PermanentDeleteRecycle_Click(this, e);
             e.Handled = true;
             return true;
+        }
+        if (IsRecycleBin && action == ExplorerShortcutAction.Cut)
+        {
+            CutRecycle_Click(this, e); e.Handled = true; return true;
         }
         if ((IsRecycleBin || IsThisPc) && action is ExplorerShortcutAction.Undo or ExplorerShortcutAction.Redo or
             ExplorerShortcutAction.Copy or ExplorerShortcutAction.Cut or ExplorerShortcutAction.Paste or

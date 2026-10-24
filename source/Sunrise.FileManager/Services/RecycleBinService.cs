@@ -8,7 +8,6 @@ public sealed record RecycleRestoreResult(int Requested, int Missing, IReadOnlyL
 public static class RecycleBinService
 {
     private static string Key(string identity) => "recycle-item:" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(identity));
-    private static void Release(object? value) { if (value is not null && Marshal.IsComObject(value)) Marshal.ReleaseComObject(value); }
     private static Task<T> Sta<T>(Func<T> action, CancellationToken token)
     {
         var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -54,11 +53,15 @@ public static class RecycleBinService
                     });
                 }
                 catch (Exception ex) when (ex is COMException or InvalidCastException or FormatException or OverflowException) { skipped++; }
-                finally { Release(item); }
             }
             return new ListingResult(entries, count > 20000 ? "항목이 20,000개를 초과합니다. 검색 전 일부 목록만 표시됩니다." : skipped > 0 ? $"읽을 수 없거나 조회 중 이동된 {skipped}개 항목은 표시하지 못했습니다." : null, DriveSummary: "휴지통 · 원래 위치로 복원 가능");
         }
-        finally { Release(items); Release(folder); Release(shell); }
+        finally
+        {
+            // Shell automation shares RCWs across enumerations/apartments. The CLR owns their
+            // lifetime; forcing a release can disconnect a concurrent refresh's live wrapper.
+            GC.KeepAlive(items); GC.KeepAlive(folder); GC.KeepAlive(shell);
+        }
     }, token);
     public static Task<RecycleRestoreResult> RestoreAsync(IReadOnlyList<string> keys, CancellationToken token, IntPtr owner = default)
         => ExecuteVerbAsync(keys, token, "undelete", owner);
@@ -93,6 +96,17 @@ public static class RecycleBinService
             return true;
         });
 
+    public static bool CutToClipboard(IReadOnlyList<string> keys, IntPtr owner)
+        => WithSelection(keys, CancellationToken.None, (pidls, missing) =>
+            pidls.Count > 0 && WindowsShellContextMenu.InvokeItems(owner, pidls, "cut"));
+
+    public static Task<bool> PasteShellClipboardAsync(string destination, IntPtr owner) => Sta(() =>
+    {
+        Marshal.ThrowExceptionForHR(SHParseDisplayName(destination, IntPtr.Zero, out IntPtr target, 0, out _));
+        try { return WindowsShellContextMenu.InvokeItems(owner, new[] { target }, "paste"); }
+        finally { Marshal.FreeCoTaskMem(target); }
+    }, CancellationToken.None);
+
     private static Task<RecycleRestoreResult> ExecuteVerbAsync(IReadOnlyList<string>? keys, CancellationToken token, string verb, IntPtr owner)
         => Sta(() => WithSelection(keys, token, (pidls, missing) =>
         {
@@ -118,7 +132,6 @@ public static class RecycleBinService
             {
                 token.ThrowIfCancellationRequested();
                 object? item = null;
-                try
                 {
                     item = ((dynamic)items).Item(i);
                     if (requested is not null && !requested.Contains(Key((string)((dynamic)item!).Path))) continue;
@@ -130,7 +143,6 @@ public static class RecycleBinService
                     }
                     pidls.Add(pidl);
                 }
-                finally { Release(item); }
             }
             token.ThrowIfCancellationRequested();
             return action(pidls, requested is null ? 0 : requested.Count - pidls.Count);
@@ -139,7 +151,7 @@ public static class RecycleBinService
         {
             foreach (IntPtr pidl in pidls) Marshal.FreeCoTaskMem(pidl);
             Marshal.FreeCoTaskMem(root);
-            Release(items); Release(folder); Release(shell);
+            GC.KeepAlive(items); GC.KeepAlive(folder); GC.KeepAlive(shell);
         }
     }
     private static IntPtr RecyclePidl()
@@ -148,6 +160,7 @@ public static class RecycleBinService
         Marshal.ThrowExceptionForHR(SHGetKnownFolderIDList(ref id, 0, IntPtr.Zero, out IntPtr pidl));
         return pidl;
     }
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern int SHParseDisplayName(string path, IntPtr bind, out IntPtr pidl, uint attributes, out uint result);
     [DllImport("shell32.dll")] private static extern int SHGetIDListFromObject([MarshalAs(UnmanagedType.IUnknown)] object value, out IntPtr pidl);
     [DllImport("shell32.dll")] private static extern int SHGetKnownFolderIDList(ref Guid id, uint flags, IntPtr token, out IntPtr pidl);
     [DllImport("shell32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool ILIsParent(IntPtr parent, IntPtr child, [MarshalAs(UnmanagedType.Bool)] bool immediate);

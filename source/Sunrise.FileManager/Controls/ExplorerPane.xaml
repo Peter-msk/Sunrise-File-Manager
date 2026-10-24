@@ -49,6 +49,7 @@
     <MenuItem x:Name="RecycleCommandMenu" Header="휴지통(_R)" Visibility="Collapsed" SubmenuOpened="RecycleMenu_Opened">
      <MenuItem Header="원래 위치로 복원" Tag="RecycleSelection" Click="RestoreRecycle_Click"/>
      <MenuItem Header="영구 삭제…" Tag="RecycleSelection" InputGestureText="Delete" Click="PermanentDeleteRecycle_Click"/>
+     <MenuItem Header="잘라내기" Tag="RecycleSelection" InputGestureText="Ctrl+X" Click="CutRecycle_Click"/>
      <MenuItem Header="속성" Tag="RecycleSelection" InputGestureText="Alt+Enter" Click="RecycleProperties_Click"/>
      <MenuItem Header="Windows 기본 메뉴…" Tag="RecycleSelection" Click="RecycleWindowsMenu_Click"/>
      <Separator/>

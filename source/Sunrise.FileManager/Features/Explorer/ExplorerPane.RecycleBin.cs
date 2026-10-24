@@ -24,6 +24,7 @@ public partial class ExplorerPane
             menu.Resources[typeof(MenuItem)] = FindResource("CompactContextMenuItem");
             AddRecycleCommand(menu.Items, "원래 위치로 복원", RestoreRecycle_Click, selection: true);
             AddRecycleCommand(menu.Items, "영구 삭제…", PermanentDeleteRecycle_Click, selection: true, gesture: "Delete");
+            AddRecycleCommand(menu.Items, "잘라내기", CutRecycle_Click, selection: true, gesture: "Ctrl+X");
             AddRecycleCommand(menu.Items, "속성", RecycleProperties_Click, selection: true, gesture: "Alt+Enter");
             AddRecycleCommand(menu.Items, "Windows 기본 메뉴…", RecycleWindowsMenu_Click, selection: true);
             menu.Items.Add(new Separator());
@@ -126,6 +127,17 @@ public partial class ExplorerPane
         try { RecycleBinService.ShowWindowsMenu(Window.GetWindow(this), selected); FileActionCompleted?.Invoke(); RefreshCurrent(); }
         catch (Exception ex) { MessageBox.Show(Window.GetWindow(this), ex.Message, "Windows 휴지통 메뉴", MessageBoxButton.OK, MessageBoxImage.Warning); }
         finally { _restoringRecycle = false; BlockingFileActionChanged?.Invoke(false); }
+    }
+    private void CutRecycle_Click(object sender, RoutedEventArgs e)
+    {
+        string[] selected = RecycleSelection();
+        if (!IsRecycleBin || !_actionsEnabled || _restoringRecycle || selected.Length == 0) return;
+        try
+        {
+            if (RecycleBinService.CutToClipboard(selected, RecycleOwner))
+                FooterText.Text = $"{selected.Length:N0}개 항목 잘라내기 준비 — 복원할 폴더에서 붙여넣기 하세요.";
+        }
+        catch (Exception ex) { MessageBox.Show(Window.GetWindow(this), ex.Message, "휴지통 잘라내기", MessageBoxButton.OK, MessageBoxImage.Warning); }
     }
     private void OpenNativeRecycle_Click(object sender, RoutedEventArgs e)
     {

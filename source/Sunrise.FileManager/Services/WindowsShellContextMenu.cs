@@ -74,8 +74,8 @@ public static class WindowsShellContextMenu
         {
             if (hook is not null) source?.RemoveHook(hook);
             if (menu != IntPtr.Zero) DestroyMenu(menu);
-            if (context is not null) Marshal.ReleaseComObject(context);
-            if (folder is not null) Marshal.ReleaseComObject(folder);
+            GC.KeepAlive(context);
+            GC.KeepAlive(folder);
         }
     }
 
@@ -108,8 +108,8 @@ public static class WindowsShellContextMenu
         {
             if (verbPtr != IntPtr.Zero) Marshal.FreeCoTaskMem(verbPtr);
             if (menu != IntPtr.Zero) DestroyMenu(menu);
-            if (context is not null) Marshal.ReleaseComObject(context);
-            if (folder is not null) Marshal.ReleaseComObject(folder);
+            GC.KeepAlive(context);
+            GC.KeepAlive(folder);
         }
     }
 
