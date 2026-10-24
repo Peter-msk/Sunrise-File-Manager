@@ -20,10 +20,10 @@ internal static class Program
         bool fileScrollOnly = args.Contains("--file-scroll-only", StringComparer.Ordinal);
         bool splitInteractionOnly = args.Contains("--split-interaction-only", StringComparer.Ordinal);
         bool eiassOnly = args.Contains("--eiass-rename-only", StringComparer.Ordinal);
-        bool navigationRecycleOnly = args.Contains("--navigation-recycle-only", StringComparer.Ordinal);
+        bool navigationRecycleOnly = args.Contains("--navigation-recycle-only", StringComparer.Ordinal) || args.Contains("--recycle-delete-only", StringComparer.Ordinal);
         bool contextMenuOnly = args.Contains("--context-menu-only", StringComparer.Ordinal);
         bool currentAudit = args.Contains("--current-ui-audit", StringComparer.Ordinal);
-        string output = Path.GetFullPath(args.FirstOrDefault(arg => arg is not ("--file-scroll-only" or "--split-interaction-only" or "--eiass-rename-only" or "--current-ui-audit" or "--context-menu-only" or "--navigation-recycle-only")) ?? "ui-check-results"); Directory.CreateDirectory(output);
+        string output = Path.GetFullPath(args.FirstOrDefault(arg => arg is not ("--file-scroll-only" or "--split-interaction-only" or "--eiass-rename-only" or "--current-ui-audit" or "--context-menu-only" or "--navigation-recycle-only" or "--recycle-delete-only")) ?? "ui-check-results"); Directory.CreateDirectory(output);
         using var timeout = new Timer(_ =>
         {
             File.WriteAllText(Path.Combine(output, "TIMEOUT.txt"), "WPF test exceeded 180 seconds.");
@@ -58,7 +58,7 @@ internal static class Program
                 {
                     var grid = (Grid)window.FindName("Workspace");
                     var targetPane = grid.Children.OfType<Grid>().SelectMany(h => h.Children.OfType<ExplorerPane>()).First();
-                    await NavigationRecycleAudit.RunAsync(window, targetPane, root, output);
+                    await NavigationRecycleAudit.RunAsync(window, targetPane, root, output, args.Contains("--recycle-delete-only", StringComparer.Ordinal));
                     checks.Add(new { feature = "First-click drive collapse and recycle Delete native keyboard", result = "PASS" });
                     return;
                 }

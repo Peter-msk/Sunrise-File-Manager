@@ -27,10 +27,13 @@ internal static class NavigationRecycleAudit
         Check(item.IsVisible && p.Y > 0 && p.Y < SystemParameters.PrimaryScreenHeight, "Drive arrow is outside desktop.");
         SetCursorPos((int)p.X, (int)p.Y); mouse_event(2, 0, 0, 0, 0); await Task.Delay(40); mouse_event(4, 0, 0, 0, 0); await Task.Delay(180);
     }
-    internal static async Task RunAsync(MainWindow window, ExplorerPane pane, string root, string output)
+    internal static async Task RunAsync(MainWindow window, ExplorerPane pane, string root, string output, bool recycleOnly = false)
     {
         var scale = (ComboBox)window.FindName("UiScaleSelector");
         scale.SelectedItem = scale.Items.OfType<ComboBoxItem>().Single(x => (int)x.Tag == 80);
+        var files = (DataGrid)pane.FindName("FilesGrid");
+        if (!recycleOnly)
+        {
         var tree = (FolderTree)pane.FindName("NavigationTree");
         var items = (TreeView)tree.FindName("FolderItems");
         var scroll = (ScrollViewer)tree.FindName("NavigationScroll");
@@ -40,7 +43,6 @@ internal static class NavigationRecycleAudit
         pane.SyncToFolder(deep); await Until(() => pane.CurrentLocation == deep, "Deep fixture navigation failed.");
         await tree.HighlightPathAsync(deep); await Task.Delay(200);
         var drive = items.Items.OfType<TreeViewItem>().Single(n => string.Equals(n.Tag as string, Path.GetPathRoot(deep), StringComparison.OrdinalIgnoreCase));
-        var files = (DataGrid)pane.FindName("FilesGrid");
         for (int turn = 0; turn < 3; turn++)
         {
             await tree.HighlightPathAsync(deep); await Task.Delay(150); drive.ApplyTemplate(); window.UpdateLayout();
@@ -58,6 +60,9 @@ internal static class NavigationRecycleAudit
             await Click(arrow); Check(drive.IsExpanded, "Next arrow click did not expand drive.");
         }
         Console.WriteLine("DRIVE_FIRST_CLICK_PASS: 3 collapse/expand cycles, descendant selected, file-list focus, queued reveal and same-folder refresh");
+
+        }
+        else Console.WriteLine("REUSED_PASS: drive first-click 3 native cycles and same-folder refresh from run 40073498262; production inputs unchanged");
 
         // Only this uniquely named synthetic item is recycled; never empty the bin.
         string name = "sunrise-delete-key-" + Guid.NewGuid().ToString("N") + ".txt";

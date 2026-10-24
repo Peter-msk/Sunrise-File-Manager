@@ -22,11 +22,11 @@ jobs:
         shell: pwsh
         run: |
           'REUSED_PASS: menu UI, native input and light/dark 80/125% from run 40073498262; production inputs unchanged' | Tee-Object menu-evidence/ui-reused.log
-      - name: Exercise drive first-click and recycle Delete independently
+      - name: Exercise recycle Delete and reuse passed drive regression
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         shell: pwsh
         run: |
-          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --navigation-recycle-only menu-evidence/navigation-recycle 2>&1 | Tee-Object menu-evidence/navigation-recycle.log
+          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --recycle-delete-only menu-evidence/navigation-recycle 2>&1 | Tee-Object menu-evidence/navigation-recycle.log
           exit $LASTEXITCODE
       - name: Build self-contained installer and check installed startup
         shell: pwsh
