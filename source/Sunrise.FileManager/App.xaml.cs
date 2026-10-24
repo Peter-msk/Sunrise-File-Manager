@@ -75,9 +75,33 @@ public partial class App : Application
         }
         MainWindow main = new();
         MainWindow = main;
-        main.Closed += (_, _) => Shutdown();
+        RegisterWorkspace(main);
         main.Show();
         main.ApplyControlPolicy(policy);
+    }
+
+    // Multiple top-level windows share the original process gate; each owns isolated panel/selection state.
+    // Only the first window persists session.json. The final window to close ends the process.
+    private void RegisterWorkspace(MainWindow workspace)
+    {
+        workspace.Closed += (_, _) =>
+        {
+            var remaining = Windows.OfType<MainWindow>().Where(w => !ReferenceEquals(w, workspace)).ToArray();
+            if (remaining.Length == 0) Shutdown();
+            else if (ReferenceEquals(MainWindow, workspace)) MainWindow = remaining[0];
+        };
+    }
+    internal void OpenAdditionalWindow(AppSession session, SunriseControlService.Policy policy)
+    {
+        if (Windows.OfType<MainWindow>().Count() >= 4)
+        {
+            MessageBox.Show("독립 창은 최대 4개까지 열 수 있습니다.", "새 창");
+            return;
+        }
+        var secondary = new MainWindow(session);
+        RegisterWorkspace(secondary);
+        secondary.Show();
+        secondary.ApplyControlPolicy(policy);
     }
 
     private static async Task<SunriseReleaseService.Release?> TryReleaseAsync()
@@ -97,6 +121,11 @@ public partial class App : Application
     internal bool RequestInstallerUpdate(InstallerUpdateHandoff prepared)
     {
         if (_pendingInstaller is not null) return false;
+        if (Windows.OfType<MainWindow>().Count() > 1)
+        {
+            MessageBox.Show("업데이트 전에 다른 Sunrise File Manager 창을 모두 닫아 주세요.", "업데이트");
+            return false;
+        }
         if (MainWindow is MainWindow main && !main.ConfirmUpdateExit()) return false;
         _pendingInstaller = prepared;
         if (MainWindow is MainWindow workspace)

@@ -24,6 +24,8 @@
  <SolidColorBrush x:Key="ThemeStatus" Color="#F8FAFC"/>
  <SolidColorBrush x:Key="ThemeTrack" Color="#D2DFEA"/>
  <SolidColorBrush x:Key="ThemeSplitter" Color="#A4B8CB"/>
+ <SolidColorBrush x:Key="ThemeNavigationRail" Color="#EFF4F8"/>
+ <SolidColorBrush x:Key="ThemeNavigationRailText" Color="#315B7A"/>
  <SolidColorBrush x:Key="ThemeSplitterHover" Color="#2679A5"/>
  <SolidColorBrush x:Key="ThemeGrip" Color="#3A769C"/>
  <SolidColorBrush x:Key="ThemeMenuBar" Color="#EBF3F9"/>
@@ -171,21 +173,24 @@
   <Setter Property="FontWeight" Value="SemiBold"/>
   <Setter Property="VerticalContentAlignment" Value="Center"/>
  </Style>
+ <Style x:Key="SunriseMenuSeparator" TargetType="Separator">
+  <Setter Property="Height" Value="12"/><Setter Property="Margin" Value="0"/>
+  <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Separator">
+   <Grid Background="Transparent" SnapsToDevicePixels="True" HorizontalAlignment="Stretch" MinHeight="12">
+    <Border Height="2" Margin="7,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+            Background="{DynamicResource ThemeMenuSeparator}" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+   </Grid>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+ <Style TargetType="Separator" BasedOn="{StaticResource SunriseMenuSeparator}"/>
  <Style x:Key="SunrisePaneMenuItem" TargetType="MenuItem">
-  <Style.Resources>
-  <Style TargetType="Separator">
-   <Setter Property="Margin" Value="8,4"/>
-   <Setter Property="Height" Value="1"/>
-   <Setter Property="Background" Value="{DynamicResource ThemeMenuSeparator}"/>
-   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Separator">
-    <Border Background="{TemplateBinding Background}" Height="1" Margin="0,2"/>
-   </ControlTemplate></Setter.Value></Setter>
-  </Style>
-  </Style.Resources>
+  <Style.Resources><Style TargetType="Separator" BasedOn="{StaticResource SunriseMenuSeparator}"/></Style.Resources>
   <Setter Property="Foreground" Value="{DynamicResource ThemeMenuText}"/>
   <Setter Property="Background" Value="{DynamicResource ThemeMenuPopup}"/>
   <Setter Property="BorderBrush" Value="Transparent"/>
   <Setter Property="Padding" Value="12,6"/>
+  <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
   <Setter Property="MinHeight" Value="32"/>
   <Setter Property="FontSize" Value="13"/>
   <Setter Property="FontWeight" Value="Normal"/>
@@ -256,10 +261,7 @@
   <Setter Property="Padding" Value="9,3"/>
   <Setter Property="FontSize" Value="12"/>
  </Style>
- <Style x:Key="CompactContextSeparator" TargetType="Separator">
-  <Setter Property="Margin" Value="4,1"/><Setter Property="Height" Value="1"/>
-  <Setter Property="Background" Value="{DynamicResource ThemeMenuSeparator}"/>
- </Style>
+ <Style x:Key="CompactContextSeparator" TargetType="Separator" BasedOn="{StaticResource SunriseMenuSeparator}"/>
  <!-- Compact theme-colored scrollbar. Track retains native drag/page/keyboard semantics. -->
  <Style x:Key="SunrisePageRepeat" TargetType="RepeatButton">
   <Setter Property="IsTabStop" Value="False"/><Setter Property="Focusable" Value="False"/>
@@ -360,36 +362,6 @@
   </Style.Triggers>
  </Style>
  <Style x:Key="CenteredFileHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}"><Setter Property="HorizontalContentAlignment" Value="Center"/></Style>
- <Style TargetType="TreeViewItem">
-  <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
-  <Setter Property="Background" Value="Transparent"/>
-  <Setter Property="Padding" Value="3,2"/>
-  <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TreeViewItem">
-   <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <Grid Grid.Row="0"><Grid.ColumnDefinitions><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-     <Border x:Name="TreeRow" Grid.ColumnSpan="2" Background="{TemplateBinding Background}" CornerRadius="3"/>
-     <ToggleButton x:Name="ExpandToggle" Grid.Column="0" Width="15" Height="22" Background="Transparent"
-       BorderThickness="0" Focusable="False" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
-      <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
-       <TextBlock x:Name="Glyph" Text="▸" Foreground="{DynamicResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
-       <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Glyph" Property="Text" Value="▾"/></Trigger></ControlTemplate.Triggers>
-      </ControlTemplate></ToggleButton.Template>
-     </ToggleButton>
-     <ContentPresenter Grid.Column="1" ContentSource="Header" Margin="3,1" VerticalAlignment="Center"/>
-    </Grid>
-    <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Margin="16,0,0,0"/>
-   </Grid>
-   <ControlTemplate.Triggers>
-    <Trigger Property="IsExpanded" Value="False"><Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/></Trigger>
-    <Trigger Property="HasItems" Value="False"><Setter TargetName="ExpandToggle" Property="Visibility" Value="Hidden"/></Trigger>
-    <Trigger Property="IsSelected" Value="True"><Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource Selected}"/></Trigger>
-    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>
-    <MultiTrigger><MultiTrigger.Conditions><Condition Property="IsMouseOver" Value="True"/><Condition Property="IsSelected" Value="True"/></MultiTrigger.Conditions>
-       <Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource Selected}"/></MultiTrigger>
-   </ControlTemplate.Triggers>
-  </ControlTemplate></Setter.Value></Setter>
- </Style>
  <DataTemplate x:Key="FileIconTemplate">
   <Grid Width="32" Height="31" ToolTip="{Binding TypeName}"><Grid.LayoutTransform><ScaleTransform ScaleX="0.78" ScaleY="0.78"/></Grid.LayoutTransform>
    <Path x:Name="Folder" Visibility="Collapsed" Fill="{DynamicResource ThemeFolderIcon}" Stroke="{DynamicResource ThemeFolderStroke}" StrokeThickness="0.8" Data="M2,6 L11,6 14,9 29,9 29,26 2,26 Z"/>

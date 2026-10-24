@@ -6,11 +6,49 @@ namespace Sunrise.FileManager.Models;
 
 public sealed class FileEntry : INotifyPropertyChanged
 {
+    public static string DescribeCloudState(FileAttributes attrs)
+    {
+        uint flags = (uint)attrs;
+        if ((flags & 0x400000) != 0 || (flags & 0x1000) != 0) return "온라인 전용";
+        if ((flags & 0x80000) != 0) return "항상 이 장치에 유지";
+        if ((flags & 0x100000) != 0) return "공간 확보 대상";
+        if ((flags & 0x40000) != 0) return "클라우드 파일";
+        return "";
+    }
+    public string CloudStatus { get; init; } = "";
+    public string ParentFolder => Path.GetDirectoryName(FullPath) ?? "";
+    public string ModifiedGroup => ModifiedAt == DateTime.MinValue ? "날짜 없음" : ModifiedAt.ToString("yyyy-MM-dd");
+    public string SizeGroup => IsDirectory ? "폴더" : SizeBytes < 1024 * 1024 ? "1MB 미만" : SizeBytes < 100L * 1024 * 1024 ? "1~100MB" : SizeBytes < 1024L * 1024 * 1024 ? "100MB~1GB" : "1GB 이상";
     private object? _thumbnailSource;
     private bool _showExtension = true;
     private bool _colorCoding = true;
     private bool _isChecked;
     private bool _isCutPending;
+    private bool _isRenaming;
+    private string _renameDraft = string.Empty;
+
+    // Ephemeral row editor state; never serialized and never used as a path identity.
+    public bool IsRenaming
+    {
+        get => _isRenaming;
+        set
+        {
+            if (_isRenaming == value) return;
+            _isRenaming = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRenaming)));
+        }
+    }
+
+    public string RenameDraft
+    {
+        get => _renameDraft;
+        set
+        {
+            if (_renameDraft == value) return;
+            _renameDraft = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RenameDraft)));
+        }
+    }
 
     public bool ThumbnailLoading { get; set; }
     public object? ThumbnailSource
@@ -73,6 +111,8 @@ public sealed class FileEntry : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public bool IsNavigationLocation { get; init; }
+    public string? LocationSummary { get; init; }
     public bool IsVirtual { get; init; }
     public string OriginalLocation { get; init; } = "";
     public DateTime DeletedAt { get; init; }
@@ -191,7 +231,7 @@ public sealed class FileEntry : INotifyPropertyChanged
 
     public string ModifiedDisplay => ModifiedAt == DateTime.MinValue ? "—" : ModifiedAt.ToString("yyyy-MM-dd HH:mm");
     public string CreatedDisplay => CreatedAt == DateTime.MinValue ? "—" : CreatedAt.ToString("yyyy-MM-dd HH:mm");
-    public string SizeDisplay => IsDirectory ? "—" : HumanSize(SizeBytes);
+    public string SizeDisplay => LocationSummary ?? (IsDirectory ? "—" : HumanSize(SizeBytes));
 
     public static FileEntry From(FileSystemInfo item, bool hasMemo = false)
     {
@@ -209,6 +249,7 @@ public sealed class FileEntry : INotifyPropertyChanged
             CreatedAt = SafeCreationTime(item),
             IsHidden = (attrs & FileAttributes.Hidden) != 0,
             IsReadOnly = (attrs & FileAttributes.ReadOnly) != 0,
+            CloudStatus = DescribeCloudState(attrs),
             HasMemo = hasMemo
         };
     }

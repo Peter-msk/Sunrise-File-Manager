@@ -25,8 +25,10 @@ public partial class OllamaSetupDialog : Window
 
         foreach (var m in HardwareModelAdvisor.Catalog)
             ModelSelector.Items.Add(new ComboBoxItem { Tag = m.Tag, Content = $"{m.Tag} · {m.Label}" });
-        EnsureModelItem(Config.Model);
-        SelectModelItem(Config.Model);
+        string preferred = string.IsNullOrWhiteSpace(Config.PreferredSetupModel) ? Config.Model : Config.PreferredSetupModel;
+        EnsureModelItem(preferred);
+        SelectModelItem(preferred);
+        _modelChosenByUser = !string.IsNullOrWhiteSpace(Config.PreferredSetupModel);
         _initializingModels = false;
 
         InstallLogBox.Text =
@@ -36,12 +38,15 @@ public partial class OllamaSetupDialog : Window
 
         Loaded += async (_, _) => await Task.WhenAll(RefreshStatusAsync(), LoadRecommendationsAsync());
         Closed += (_, _) => { _closed = true; _lifetime.Cancel(); };
-        Closing += (_, _) =>
+        Closing += (_, closeArgs) =>
         {
             if (_installing)
             {
                 _installCts?.Cancel();
             }
+            try { Config.PreferredSetupModel = SelectedModelTag; AiOllamaService.SaveConfig(Config); }
+            catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+            { closeArgs.Cancel = true; MessageBox.Show(this, "AI 모델 선택을 저장하지 못했습니다. " + ex.Message, "설정 저장"); }
         };
     }
 

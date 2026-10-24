@@ -43,7 +43,7 @@
      <ComboBoxItem Content="파일 유형별 분류하여 복사 (원본 유지)" Tag="유형별 복사"/>
     </ComboBox>
     <TextBlock x:Name="QuickDescription" Text="파일명·위치를 변경하기 전 결과를 반드시 검토합니다." Foreground="{DynamicResource TextMuted}" FontSize="11" Margin="0,5,0,2" TextWrapping="Wrap"/>
-    <Expander Header="온보드 AI 엔진 선택 (외부 클라우드 서버 전송 없음 · 100% 내 PC 실행)" IsExpanded="False" Margin="0,5,0,0">
+    <Expander x:Name="EngineExpander" Header="온보드 AI 엔진 선택 (외부 클라우드 서버 전송 없음 · 100% 내 PC 실행)" IsExpanded="False" Margin="0,5,0,0">
      <StackPanel Margin="0,4">
       <ComboBox x:Name="Provider" SelectedIndex="0" SelectionChanged="Provider_Changed">
        <ComboBoxItem Content="로컬 규칙 엔진 · 즉시 실행 (기본 · AI 미설치 시에도 사용 가능)"/>
@@ -56,10 +56,10 @@
     </Expander>
     <TextBlock Text="명령 입력 (예: 최근 7일 수정된 한글/PDF 파일 찾아줘 / 선택한 파일 주제별 폴더로 분류해 줘)" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="0,8,0,2"/>
     <TextBox x:Name="CommandBox" AcceptsReturn="True" Height="64" MaxLength="4000" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" TextChanged="Input_Changed" Margin="0,6,0,0"/>
-    <Expander Header="지원 명령과 제한사항" Margin="0,4"><TextBlock x:Name="HelpText" FontSize="12" TextWrapping="Wrap"/></Expander>
-    <CheckBox x:Name="ContentReadApproval" Content="문서 본문 읽기 허용 (선택한 검색 범위 내 PDF·HWPX·DOCX·TXT·MD, 외부 전송 없음)"
+    <Expander x:Name="HelpExpander" Header="지원 명령과 제한사항" Margin="0,4"><TextBlock x:Name="HelpText" FontSize="12" TextWrapping="Wrap"/></Expander>
+    <CheckBox x:Name="ContentReadApproval" Content="문서 본문 읽기 허용 (선택한 검색 범위 내 지원 문서·텍스트, 외부 전송 없음)"
               IsChecked="False" Checked="Input_Changed" Unchecked="Input_Changed" Margin="0,6,0,3"
-              ToolTip="본문 검색 및 온보드 AI 문서 요약에서 사용됩니다. PDF 앞 4쪽, DOCX/HWPX 본문 앞부분 최대 16,000자까지 로컬 읽기"/>
+              ToolTip="본문 검색은 지원 문서 전체를 로컬에서 검색합니다. 온보드 AI 요약에는 별도의 문맥 길이 제한이 적용됩니다."/>
     <TextBlock Text="③ 결과 파일을 저장할 폴더" FontWeight="SemiBold" Margin="0,8,0,2"/>
     <WrapPanel Margin="0,4">
      <Button x:Name="DestinationButton" Content="📁 대상 폴더 지정…" Style="{StaticResource ExplorerCommand}" Click="Destination_Click" Margin="0,0,6,0"/>

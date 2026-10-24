@@ -1,6 +1,6 @@
 <UserControl x:Class="Sunrise.FileManager.Controls.FileInspector" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" MinWidth="295" Background="{DynamicResource ThemeSurface}">
  <Border BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" Background="{DynamicResource ThemeSurface}">
-  <Grid>
+  <Grid x:Name="InspectorLayout">
    <Grid.RowDefinitions><RowDefinition Height="66"/><RowDefinition Height="*" MinHeight="165"/><RowDefinition Height="11"/><RowDefinition Height="*" MinHeight="165"/></Grid.RowDefinitions>
    <Border Grid.Row="0" Background="{DynamicResource ThemeSoftAlt}" Padding="12,4">
     <Grid>

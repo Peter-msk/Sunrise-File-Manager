@@ -106,11 +106,36 @@ public static partial class FileActionsService
         IReadOnlyList<(string SourcePath, string NewName)> operations)
     {
         ArgumentNullException.ThrowIfNull(operations);
-        var results = new List<(string OldPath, string NewPath)>(operations.Count);
-        foreach (var (sourcePath, newName) in operations)
+        if (operations.All(op => File.Exists(op.SourcePath)))
+            return BatchRenameFilesSafely(operations);
+
+        // Validate the whole mixed file/folder plan before moving its first entry.
+        var plan = operations.Select(op => (Source: Path.GetFullPath(op.SourcePath), Name: ValidateName(op.NewName)))
+            .Where(op => !string.Equals(Path.GetFileName(op.Source), op.Name, StringComparison.Ordinal)).ToArray();
+        var sourceSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var targetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var op in plan)
         {
-            string renamed = Rename(sourcePath, newName);
-            results.Add((sourcePath, renamed));
+            EnsureOrdinaryEntry(op.Source);
+            string target = Path.Combine(Path.GetDirectoryName(op.Source)!, op.Name);
+            if (!sourceSet.Add(op.Source) || !targetSet.Add(target)) throw new IOException("원본 또는 변경 후 이름이 중복됩니다.");
+            if (File.Exists(target) || Directory.Exists(target)) throw new IOException("대상에 같은 이름이 존재합니다: " + target);
+            if (Directory.Exists(op.Source) && plan.Any(other => other.Source.StartsWith(op.Source + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
+                throw new IOException("상위 폴더와 내부 항목은 동시에 이름을 변경할 수 없습니다.");
+        }
+        var results = new List<(string OldPath, string NewPath)>(operations.Count);
+        try
+        {
+            foreach (var op in plan) results.Add((op.Source, Rename(op.Source, op.Name)));
+        }
+        catch (Exception failure)
+        {
+            var errors = new List<string>();
+            foreach (var pair in results.AsEnumerable().Reverse())
+                try { MoveEntry(pair.NewPath, pair.OldPath); }
+                catch (Exception ex) { errors.Add(pair.NewPath + " → " + pair.OldPath + ": " + ex.Message); }
+            throw new IOException(errors.Count == 0 ? "일괄 이름 변경에 실패하여 원래 이름으로 복구했습니다. " + failure.Message
+                : "일부 항목 복구에 실패했습니다. 보존된 경로를 확인하세요:\n" + string.Join("\n", errors), failure);
         }
         return results;
     }
@@ -123,6 +148,17 @@ public static partial class FileActionsService
         EnsureOrdinaryEntry(source);
         if (File.Exists(destination) || Directory.Exists(destination))
             throw new IOException("대상에 같은 이름이 존재합니다. 덮어쓰지 않습니다.");
+        if (TransferService.IsDifferentVolume(source, destination))
+        {
+            // Undo/redo and direct file actions use the same safe cross-volume move owner.
+            string parent = Path.GetDirectoryName(destination)!;
+            var exact = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [source] = destination };
+            TransferResult result = TransferService.RunAsync([source], parent, TransferKind.Move,
+                null, CancellationToken.None, CollisionPolicy.Skip, exact).GetAwaiter().GetResult();
+            if (result.Failed != 0 || result.Completed != 1)
+                throw new IOException(result.Errors.FirstOrDefault() ?? "다른 드라이브로 이동하지 못했습니다.");
+            return;
+        }
         if (Directory.Exists(source)) Directory.Move(source, destination);
         else FileMemoStore.MoveFileWithMemos(source, destination);
     }
@@ -179,7 +215,7 @@ public static partial class FileActionsService
         return completion.Task;
     }
 
-    private static void EnsureOrdinaryEntry(string path)
+    internal static void EnsureOrdinaryEntry(string path)
     {
         if (!File.Exists(path) && !Directory.Exists(path))
             throw new FileNotFoundException("선택한 항목이 존재하지 않습니다.", path);
@@ -187,7 +223,7 @@ public static partial class FileActionsService
         if (string.Equals(Path.TrimEndingDirectorySeparator(path), Path.TrimEndingDirectorySeparator(root),
                 StringComparison.OrdinalIgnoreCase))
             throw new IOException("드라이브 루트는 수정 또는 삭제할 수 없습니다.");
-        if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+        if (ReparsePointPolicy.IsBlocked(path))
             throw new IOException("연결·접합점은 수정 또는 삭제 대상이 아닙니다.");
     }
 }

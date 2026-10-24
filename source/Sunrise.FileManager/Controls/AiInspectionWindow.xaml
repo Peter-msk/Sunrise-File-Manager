@@ -16,9 +16,9 @@
   </StackPanel>
   <Expander Grid.Row="1" Header="내용 분류 규칙 · 내용은 외부 전송하지 않음" Margin="0,8">
    <StackPanel>
-    <TextBlock Text="텍스트(TXT·MD·CSV 등)는 1MB 이하, PDF는 35MB 이하·앞 4쪽, HWPX·DOCX는 30MB 이하·앞부분 최대 16,000자만 분석합니다. 스캔 PDF OCR 미지원. 폴더=키워드1,키워드2 규칙으로 분류합니다." TextWrapping="Wrap"/>
+    <TextBlock Text="텍스트(TXT·MD·CSV 등)는 1MB 이하, PDF·DOCX·HWPX·일반 HWP 5·XLSX·PPTX는 128MiB 이하의 지원 본문을 전체 검색합니다. 암호·DRM·OCR 및 문서 내부 크기 제한은 별도 안내합니다. 폴더=키워드1,키워드2 규칙으로 분류합니다." TextWrapping="Wrap"/>
     <TextBox x:Name="RulesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="70" VerticalScrollBarVisibility="Auto" Text="수질=수질,하천&#10;대기=대기,미세먼지" TextChanged="Rules_Changed" Margin="0,6"/>
-    <CheckBox x:Name="ContentConsent" Content="선택한 파일의 텍스트·PDF·HWPX·DOCX 본문을 PC 안에서 읽는 데 동의합니다." Checked="Rules_Changed" Unchecked="Rules_Changed"/>
+    <CheckBox x:Name="ContentConsent" Content="선택한 파일의 텍스트·PDF·DOCX·HWPX·일반 HWP 5·XLSX·PPTX 본문을 PC 안에서 읽는 데 동의합니다." Checked="Rules_Changed" Unchecked="Rules_Changed"/>
     <WrapPanel Margin="0,6">
      <Button x:Name="DestinationButton" Content="분류 대상 폴더" Click="Destination_Click" Margin="0,0,6,0"/>
      <ComboBox x:Name="ActionSelector" SelectedIndex="0" Width="100" SelectionChanged="Rules_Changed"><ComboBoxItem Content="복사"/><ComboBoxItem Content="이동"/></ComboBox>

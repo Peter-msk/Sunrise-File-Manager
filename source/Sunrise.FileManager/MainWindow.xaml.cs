@@ -47,7 +47,7 @@ public partial class MainWindow : Window
             foreach (var pane in _panes) pane?.CancelLocalFileJob();
             _transferCancellation?.Cancel();
             AiPanel.Cancel();
-            MessageBox.Show("진행 중인 작업에 취소를 요청했습니다. 휴지통 이동은 완료를 기다려야 합니다.\n처리가 끝나면 종료 또는 업데이트를 다시 선택하십시오.",
+            MessageBox.Show("진행 중인 작업에 취소를 요청했습니다. 이름 변경·이동·휴지통 작업은 완료를 기다려야 합니다.\n처리가 끝나면 종료 또는 업데이트를 다시 선택하십시오.",
                 "작업 진행 중", MessageBoxButton.OK, MessageBoxImage.Information);
             return false;
         }
@@ -97,6 +97,14 @@ public partial class MainWindow : Window
     {
         _persistSession = initialSession is null;
         InitializeComponent();
+        // Nested explorer controls may request BringIntoView when focus/selection changes.
+        // Their own ScrollViewers handle in-pane movement; do not let those requests
+        // propagate to the workspace-level scrollbars and pan every explorer pane.
+        Workspace.AddHandler(FrameworkElement.RequestBringIntoViewEvent,
+            new RequestBringIntoViewEventHandler((_, e) =>
+            {
+                if (!ReferenceEquals(e.OriginalSource, Workspace)) e.Handled = true;
+            }));
         AiPanel = new AiCommandPanel();
         _sessionSaveTimer.Tick += (_, _) =>
         {
@@ -105,6 +113,10 @@ public partial class MainWindow : Window
         };
         WorkspaceShell.SizeChanged += (_, _) => UpdateWorkspaceLayout();
         WorkspaceViewport.SizeChanged += (_, _) => UpdateWorkspaceLayout();
+        WorkspaceViewport.ScrollChanged += (_, e) =>
+        {
+            if (e.ViewportWidthChange != 0 || e.ViewportHeightChange != 0) UpdateWorkspaceLayout();
+        };
         Inspector.SizeChanged += (_, _) => UpdateWorkspaceLayout();
         PreviewPane.SizeChanged += (_, _) => UpdateWorkspaceLayout();
         string? settingsWarning = null;
@@ -112,6 +124,7 @@ public partial class MainWindow : Window
         foreach (int scale in UiScalePolicy.Choices) UiScaleSelector.Items.Add(new ComboBoxItem { Content = $"{scale}%", Tag = scale });
         UiScaleSelector.SelectedIndex = Array.IndexOf(UiScalePolicy.Choices, UiScalePolicy.Normalize(session.UiScalePercent));
         UiScaleService.Set(session.UiScalePercent);
+        RestoreUserPreferences(session);
         // Restore only sensible, visible window geometry (old sessions simply use defaults).
         if (session.WindowWidth is >= 1010 and <= 12000 && session.WindowHeight is >= 560 and <= 9000)
         {
@@ -151,7 +164,8 @@ public partial class MainWindow : Window
             pane.DropRequested += Pane_DropRequested;
             pane.PasteRequested += Pane_PasteRequested;
             pane.FileActionCompleted += RefreshAllPanes;
-            pane.BeforeFileChange = () => !_inspectorOpen || Inspector.ConfirmLeavingMemo();
+            pane.SettingsChanged += ScheduleSessionSave;
+            pane.BeforeFileChange = () => _activeRecycleJobs == 0 && (!_inspectorOpen || Inspector.ConfirmLeavingMemo());
             pane.PreviewRequested += source => { ActivatePane(source); SetDockPreview(!_dockPreviewOpen); };
             pane.InspectorRequested += source => { ActivatePane(source); SetInspectorVisible(!_inspectorOpen); };
             pane.AiRequested += source =>
@@ -260,6 +274,7 @@ public partial class MainWindow : Window
 
     private void ArrangePanels(int count, SplitLayoutPreset? explicitPreset)
     {
+        CaptureWorkspaceRatios();
         int previousCount = _visiblePanels;
         int clampedCount = WorkspaceSplitLayoutEngine.ClampVisiblePanels(count);
         PreserveAndSyncPaneFoldersOnSplitChange(previousCount, clampedCount);
@@ -329,14 +344,19 @@ public partial class MainWindow : Window
                 Title = "Sunrise File Manager · AI 파일 검색 및 정리",
                 Owner = this,
                 Style = (Style)FindResource("AppWindow"),
-                Width = 1060,
-                Height = 790,
+                Width = Math.Clamp(_restoredPreferences.AiWindowWidth, 790, 12000),
+                Height = Math.Clamp(_restoredPreferences.AiWindowHeight, 620, 9000),
                 MinWidth = 790,
                 MinHeight = 620,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 ShowInTaskbar = false,
                 Content = AiPanel
             };
+            if (_restoredPreferences.AiWindowLeft is double savedLeft && _restoredPreferences.AiWindowTop is double savedTop &&
+                savedLeft >= SystemParameters.VirtualScreenLeft && savedLeft < SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 80 &&
+                savedTop >= SystemParameters.VirtualScreenTop && savedTop < SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - 60)
+            { window.WindowStartupLocation = WindowStartupLocation.Manual; window.Left = savedLeft; window.Top = savedTop; }
+            if (_restoredPreferences.AiWindowMaximized) window.Loaded += (_, _) => window.WindowState = WindowState.Maximized;
             window.Closing += (_, args) =>
             {
                 if (_mainWindowClosing) return;
@@ -355,6 +375,7 @@ public partial class MainWindow : Window
         _aiWindow.Show();
         _aiWindow.Activate();
         AiPanel.FocusCommand();
+        ScheduleSessionSave();
     }
 
     private void HideAiWindow()
@@ -362,6 +383,7 @@ public partial class MainWindow : Window
         if (_aiBusy) return;  // Never hide an active file-changing workflow.
         _aiOpen = false;
         _aiWindow?.Hide();
+        ScheduleSessionSave();
         AiToggleButton.Background = (Brush)FindResource("ControlBackground");
         if (IsActive && _panes[_activePane] is not null) _panes[_activePane].FocusFiles();
     }
@@ -375,6 +397,7 @@ public partial class MainWindow : Window
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.F8) { AiToggle_Click(sender, new RoutedEventArgs()); e.Handled = true; }
+        else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.W) { NewWindow_Click(sender, new RoutedEventArgs()); e.Handled = true; }
         else if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control && Inspector.SaveShortcutIfFocused()) e.Handled = true;
         else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.P) { SetDockPreview(!_dockPreviewOpen); e.Handled = true; }
         else if (Keyboard.Modifiers == ModifierKeys.Control && !_working && !_aiBusy && e.OriginalSource is not TextBox)
@@ -394,13 +417,13 @@ public partial class MainWindow : Window
         double previewPixels = _dockPreviewOpen
             ? Math.Max(260, PreviewColumn.ActualWidth) + 11 : 0;
         double fallbackWidth = Math.Max(1, WorkspaceShell.ActualWidth - inspectorPixels - previewPixels - 12);
-        double viewportWidth = WorkspaceViewport.ActualWidth > 1 ? WorkspaceViewport.ActualWidth : fallbackWidth;
-        double viewportHeight = WorkspaceViewport.ActualHeight > 1
-            ? WorkspaceViewport.ActualHeight : Math.Max(1, WorkspaceShell.ActualHeight - 12);
-        var layout = UiLayoutPolicy.Workspace(Math.Max(1, viewportWidth),
-            Math.Max(1, viewportHeight), _visiblePanels, aiOpen: false);
-        double targetWidth = Math.Max(layout.MinimumWidth, viewportWidth - 2);
-        double targetHeight = Math.Max(layout.MinimumHeight, viewportHeight - 2);
+        double viewportWidth = WorkspaceViewport.ViewportWidth > 1 && double.IsFinite(WorkspaceViewport.ViewportWidth)
+            ? WorkspaceViewport.ViewportWidth : WorkspaceViewport.ActualWidth > 1 ? WorkspaceViewport.ActualWidth : fallbackWidth;
+        double viewportHeight = WorkspaceViewport.ViewportHeight > 1 && double.IsFinite(WorkspaceViewport.ViewportHeight)
+            ? WorkspaceViewport.ViewportHeight : WorkspaceViewport.ActualHeight > 1 ? WorkspaceViewport.ActualHeight : Math.Max(1, WorkspaceShell.ActualHeight - 12);
+        var minimum = WorkspaceSplitLayoutEngine.GetMinimumWorkspaceSize(_splitPreset);
+        double targetWidth = Math.Max(minimum.Width, viewportWidth - 2);
+        double targetHeight = Math.Max(minimum.Height, viewportHeight - 2);
         if (Math.Abs(Workspace.Width - targetWidth) > 1) Workspace.Width = targetWidth;
         if (Math.Abs(Workspace.Height - targetHeight) > 1) Workspace.Height = targetHeight;
     }
@@ -551,12 +574,10 @@ public partial class MainWindow : Window
             if (_inspectorOpen && !Inspector.ConfirmLeavingMemo()) return;
         }
         string action = kind == TransferKind.Copy ? "복사" : "이동";
-        CollisionPolicy collision = CollisionSelector.SelectedIndex == 1 ? CollisionPolicy.Rename : CollisionPolicy.Skip;
-        string collisionDescription = collision == CollisionPolicy.Rename ? "겹치는 이름은 번호를 붙여 저장합니다." : "같은 이름이 존재하면 덮어쓰지 않고 건너뜁니다.";
-        if (MessageBox.Show($"{paths.Count:N0}개 항목을 다음 폴더로 {action}할까요?\n\n{target}\n\n" +
-            collisionDescription + " 접근 거부된 파일은 처리하지 않습니다.",
-            action + " 확인", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
-            return;
+        CollisionPolicy collision = CollisionPolicy.Ask;
+        // Windows Explorer interaction: copy/move (including clipboard and drag/drop)
+        // starts immediately. TransferService still validates paths, prevents overwrite,
+        // and preserves source data on failure; destructive deletion remains confirmed.
 
         _working = true;
         CopyButton.IsEnabled = MoveButton.IsEnabled = false;
@@ -567,32 +588,57 @@ public partial class MainWindow : Window
         CancelJobButton.IsEnabled = true;
         CancelJobButton.Visibility = JobProgress.Visibility = JobDetail.Visibility = Visibility.Visible;
         JobProgress.Value = 0;
-        JobStatus.Text = $"{action} 계획 확인 중";
+        JobStatus.Text = $"{action} 작업 준비 중";
         JobDetail.Text = "선택한 항목을 검사하고 있습니다.";
         using var cancellation = new CancellationTokenSource();
+        _transferControl = new TransferControl();
+        PauseJobButton.Content = "일시 중지";
+        PauseJobButton.Visibility = Visibility.Visible;
+        var transferClock = System.Diagnostics.Stopwatch.StartNew();
         _transferCancellation = cancellation;
         using var progress = new UiLatestProgress<TransferProgress>(Dispatcher, item =>
         {
             if (!ReferenceEquals(_transferCancellation, cancellation)) return;
+            if (_transferControl?.IsPaused == true) { JobDetail.Text = "일시 중지됨"; return; }
             double fraction = item.BytesTotal > 0
                 ? (double)item.BytesDone / item.BytesTotal
                 : item.Total > 0 ? (double)item.Completed / item.Total : 0;
             JobProgress.Value = Math.Clamp(fraction * 100, 0, 100);
             JobStatus.Text = $"{action}: {item.Completed}/{item.Total}개 · {JobProgress.Value:F0}% · {item.Phase}";
-            JobDetail.Text = item.CurrentName;
+            double seconds = Math.Max(0.1, transferClock.Elapsed.TotalSeconds - _pausedSeconds);
+            double speed = item.BytesTransferred / seconds;
+            string remaining = speed > 0 && item.BytesTotal > item.BytesDone
+                ? TimeSpan.FromSeconds(Math.Min(864000, (item.BytesTotal - item.BytesDone) / speed)).ToString(@"hh\:mm\:ss") : "—";
+            JobDetail.Text = $"{item.CurrentName} · {Sunrise.FileManager.Models.FileEntry.HumanSize((long)speed)}/초 · 남은 시간 {remaining}";
         });
         try
         {
-            TransferResult result = await TransferService.RunAsync(paths, target, kind, progress, cancellation.Token, collision);
+            // Transaction plan is persisted before copy/move starts. Interrupted plans are review-only.
+            var recoveryPlan = TransferRecoveryJournal.Begin(paths, target, kind);
+            TransferResult result = await TransferService.RunAsync(paths, target, kind, progress, cancellation.Token, collision,
+                resolveConflict: (conflict, token) => Dispatcher.InvokeAsync(() =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    var dialog = new TransferConflictWindow(conflict) { Owner = this };
+                    using var registration = token.Register(() => { _ = Dispatcher.BeginInvoke(new Action(() => dialog.Close())); });
+                    var wait = System.Diagnostics.Stopwatch.StartNew();
+                    try { dialog.ShowDialog(); }
+                    finally { _pausedSeconds += wait.Elapsed.TotalSeconds; }
+                    return dialog.Decision;
+                }).Task, control: _transferControl);
+            try { TransferRecoveryJournal.Finish(recoveryPlan, result); }
+            catch (IOException ex) { System.Diagnostics.Trace.TraceWarning("Transfer recovery record cleanup failed: {0}", ex.GetType().Name); }
             progress.Dispose();
             JobStatus.Text = result.Summary;
             JobDetail.Text = result.Errors.Count == 0 ? "작업 결과를 확인했습니다." : result.Errors[0];
+            if (result.ReplacementBackups.Count > 0)
+                MessageBox.Show("기존 파일을 다음 위치에 보존했습니다. 확인 후 필요에 따라 정리하세요.\n\n" +
+                    string.Join("\n", result.ReplacementBackups.Take(12)), "파일 바꾸기 결과", MessageBoxButton.OK, MessageBoxImage.Information);
             if (!result.Canceled && result.Failed == 0) JobProgress.Value = 100;
-            if (kind == TransferKind.Move && result.Completed > 0)
+            if (kind == TransferKind.Move && result.MovedPaths.Count > 0)
             {
-                var movedPairs = paths
-                    .Select(src => (OldPath: src, NewPath: Path.Combine(target, Path.GetFileName(Path.TrimEndingDirectorySeparator(src)))))
-                    .Where(p => File.Exists(p.NewPath) || Directory.Exists(p.NewPath))
+                var movedPairs = result.MovedPaths
+                    .Select(p => (OldPath: p.Source, NewPath: p.Destination))
                     .ToArray();
                 if (movedPairs.Length > 0)
                     _panes[targetIndex].RecordCompletedMoves(movedPairs);
@@ -622,6 +668,10 @@ public partial class MainWindow : Window
         }
         finally
         {
+            _transferControl?.Resume();
+            _transferControl = null;
+            _pausedSeconds = 0;
+            PauseJobButton.Visibility = Visibility.Collapsed;
             _transferCancellation = null;
             _working = false;
             CopyButton.IsEnabled = MoveButton.IsEnabled = _activeRecycleJobs == 0;
@@ -631,6 +681,27 @@ public partial class MainWindow : Window
             foreach (ExplorerPane pane in _panes) pane.SetFileActionsEnabled(true);
             CancelJobButton.IsEnabled = false;
             CancelJobButton.Visibility = JobProgress.Visibility = JobDetail.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private TransferControl? _transferControl;
+    private DateTime _pauseStarted;
+    private double _pausedSeconds;
+    private void PauseJob_Click(object sender, RoutedEventArgs e)
+    {
+        if (_transferControl is null) return;
+        if (_transferControl.IsPaused)
+        {
+            _pausedSeconds += (DateTime.UtcNow - _pauseStarted).TotalSeconds;
+            _transferControl.Resume();
+            PauseJobButton.Content = "일시 중지";
+        }
+        else
+        {
+            _pauseStarted = DateTime.UtcNow;
+            _transferControl.Pause();
+            PauseJobButton.Content = "다시 시작";
+            JobDetail.Text = "일시 중지됨";
         }
     }
 
@@ -646,7 +717,7 @@ public partial class MainWindow : Window
         {
             foreach (var pane in _panes) pane?.CancelLocalFileJob();
             e.Cancel = true;
-            MessageBox.Show("파일 작업의 취소를 요청했습니다. 휴지통 이동은 완료를 기다려야 합니다. 처리 후 다시 종료하십시오.",
+            MessageBox.Show("파일 작업의 취소를 요청했습니다. 이름 변경·이동·휴지통 작업은 완료를 기다려야 합니다. 처리 후 다시 종료하십시오.",
                 "파일 작업 진행 중", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -664,8 +735,8 @@ public partial class MainWindow : Window
         }
         if (!_updateExitApproved && !Inspector.ConfirmLeavingMemo()) { e.Cancel = true; return; }
         _sessionSaveTimer.Stop();
+        if (_persistSession && !TrySaveSession(showError: true)) { e.Cancel = true; return; }
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= SystemThemeChanged;
-        if (_persistSession) TrySaveSession(showError: true);
         foreach (var pane in _panes) pane.CancelPendingOperations();
         AiPanel.Cancel();
         _mainWindowClosing = true;
@@ -679,17 +750,35 @@ public partial class MainWindow : Window
         _sessionSaveTimer.Start();
     }
 
-    private void TrySaveSession(bool showError)
+    private bool TrySaveSession(bool showError)
     {
         try
         {
+            CaptureWorkspaceRatios();
+            Rect aiRect = _aiWindow is null ? Rect.Empty : _aiWindow.WindowState == WindowState.Normal ? new Rect(_aiWindow.Left, _aiWindow.Top, _aiWindow.Width, _aiWindow.Height) : _aiWindow.RestoreBounds;
             Rect rect = WindowState == WindowState.Normal ? new Rect(Left, Top, Width, Height) : RestoreBounds;
-            SessionStore.Save(new AppSession
+            SessionStore.SaveUiSnapshot(new AppSession
             {
                 VisiblePanels = _visiblePanels,
                 ActivePane = _activePane,
                 SplitLayoutPreset = _splitPreset.ToString(),
-                LayoutVersion = 21,
+                LayoutVersion = 22,
+                SplitRatios = _splitRatios,
+                LastSplitPresets = _lastPresetByCount.Select(x => x.ToString()).ToList(),
+                AiSettings = AiPanel.GetPreferences(),
+                AiWindowVisible = _aiOpen,
+                AiWindowWidth = aiRect.IsEmpty ? _restoredPreferences.AiWindowWidth : aiRect.Width,
+                AiWindowHeight = aiRect.IsEmpty ? _restoredPreferences.AiWindowHeight : aiRect.Height,
+                AiWindowLeft = aiRect.IsEmpty ? _restoredPreferences.AiWindowLeft : aiRect.Left,
+                AiWindowTop = aiRect.IsEmpty ? _restoredPreferences.AiWindowTop : aiRect.Top,
+                AiWindowMaximized = _aiWindow is null ? _restoredPreferences.AiWindowMaximized : _aiWindow.WindowState == WindowState.Maximized,
+                PreviewFitWidth = PreviewPane.FitWidthPreference,
+                PreviewZoom = PreviewPane.ZoomPreference,
+                MemoAuthor = Inspector.PreferredAuthor,
+                InspectorDetailRatio = Inspector.DetailSectionRatio,
+                TransferSourceIndex = Math.Max(0, SourceSelector.SelectedIndex),
+                TransferDestinationIndex = Math.Max(0, DestinationSelector.SelectedIndex),
+                TransferCollisionIndex = Math.Max(0, CollisionSelector.SelectedIndex),
                 UiScalePercent = UiScaleService.Percent,
                 Theme = _currentTheme,
                 InspectorVisible = _inspectorOpen,
@@ -704,6 +793,7 @@ public partial class MainWindow : Window
                 PinnedFolders = _panes[_activePane].GetPinnedFolders().ToList(),
                 Panels = _panes.Select(pane => pane.GetSession()).ToList()
             });
+            return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
@@ -711,6 +801,7 @@ public partial class MainWindow : Window
                 MessageBox.Show($"화면 설정을 저장하지 못했습니다.\n{ex.Message}", "Sunrise File Manager",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+        return false;
     }
 
 }

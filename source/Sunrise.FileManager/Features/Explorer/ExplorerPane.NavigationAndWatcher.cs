@@ -86,13 +86,19 @@ public partial class ExplorerPane
         foreach (ExplorerTab item in _tabs)
             item.IsSelected = ReferenceEquals(item, _activeTab);
         string path = _activeTab.CurrentPath;
+        // A real location change closes previously visited branches; F5/watcher refresh does not.
+        if (!string.Equals(_lastTreeLocation, path, StringComparison.OrdinalIgnoreCase))
+        {
+            _lastTreeLocation = path;
+            NavigationTree.CollapseInactiveBranches(_skipNavigationTreeReveal ? null : path);
+        }
         ConfigureRecycleBinView();
         SetAddressPath(path);
         UpdateBreadcrumbs(path);
         AttachFolderWatcher(path);
         BackButton.IsEnabled = _activeTab.CanGoBack;
         ForwardButton.IsEnabled = _activeTab.CanGoForward;
-        UpButton.IsEnabled = !IsRecycleBin && Directory.GetParent(path) is not null;
+        UpButton.IsEnabled = ExplorerLocationService.Parent(path, WindowsKnownLocations.Resolve("Desktop")) is not null;
         _ = ApplyFilterAndSortAsync();
     }
 
@@ -152,12 +158,14 @@ public partial class ExplorerPane
 
     private void SelectTab(ExplorerTab tab)
     {
+        if (_activeTab is not null && !_initializing) _activeTab.SearchText = SearchBox.Text;
         foreach (ExplorerTab item in _tabs)
             item.IsSelected = ReferenceEquals(item, tab);
         _activeTab = tab;
+        _skipNavigationTreeReveal = false;
         SetAddressPath(tab.CurrentPath);
         UpdateBreadcrumbs(tab.CurrentPath);
-        SearchBox.Text = string.Empty;
+        SearchBox.Text = tab.SearchText;
         _filterTimer.Stop();
         _ = LoadFolderAsync();
     }
@@ -166,6 +174,7 @@ public partial class ExplorerPane
     {
         if (BreadcrumbPanel is null) return;
         BreadcrumbPanel.Children.Clear();
+        if (WindowsKnownLocations.IsThisPc(fullPath)) { AddBreadcrumbButton("바탕화면", WindowsKnownLocations.Resolve("Desktop")); AddBreadcrumbButton("내 PC", WindowsKnownLocations.ThisPc); return; }
         if (WindowsKnownLocations.IsRecycleBin(fullPath)) { AddBreadcrumbButton("휴지통", WindowsKnownLocations.RecycleBin); return; }
         if (string.IsNullOrWhiteSpace(fullPath)) return;
 
@@ -207,12 +216,12 @@ public partial class ExplorerPane
             Padding = new Thickness(6, 1, 6, 1),
             MinHeight = 20,
             FontSize = 11.5,
-            AllowDrop = !WindowsKnownLocations.IsRecycleBin(targetPath)
+            AllowDrop = !WindowsKnownLocations.IsVirtual(targetPath)
         };
         btn.Click += (_, _) => TryNavigate(targetPath);
         btn.PreviewDragOver += (_, e) =>
         {
-            if (!WindowsKnownLocations.IsRecycleBin(targetPath) && _actionsEnabled && e.Data.GetDataPresent(DataFormats.FileDrop) &&
+            if (!WindowsKnownLocations.IsVirtual(targetPath) && _actionsEnabled && e.Data.GetDataPresent(DataFormats.FileDrop) &&
                 e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0 &&
                 !string.Equals(targetPath, ActiveFolder, StringComparison.OrdinalIgnoreCase))
             {
@@ -225,7 +234,7 @@ public partial class ExplorerPane
         };
         btn.PreviewDrop += (_, e) =>
         {
-            if (!WindowsKnownLocations.IsRecycleBin(targetPath) && _actionsEnabled && e.Data.GetDataPresent(DataFormats.FileDrop) &&
+            if (!WindowsKnownLocations.IsVirtual(targetPath) && _actionsEnabled && e.Data.GetDataPresent(DataFormats.FileDrop) &&
                 e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0 &&
                 !string.Equals(targetPath, ActiveFolder, StringComparison.OrdinalIgnoreCase))
             {
@@ -241,10 +250,31 @@ public partial class ExplorerPane
         BreadcrumbPanel.Children.Add(btn);
     }
 
-    private async Task LoadFolderAsync()
+    private async Task LoadFolderAsync(bool resetPage = true)
     {
+        string selectionKey = string.Join("\0", _activeTab?.CurrentPath, SearchBox.Text.Trim(), _categoryFilter, _searchScope.ToString());
+        bool preserveSelection = ReferenceEquals(_selectionListingTab, _activeTab) &&
+            string.Equals(_selectionListingKey, selectionKey, StringComparison.OrdinalIgnoreCase);
+        IReadOnlyList<string> selectedBeforeRefresh = preserveSelection ? _pagedSelection.Snapshot() : [];
+        _selectionListingKey = selectionKey;
+        _selectionListingTab = _activeTab;
+        if (resetPage)
+        {
+            _directoryAfter = null; _directoryPageHistory.Clear(); _searchPageOffset = 0;
+            _pagedSelection.Clear(); _selectAllCancellation?.Cancel();
+            if (preserveSelection)
+            {
+                _pagedSelection.ReplaceAll(selectedBeforeRefresh);
+                if (_restoreSelectionPath is null && selectedBeforeRefresh.Count == 1)
+                    _restoreSelectionPath = selectedBeforeRefresh[0];
+            }
+        }
+        PreviousPageButton.IsEnabled = NextPageButton.IsEnabled = false;
+        _searchCache = null; _searchCacheKey = null;
         if (_activeTab is null) return;
+        EndMarquee();
         _listingCancellation?.Cancel();
+        _filterCancellation?.Cancel();
         ResetThumbnails(_viewMode is "Thumbnails" or "Tiles");
         var cancellation = new CancellationTokenSource();
         _listingCancellation = cancellation;
@@ -252,13 +282,39 @@ public partial class ExplorerPane
 
         ExplorerTab tab = _activeTab;
         string path = tab.CurrentPath;
+        if (_restoreSelectionPath is string pendingSelection && !WindowsKnownLocations.IsVirtual(path) &&
+            !string.Equals(Path.GetDirectoryName(pendingSelection), Path.TrimEndingDirectorySeparator(path), StringComparison.OrdinalIgnoreCase))
+            _restoreSelectionPath = null;
+        bool newLocation = !string.Equals(_lastListingPath, path, StringComparison.OrdinalIgnoreCase);
+        _lastListingPath = path;
+        if (newLocation && !_initializing)
+        {
+            // New folder / Back / Forward / tab switch: always start the file list at
+            // the left edge. An old saved viewport must not leak into a new location.
+            _restoreViewportPending = false;
+            _horizontalResetListingGeneration = generation;
+            GetFilesScrollViewer()?.ScrollToHorizontalOffset(0);
+        }
+        else if (!newLocation && !_restoreViewportPending && GetFilesScrollViewer() is { } currentScroll)
+        {
+            // Refreshing the same folder should keep the user's scroll position.
+            _savedVerticalOffset = currentScroll.VerticalOffset;
+            _savedHorizontalOffset = currentScroll.HorizontalOffset;
+            _restoreViewportPending = true;
+        }
+        // A real location change closes previously visited branches; F5/watcher refresh does not.
+        if (!string.Equals(_lastTreeLocation, path, StringComparison.OrdinalIgnoreCase))
+        {
+            _lastTreeLocation = path;
+            NavigationTree.CollapseInactiveBranches(_skipNavigationTreeReveal ? null : path);
+        }
         ConfigureRecycleBinView();
         SetAddressPath(path);
         UpdateBreadcrumbs(path);
         AttachFolderWatcher(path);
         BackButton.IsEnabled = tab.CanGoBack;
         ForwardButton.IsEnabled = tab.CanGoForward;
-        UpButton.IsEnabled = !IsRecycleBin && Directory.GetParent(path) is not null;
+        UpButton.IsEnabled = ExplorerLocationService.Parent(path, WindowsKnownLocations.Resolve("Desktop")) is not null;
         PaneStatus.Text = "조회 중…";
         FooterText.Text = path;
         _allEntries = [];
@@ -272,20 +328,35 @@ public partial class ExplorerPane
         {
             ListingResult result = IsRecycleBin
                 ? await RecycleBinService.ReadAsync(cancellation.Token)
-                : await DirectoryScanner.ReadAsync(path, cancellation.Token, showHidden: true);
+                : IsThisPc ? await ExplorerLocationService.ReadThisPcAsync(cancellation.Token)
+                : await DirectoryScanner.ReadPageAsync(path, _directoryAfter,
+                    _searchScope == ExplorerSearchScope.Current ? SearchBox.Text.Trim() : "",
+                    _sortField, _sortDescending, _categoryFilter, _showHidden, cancellation.Token, _restoreSelectionPath);
             if (generation != _listingGeneration || !ReferenceEquals(_activeTab, tab)) return;
+            if (resetPage && preserveSelection && !result.HasMore && !result.IsRevealPage && !UsesRecursiveResults)
+            {
+                var present = result.Entries.Select(entry => entry.FullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                _pagedSelection.ReplaceAll(_pagedSelection.Snapshot().Where(present.Contains));
+            }
             foreach (FileEntry entry in result.Entries)
             {
                 entry.ShowExtension = _showExtensions;
                 entry.ColorCoding = _colorCoding;
             }
             _allEntries = result.Entries;
+            if (result.IsRevealPage)
+            {
+                _directoryPageHistory.Push(null);
+                _directoryAfter = result.RevealBefore;
+            }
+            _directoryNext = result.NextCursor; _directoryHasMore = result.HasMore;
+            _directoryTotal = result.TotalEntries;
             _listingWarning = result.Warning;
             _driveSpaceSummary = result.DriveSummary ?? string.Empty;
             if (DriveSpaceText is not null) DriveSpaceText.Text = _driveSpaceSummary;
-            _ = ApplyFilterAndSortAsync();
+            _ = ApplyFilterAndSortAsync(listingReady: true);
             PaneStatus.Text = result.Warning is null ? $"{result.Entries.Count:N0}개" : "일부 항목 제한";
-            if (!IsRecycleBin && NavigationTree.Visibility == Visibility.Visible)
+            if (newLocation && !_skipNavigationTreeReveal && !WindowsKnownLocations.IsVirtual(path) && NavigationTree.Visibility == Visibility.Visible)
                 _ = NavigationTree.HighlightPathAsync(path);
         }
         catch (OperationCanceledException)
@@ -316,13 +387,53 @@ public partial class ExplorerPane
         AddressBox.Text = AddressBox.IsKeyboardFocusWithin ? path : WindowsKnownLocations.DisplayPath(path);
     }
 
-    private void TryNavigate(string requestedPath)
+    // Editable address field remains separate from the on-demand navigation tree.
+    private void AddressBox_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!AddressPopup.IsOpen) ShowAddressDropdown();
+    }
+
+    private void AddressDropButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (AddressPopup.IsOpen) AddressPopup.IsOpen = false;
+        else ShowAddressDropdown();
+    }
+
+    private void ShowAddressDropdown()
+    {
+        if (_activeTab is null) return;
+        if (_addressNavigationTree is null)
+        {
+            var tree = new FolderTree { Focusable = true };
+            tree.GetActiveFolder = () => ActiveFolder;
+            tree.PathChosen += NavigateFromAddressTree;
+            tree.QuickPathChosen += NavigateFromAddressTree;
+            tree.PinnedFoldersChanged += paths =>
+            {
+                NavigationTree.SetPinnedFolders(paths);
+                PinnedFoldersChanged?.Invoke(paths);
+            };
+            _addressNavigationTree = tree;
+            AddressPopupContent.Content = tree;
+        }
+        _addressNavigationTree.SetPinnedFolders(NavigationTree.PinnedFolders);
+        AddressPopupSurface.Width = Math.Clamp(AddressHost.ActualWidth, 285, 415);
+        AddressPopup.IsOpen = true;
+    }
+
+    private void NavigateFromAddressTree(string path)
+    {
+        AddressPopup.IsOpen = false;
+        TryNavigate(path, revealInTree: false);
+    }
+
+    private void TryNavigate(string requestedPath, bool revealInTree = true)
     {
         if (string.IsNullOrWhiteSpace(requestedPath)) return;
         requestedPath = WindowsKnownLocations.ExpandDisplayPath(requestedPath);
         try
         {
-            string full = WindowsKnownLocations.IsRecycleBin(requestedPath) ? WindowsKnownLocations.RecycleBin
+            string full = WindowsKnownLocations.IsVirtual(requestedPath) ? requestedPath
                 : FileActionsService.ExpandAndResolveFolderPath(requestedPath, ActiveFolder);
             if (!WindowsKnownLocations.Exists(full))
             {
@@ -332,7 +443,12 @@ public partial class ExplorerPane
             }
             if (_activeTab is null) return;
             HasUserNavigated = true;
-            if (_activeTab.Navigate(full)) _ = LoadFolderAsync();
+            if (_activeTab.Navigate(full))
+            {
+                _skipNavigationTreeReveal = !revealInTree;
+                if (!revealInTree) NavigationTree.CancelAutomaticReveal();
+                _ = LoadFolderAsync();
+            }
             else SetAddressPath(_activeTab.CurrentPath);
         }
         catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException)
@@ -347,6 +463,7 @@ public partial class ExplorerPane
         bool active = ReferenceEquals(tab, _activeTab);
         int index = _tabs.IndexOf(tab);
         _tabs.Remove(tab);
+        SettingsChanged?.Invoke();
         if (active) SelectTab(_tabs[Math.Min(index, _tabs.Count - 1)]);
     }
 
@@ -361,5 +478,6 @@ public partial class ExplorerPane
         var newTab = new ExplorerTab(WindowsKnownLocations.Exists(folderPath) ? folderPath : DefaultFolder());
         _tabs.Add(newTab);
         SelectTab(newTab);
+        SettingsChanged?.Invoke();
     }
 }

@@ -101,6 +101,7 @@ internal static class ContextMenuAudit
         timer.Start();
         try { await Click(menu.Items.OfType<MenuItem>().First()); await Until(() => dialogSeen, "EIASS context command did not open its dialog."); }
         finally { timer.Stop(); menu.IsOpen = false; }
+        await NavigationRecycleAudit.RunAsync(window, pane, root, output);
         Console.WriteLine("CONTEXT_MENU_PASS: native right-click, all 7 submenus, light/dark 80/125% app scale, moved preview action, EIASS entry and Edit-menu isolation");
     }
     private static IEnumerable<MenuItem> AllItems(ItemsControl owner)

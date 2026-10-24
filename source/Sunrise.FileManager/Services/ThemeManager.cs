@@ -30,6 +30,8 @@ public static class ThemeManager
         ["ThemeStatus"] = ("#F8FAFC", "#1C2534"),
         ["ThemeTrack"] = ("#D2DFEA", "#36465A"),
         ["ThemeSplitter"] = ("#A4B8CB", "#506984"),
+        ["ThemeNavigationRail"] = ("#EFF4F8", "#506984"),
+        ["ThemeNavigationRailText"] = ("#315B7A", "#EFF7FF"),
         ["ThemeSplitterHover"] = ("#2679A5", "#6FD6F5"),
         ["ThemeGrip"] = ("#3A769C", "#B0E8FF"),
         ["ThemeMenuBar"] = ("#EBF3F9", "#233043"),

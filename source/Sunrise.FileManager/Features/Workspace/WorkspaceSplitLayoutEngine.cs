@@ -52,6 +52,19 @@ public sealed record SplitGridBlueprint(
 /// </summary>
 public static class WorkspaceSplitLayoutEngine
 {
+    // The workspace extent and track limits must agree with one another and
+    // leave room for each pane's fixed header rows plus an actual file viewport.
+    public const double MinimumPaneWidth = 350;
+    public const double MinimumPaneHeight = 340;
+    public const double SplitterThickness = 11;
+
+    public static (double Width, double Height) GetMinimumWorkspaceSize(SplitLayoutPreset preset)
+    {
+        var blueprint = BuildBlueprint(preset);
+        return (blueprint.StarColumns * MinimumPaneWidth + (blueprint.StarColumns - 1) * SplitterThickness,
+            blueprint.StarRows * MinimumPaneHeight + (blueprint.StarRows - 1) * SplitterThickness);
+    }
+
     private static readonly SplitPresetOption[] AllPresetOptions =
     [
         new(SplitLayoutPreset.Single, 1, "단일 전체 화면", "Windows 기본 탐색기와 동일한 단일 폴더 화면"),
@@ -100,14 +113,14 @@ public static class WorkspaceSplitLayoutEngine
     public static SplitLayoutPreset NormalizePresetForCount(int panelCount, SplitLayoutPreset? candidate)
     {
         int clamped = ClampVisiblePanels(panelCount);
-        if (candidate is SplitLayoutPreset p && GetPanelCountForPreset(p) == clamped)
+        if (candidate is SplitLayoutPreset p && Enum.IsDefined(p) && GetPanelCountForPreset(p) == clamped)
             return p;
         return GetDefaultPreset(clamped);
     }
 
     public static SplitLayoutPreset ParsePresetName(string? name, int fallbackPanelCount)
     {
-        if (!string.IsNullOrWhiteSpace(name) && Enum.TryParse<SplitLayoutPreset>(name, ignoreCase: true, out var parsed) &&
+        if (!string.IsNullOrWhiteSpace(name) && Enum.TryParse<SplitLayoutPreset>(name, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed) &&
             GetPanelCountForPreset(parsed) == ClampVisiblePanels(fallbackPanelCount))
         {
             return parsed;

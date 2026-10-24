@@ -60,10 +60,14 @@ public static class RecycleBinService
         }
         finally { Release(items); Release(folder); Release(shell); }
     }, token);
-    public static Task<RecycleRestoreResult> RestoreAsync(IReadOnlyList<string> keys, CancellationToken token) => Sta(() =>
+    public static Task<RecycleRestoreResult> RestoreAsync(IReadOnlyList<string> keys, CancellationToken token)
+        => ExecuteVerbAsync(keys, token, "undelete");
+    public static Task<RecycleRestoreResult> PermanentlyDeleteAsync(IReadOnlyList<string> keys, CancellationToken token)
+        => ExecuteVerbAsync(keys, token, "delete");
+    private static Task<RecycleRestoreResult> ExecuteVerbAsync(IReadOnlyList<string> keys, CancellationToken token, string verb) => Sta(() =>
     {
         var requestedKeys = keys.ToHashSet(StringComparer.Ordinal);
-        if (requestedKeys.Count > 20000) throw new IOException("한 번에 20,000개 이하를 선택하세요.");
+        if (requestedKeys.Count > (verb == "delete" ? 100 : 20000)) throw new IOException(verb == "delete" ? "휴지통 영구 삭제는 한 번에 100개 이하를 선택하세요." : "한 번에 20,000개 이하를 선택하세요.");
         object? shell = null, folder = null, items = null;
         var matched = new List<object>();
         var errors = new List<string>();
@@ -87,13 +91,13 @@ public static class RecycleBinService
                 catch (COMException ex) { if (errors.Count < 20) errors.Add("목록 변경 또는 접근 제한: " + ex.Message); }
                 finally { Release(item); }
             }
-            // Snapshot all matching Shell items before invoking verbs; restoration can mutate the live collection.
+            // Snapshot COM identities before invoking verbs; each action changes the live collection.
             int requested = 0;
             foreach (object item in matched)
             {
                 token.ThrowIfCancellationRequested();
-                try { ((dynamic)item).InvokeVerb("undelete"); requested++; }
-                catch (COMException ex) { if (errors.Count < 20) errors.Add("복원 요청 실패: " + ex.Message); }
+                try { ((dynamic)item).InvokeVerb(verb); requested++; }
+                catch (COMException ex) { if (errors.Count < 20) errors.Add("Windows Shell 작업 실패: " + ex.Message); }
             }
             return new RecycleRestoreResult(requested, requestedKeys.Count - matched.Count, errors);
         }

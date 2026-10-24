@@ -18,7 +18,7 @@ public static class AiNaturalLanguageService
         "예: 파일명 앞에 '완료_' 붙여줘\n" +
         "예: 선택한 파일을 휴지통으로 보내줘 (2차 승인 필요)\n" +
         "예: 본문에 '안성천' 포함된 PDF 파일 찾아줘\n" +
-        "검색 위치는 '선택 항목' 또는 '현재 폴더 및 하위 폴더'에서 고릅니다. 문서 본문 검색은 PDF 앞 4쪽, DOCX/HWPX 앞부분 최대 16,000자입니다.";
+        "검색 위치는 '선택 항목' 또는 '현재 폴더 및 하위 폴더'에서 고릅니다. 본문은 지원 텍스트·PDF·DOCX·HWPX·일반 HWP 5·XLSX·PPTX를 전체 순차 검색합니다. 암호·DRM 문서 및 크기 제한은 별도 안내합니다.";
 
     public sealed record Intent(string Action, string? Extension, string? Category, string? NameContains,
         int? ModifiedWithinDays, string Grouping, string Description,
@@ -111,8 +111,8 @@ public static class AiNaturalLanguageService
             throw new ArgumentException("본문 조건은 '본문에 '검색어' 포함된 PDF 파일 찾아줘' 형식으로 지정하세요.");
         if (Regex.IsMatch(text, @"중복|동일한|유사한|최종본|최신본|하위폴더만|관련|사업별|프로젝트별"))
             throw new ArgumentException("중복·최종본·의미적 관련성 판단은 이 단계에서 지원하지 않습니다.");
-        if (content is not null && extension is not null && extension is not (".pdf" or ".docx" or ".hwpx"))
-            throw new ArgumentException("본문 검색은 PDF·DOCX·HWPX에서만 지원합니다.");
+        if (content is not null && extension is not null && !DocumentContentSearch.Supports("document" + extension))
+            throw new ArgumentException("이 형식은 본문 검색을 지원하지 않습니다. PDF·DOCX·HWPX·일반 HWP 5·XLSX·PPTX·지원 텍스트를 선택하세요.");
         if (content is not null && (rename || recycle))
             throw new ArgumentException("본문 검색과 이름 변경·휴지통 이동을 한 번에 실행할 수 없습니다. 먼저 검색하여 선택한 뒤 작업하세요.");
         if (category is not null && extension is not null && AiLocalPlanner.Category("a" + extension, false) != category)

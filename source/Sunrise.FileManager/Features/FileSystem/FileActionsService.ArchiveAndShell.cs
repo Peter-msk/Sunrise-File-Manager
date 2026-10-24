@@ -110,8 +110,22 @@ public static partial class FileActionsService
         if (File.Exists(zipFull) || Directory.Exists(zipFull))
             throw new IOException("같은 이름의 압축 파일이 이미 존재합니다.");
 
-        foreach (string source in sourcePaths.Select(Path.GetFullPath))
+        // Validate top-level names before creating any ZIP: two same-named entries or
+        // selecting a folder together with its child creates an archive our extractor rejects.
+        string[] selected = sourcePaths.Select(Path.GetFullPath).ToArray();
+        var rootNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var selectedFolders = new HashSet<string>(selected.Where(Directory.Exists), StringComparer.OrdinalIgnoreCase);
+        foreach (string source in selected)
         {
+            string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(source));
+            if (!rootNames.Add(name))
+                throw new IOException("동일한 이름의 압축 항목이 포함되어 있습니다. 다른 이름으로 선택하세요.");
+            for (string? parent = Path.GetDirectoryName(source); parent is not null; parent = Path.GetDirectoryName(parent))
+            {
+                if (selectedFolders.Contains(parent))
+                    throw new IOException("상위 폴더와 그 하위 항목을 동시에 압축할 수 없습니다.");
+                if (Path.GetDirectoryName(parent) == parent) break;
+            }
             if (Directory.Exists(source) && (zipFull.StartsWith(Path.TrimEndingDirectorySeparator(source) + Path.DirectorySeparatorChar,
                     StringComparison.OrdinalIgnoreCase) || string.Equals(zipFull, source, StringComparison.OrdinalIgnoreCase)))
                 throw new IOException("압축할 폴더 내부에는 결과 ZIP을 저장할 수 없습니다.");
@@ -122,11 +136,10 @@ public static partial class FileActionsService
             using (var archive = ZipFile.Open(tempZip, ZipArchiveMode.Create))
             {
                 int scanned = 0;
-                foreach (string raw in sourcePaths)
+                foreach (string src in selected)
                 {
                     token.ThrowIfCancellationRequested();
                     if (++scanned > 20_000) throw new IOException("ZIP은 최대 20,000개 항목까지 지원합니다.");
-                    string src = Path.GetFullPath(raw);
                     EnsureOrdinaryEntry(src);
                     if (Directory.Exists(src))
                     {
