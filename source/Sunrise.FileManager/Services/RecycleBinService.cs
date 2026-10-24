@@ -8,7 +8,7 @@ public sealed record RecycleRestoreResult(int Requested, int Missing, IReadOnlyL
 public static class RecycleBinService
 {
     private static string Key(string identity) => "recycle-item:" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(identity));
-    private static void Release(object? value) { if (value is not null && Marshal.IsComObject(value)) Marshal.FinalReleaseComObject(value); }
+    private static void Release(object? value) { if (value is not null && Marshal.IsComObject(value)) Marshal.ReleaseComObject(value); }
     private static Task<T> Sta<T>(Func<T> action, CancellationToken token)
     {
         var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);

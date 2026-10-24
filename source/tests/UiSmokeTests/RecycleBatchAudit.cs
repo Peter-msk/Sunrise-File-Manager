@@ -63,6 +63,36 @@ internal static class RecycleBatchAudit
         }
         public void Dispose() => timer.Stop();
     }
+    private static async Task CheckPropertiesAsync(ExplorerPane pane, string title, string output, string name)
+    {
+        bool seen = false;
+        using var timer = new System.Threading.Timer(_ => EnumWindows((hwnd, _) =>
+        {
+            if (IsWindowVisible(hwnd) && Text(hwnd).Contains("Properties", StringComparison.OrdinalIgnoreCase))
+            {
+                seen = true;
+                NativeUiRegression.CaptureDesktop(Path.Combine(output, name + ".png"));
+                PostMessage(hwnd, 0x10, 0, 0);
+            }
+            return true;
+        }, 0), null, 50, 80);
+        Invoke(pane, title);
+        await Until(() => seen && !Busy(pane), "Native properties window did not appear/finish: " + title);
+    }
+    private static void CheckNativeMenu(Action show, string output, string name)
+    {
+        bool seen = false;
+        using var timer = new System.Threading.Timer(_ => EnumWindows((hwnd, _) =>
+        {
+            var cls = new StringBuilder(100); GetClassName(hwnd, cls, cls.Capacity);
+            if (!seen && IsWindowVisible(hwnd) && cls.ToString() == "#32768")
+            {
+                seen = true; NativeUiRegression.CaptureDesktop(Path.Combine(output, name + ".png")); Key(0x1B);
+            }
+            return true;
+        }, 0), null, 50, 80);
+        show(); Check(seen, "Native menu did not appear: " + name);
+    }
     internal static async Task RunAsync(MainWindow window, ExplorerPane pane, string root, string output)
     {
         var files = (DataGrid)pane.FindName("FilesGrid");
@@ -139,6 +169,18 @@ internal static class RecycleBatchAudit
         Console.WriteLine("EMPTY_BIN_PASS: native one confirmation, cancel preserves, approve empties isolated fixture only");
         await Until(() => files.Items.Count == 0, "Empty UI did not refresh.");
         NativeUiRegression.CaptureDesktop(Path.Combine(output, "recycle-empty-commands.png"));
+        File.WriteAllText(guard, "property fixture"); FileActionsService.Recycle(guard);
+        pane.RefreshCurrent(); await Until(() => files.Items.Count == 1, "Property fixture missing.");
+        Select(files, files.Items.OfType<FileEntry>().Select(e => e.FullPath).ToArray());
+        await CheckPropertiesAsync(pane, "속성", output, "recycle-item-properties");
+        await Until(() => files.Items.Count == 1, "Property refresh failed.");
+        await CheckPropertiesAsync(pane, "휴지통 속성·설정…", output, "recycle-bin-properties");
+        await Until(() => files.Items.Count == 1, "Bin property refresh failed.");
+        Select(files, files.Items.OfType<FileEntry>().Select(e => e.FullPath).ToArray());
+        CheckNativeMenu(() => Invoke(pane, "Windows 기본 메뉴…"), output, "recycle-native-menu");
+        string ordinary = Path.Combine(group, "normal-menu.txt"); File.WriteAllText(ordinary, "normal menu regression");
+        CheckNativeMenu(() => WindowsShellContextMenu.Show(window, new[] { ordinary }), output, "normal-native-menu");
+        Console.WriteLine("NATIVE_PROPERTIES_AND_MENUS_PASS: actual recycle item/bin property windows, native recycle and ordinary file context menus");
         File.WriteAllText(Path.Combine(output, "RECYCLE_BATCH_RESULT.json"), JsonSerializer.Serialize(new { status = "PASS", selectedCount = 103, nativeConfirmationsPerDelete = 1, canceledPreserved = true, unselectedPreserved = true, restoredDuplicateNamesToCorrectOrigins = true, restoredFolderChild = true, restoreAll = true, emptyCancelAndApprove = true, testedOn = Environment.OSVersion.ToString() }));
     }
 }
