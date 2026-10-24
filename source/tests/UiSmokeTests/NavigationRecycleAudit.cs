@@ -63,11 +63,14 @@ internal static class NavigationRecycleAudit
         string name = "sunrise-delete-key-" + Guid.NewGuid().ToString("N") + ".txt";
         string path = Path.Combine(root, name); File.WriteAllText(path, "synthetic recycle keyboard fixture");
         FileActionsService.Recycle(path);
+        bool IsFixture(FileEntry item) => item.Name == name || item.Name == Path.GetFileNameWithoutExtension(name);
         pane.SyncToFolder(WindowsKnownLocations.RecycleBin);
-        await Until(() => pane.IsRecycleBin && files.Items.OfType<FileEntry>().Any(f => f.Name == name), "Recycled fixture not visible.");
+        await Until(() => pane.IsRecycleBin && files.Items.OfType<FileEntry>().Any(IsFixture), "Recycled fixture not visible.");
+        // Shell display names follow the Windows extension preference; identity does not.
+        string fixtureIdentity = files.Items.OfType<FileEntry>().Single(IsFixture).FullPath;
         foreach (bool approve in new[] { false, true })
         {
-            var entry = files.Items.OfType<FileEntry>().Single(f => f.Name == name);
+            var entry = files.Items.OfType<FileEntry>().Single(f => f.FullPath == fixtureIdentity);
             files.SelectedItem = entry; files.ScrollIntoView(entry); files.Focus();
             bool confirmation = false, resultSeen = false;
             var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
@@ -94,14 +97,14 @@ internal static class NavigationRecycleAudit
                 if (!approve)
                 {
                     await Task.Delay(150); var listing = await RecycleBinService.ReadAsync(default);
-                    Check(listing.Entries.Any(e => e.Name == name), "Cancel deleted the recycle fixture.");
+                    Check(listing.Entries.Any(e => e.FullPath == fixtureIdentity), "Cancel deleted the recycle fixture.");
                 }
                 else
                 {
                     await Until(() => resultSeen, "Approved Delete did not finish its Shell request.");
                     bool gone = false;
                     for (int i = 0; i < 30; i++)
-                    { var listing = await RecycleBinService.ReadAsync(default); gone = !listing.Entries.Any(e => e.Name == name); if (gone) break; await Task.Delay(100); }
+                    { var listing = await RecycleBinService.ReadAsync(default); gone = !listing.Entries.Any(e => e.FullPath == fixtureIdentity); if (gone) break; await Task.Delay(100); }
                     Check(gone, "Approved native Delete did not remove its uniquely selected recycle item.");
                 }
             }

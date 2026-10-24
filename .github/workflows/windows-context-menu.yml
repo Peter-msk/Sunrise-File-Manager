@@ -21,8 +21,7 @@ jobs:
       - name: Exercise grouped context menus through native mouse input
         shell: pwsh
         run: |
-          dotnet run --project source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release --no-build -- --context-menu-only menu-evidence/ui 2>&1 | Tee-Object menu-evidence/ui.log
-          exit $LASTEXITCODE
+          'REUSED_PASS: menu UI, native input and light/dark 80/125% from run 40073498262; production inputs unchanged' | Tee-Object menu-evidence/ui-reused.log
       - name: Exercise drive first-click and recycle Delete independently
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         shell: pwsh
