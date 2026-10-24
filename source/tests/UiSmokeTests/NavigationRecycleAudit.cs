@@ -111,6 +111,10 @@ internal static class NavigationRecycleAudit
                     for (int i = 0; i < 30; i++)
                     { var listing = await RecycleBinService.ReadAsync(default); gone = !listing.Entries.Any(e => e.FullPath == fixtureIdentity); if (gone) break; await Task.Delay(100); }
                     Check(gone, "Approved native Delete did not remove its uniquely selected recycle item.");
+                    // The Shell item can disappear before the modal result dialog closes.
+                    // Wait for its owner/finally to release the real close guard.
+                    await Until(() => FindWindow("#32770", "휴지통 영구 삭제 요청 결과") == 0 && pane.BeforeFileChange?.Invoke() != false,
+                        "Delete result dialog or blocking operation state did not finish.");
                 }
             }
             finally { timer.Stop(); }
