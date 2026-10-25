@@ -1,0 +1,72 @@
+name: Sunrise File Manager R06 Windows UI verification
+
+on:
+  push:
+    branches: [validation/v1.7.0-r06-windows]
+    paths:
+      - 'source/**'
+      - 'r06-validation-kit/**'
+      - 'RELEASE_STATUS.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  r06-windows:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact R06 source identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (!(Test-Path 'RELEASE_STATUS.json')) { throw 'R06 full source not uploaded: RELEASE_STATUS.json missing' }
+          $status = Get-Content 'RELEASE_STATUS.json' -Raw | ConvertFrom-Json
+          if ($status.source_version -ne '1.7.0' -or $status.source_revision -ne 'V170_R06_LIGHT_DARK_SHELL_BUTTON_FINISH') {
+            throw "Wrong baseline: version=$($status.source_version) revision=$($status.source_revision); refused to test older source"
+          }
+          if (!(Test-Path 'r06-validation-kit/VERIFY_R06_WINDOWS.ps1')) { throw 'R06 Windows verification kit missing' }
+          if (!(Test-Path 'source/tests/UiSmokeTests/UiSmokeTests.csproj')) { throw 'UiSmokeTests source missing' }
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Capture Windows environment
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ci-r06 | Out-Null
+          dotnet --info | Out-File ci-r06/dotnet-info.log
+          [Environment]::UserInteractive | Out-File ci-r06/user-interactive.txt
+          cmd /c 'query session' 2>&1 | Out-File ci-r06/sessions.txt
+      - name: Run Python source and product tests
+        shell: pwsh
+        run: |
+          python -m unittest discover -s source/tests -p 'test_*.py' -q 2>&1 | Tee-Object ci-r06/source-tests.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p 'test_*.py' -q 2>&1 | Tee-Object ci-r06/product-tests.log
+          exit $LASTEXITCODE
+      - name: Compile R06 WPF and native test host
+        shell: pwsh
+        run: |
+          dotnet build source/tests/UiSmokeTests/UiSmokeTests.csproj -c Release -warnaserror 2>&1 | Tee-Object ci-r06/wpf-compile.log
+          exit $LASTEXITCODE
+      - name: Run real Windows UI interactions and screenshots
+        shell: pwsh
+        timeout-minutes: 18
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File .\r06-validation-kit\VERIFY_R06_WINDOWS.ps1 -IncludeExtendedUI 2>&1 | Tee-Object ci-r06/windows-visual.log
+          exit $LASTEXITCODE
+      - name: Preserve native Windows evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-file-manager-r06-windows-evidence
+          path: |
+            ci-r06/
+            validation/windows-r06-visual-*/
+          if-no-files-found: warn
+          retention-days: 14
