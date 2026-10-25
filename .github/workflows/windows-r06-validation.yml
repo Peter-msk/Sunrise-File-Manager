@@ -40,6 +40,7 @@ jobs:
           $harness = 'r06-validation-kit/VERIFY_R06_WINDOWS.ps1'
           $scriptText = Get-Content $harness -Raw
           $scriptText = $scriptText.Replace("session = @(cmd /c 'query session' 2>&1);", "session = @('Windows CI runner: session status is recorded in ci-r06');")
+          $scriptText = $scriptText.Replace('for $name: $_', 'for ${name}: $_')
           Set-Content $harness -Value $scriptText -Encoding utf8
           Write-Output 'R06 source and native validation kit extracted after SHA256 verification'
       - name: Verify exact R06 source identity
