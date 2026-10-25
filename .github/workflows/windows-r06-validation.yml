@@ -30,7 +30,7 @@ jobs:
           $source = '.r06_payload/Sunrise_File_Manager_v1.7.0_R06_CI_source.zip'
           $kit = '.r06_payload/Sunrise_File_Manager_v1.7.0_R06_Windows_실기검증_키트.zip'
           foreach($file in @($source,$kit)) { if (!(Test-Path $file)) { throw "Verification payload missing: $file" } }
-          if ((Get-FileHash $source -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'b1603185e9ad122088e1393af12bca032d600b0f126260591bacd322497f04ed') { throw 'R06 source ZIP digest mismatch' }
+          if ((Get-FileHash $source -Algorithm SHA256).Hash.ToLowerInvariant() -ne '00acb9c336890e423eadf1a6da5f99f3653b8f68ed252cdff7dfc7e973f164c7') { throw 'R06 source ZIP digest mismatch' }
           if ((Get-FileHash $kit -Algorithm SHA256).Hash.ToLowerInvariant() -ne '27153d8235c22eac3255ec0b6636b65a17267e0ed315392ff6522b23ca415c39') { throw 'R06 native UI kit ZIP digest mismatch' }
           foreach ($old in @('source','tests','docs','build-tools','validation','installer','release','ui-audit')) {
             if (Test-Path $old) { Remove-Item $old -Recurse -Force }
