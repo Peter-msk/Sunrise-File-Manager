@@ -17,6 +17,9 @@ permissions:
 jobs:
   r06-windows:
     runs-on: windows-2025
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: 'utf-8'
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +32,9 @@ jobs:
           foreach($file in @($source,$kit)) { if (!(Test-Path $file)) { throw "Verification payload missing: $file" } }
           if ((Get-FileHash $source -Algorithm SHA256).Hash.ToLowerInvariant() -ne '66b7ba34711c354aec9636b3d80300cd4d00453e4fd5efc66bbe874f7080bd3c') { throw 'R06 source ZIP digest mismatch' }
           if ((Get-FileHash $kit -Algorithm SHA256).Hash.ToLowerInvariant() -ne '0ef3d13c7e10169f4d293a922bcd1c87ff9d658a446408c20ad40b2b6594ad98') { throw 'R06 native UI kit ZIP digest mismatch' }
+          foreach ($old in @('source','tests','docs','build-tools','validation','installer','release','ui-audit')) {
+            if (Test-Path $old) { Remove-Item $old -Recurse -Force }
+          }
           Expand-Archive -LiteralPath $source -DestinationPath '.' -Force
           Expand-Archive -LiteralPath $kit -DestinationPath '.' -Force
           $harness = 'r06-validation-kit/VERIFY_R06_WINDOWS.ps1'
