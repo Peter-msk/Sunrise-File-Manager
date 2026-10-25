@@ -7,6 +7,7 @@ on:
       - 'source/**'
       - 'r06-validation-kit/**'
       - 'RELEASE_STATUS.json'
+      - '.r06_payload/**'
   workflow_dispatch:
 
 permissions:
@@ -18,6 +19,18 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Extract and fingerprint R06 source/Windows kit
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = '.r06_payload/Sunrise_File_Manager_v1.7.0_R06_CI_source.zip'
+          $kit = '.r06_payload/Sunrise_File_Manager_v1.7.0_R06_Windows_실기검증_키트.zip'
+          foreach($file in @($source,$kit)) { if (!(Test-Path $file)) { throw "Verification payload missing: $file" } }
+          if ((Get-FileHash $source -Algorithm SHA256).Hash.ToLowerInvariant() -ne '66b7ba34711c354aec9636b3d80300cd4d00453e4fd5efc66bbe874f7080bd3c') { throw 'R06 source ZIP digest mismatch' }
+          if ((Get-FileHash $kit -Algorithm SHA256).Hash.ToLowerInvariant() -ne '0ef3d13c7e10169f4d293a922bcd1c87ff9d658a446408c20ad40b2b6594ad98') { throw 'R06 native UI kit ZIP digest mismatch' }
+          Expand-Archive -LiteralPath $source -DestinationPath '.' -Force
+          Expand-Archive -LiteralPath $kit -DestinationPath '.' -Force
+          Write-Output 'R06 source and native validation kit extracted after SHA256 verification'
       - name: Verify exact R06 source identity
         shell: pwsh
         run: |
