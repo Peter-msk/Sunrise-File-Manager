@@ -30,8 +30,6 @@ Sunrise File Manager v1.7.5 정식 버전을 안내합니다. 여러 폴더와 �
 클라우드 연결은 선택 사항이며, 계정 비밀번호나 Client Secret을 프로그램에 입력하지 않습니다. 자동 로그인은 사용자가 선택한 경우에만 사용합니다.
 
 [설치 및 이용 안내]
-- 공식 다운로드: https://github.com/Peter-msk/Sunrise-File-Manager/releases/tag/v1.7.5
-- 설치파일: Sunrise_File_Manager_1.7.5_Setup.exe
 - 복사·이동·휴지통·동기화 작업 전에는 대상과 전송 결과를 확인해 주세요.
 - 이 공지는 기능 및 정식 버전 안내이며, 공지 열람만으로 설치 또는 업데이트가 자동 실행되지는 않습니다.
 
