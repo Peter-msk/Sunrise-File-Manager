@@ -15,10 +15,8 @@ public static class SunriseReleaseService
     private static readonly HttpClient Client = new(new HttpClientHandler { AllowAutoRedirect = false })
         { Timeout = Timeout.InfiniteTimeSpan };
     private static readonly SemaphoreSlim DownloadGate = new(1, 1);
-    internal static string UpdatesRoot => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "Updates");
-    private static string NoticeState => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "notice-sha256.txt");
+    internal static string UpdatesRoot => Path.Combine(AppStoragePaths.LocalRoot, "Updates");
+    private static string NoticeState => Path.Combine(AppStoragePaths.LocalRoot, "notice-sha256.txt");
 
     public sealed record Release(string Version, string DownloadUrl, string FileName, string Sha256,
         long FileSize, string Notes, string ReleaseUrl, string NoticeUrl, bool UpdateConfigured)

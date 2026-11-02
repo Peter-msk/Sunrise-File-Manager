@@ -160,8 +160,7 @@ public static class AiInspectionService
 
 public static class AiInspectionSettings
 {
-    private static string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "inspection-limits.json");
+    private static string FilePath => Path.Combine(AppStoragePaths.LocalRoot, "inspection-limits.json");
     public static AiWorkLimits Load(out string? warning)
     {
         warning = null;
