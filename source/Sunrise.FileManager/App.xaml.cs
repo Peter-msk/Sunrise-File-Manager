@@ -40,8 +40,8 @@ public partial class App : Application
         try { AppStoragePaths.ImportLegacyOnce(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show("기존 사용자 데이터를 새 Sunrise Group 폴더로 안전하게 복사하지 못했습니다.\\n" +
-                "원본 데이터는 보존되었습니다. 폴더 권한과 경로 링크를 확인한 후 다시 실행하세요.\\n" + ex.Message,
+            MessageBox.Show("기존 사용자 데이터를 새 Sunrise Group 폴더로 안전하게 복사하지 못했습니다.\n" +
+                "원본 데이터는 보존되었습니다. 폴더 권한과 경로 링크를 확인한 후 다시 실행하세요.\n" + ex.Message,
                 "Sunrise File Manager", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
