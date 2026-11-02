@@ -85,8 +85,7 @@ public sealed record AiJournalSummary(string Id, DateTimeOffset? ApprovedUtc, st
 /// <summary>Encrypted append-only, hash-linked records. Every intent/result is flushed before the next operation.</summary>
 public sealed class AiJournalStore
 {
-    public static string DefaultDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "AiAudit", "Journal");
+    public static string DefaultDirectory => Path.Combine(AppStoragePaths.LocalRoot, "AiAudit", "Journal");
     private readonly string _directory;
     private readonly IAiJournalProtection _protection;
     private static readonly JsonSerializerOptions Options = new() { MaxDepth = 16 };

@@ -13,9 +13,7 @@ namespace Sunrise.FileManager.Services;
 /// </summary>
 internal static class MemoLocalSnapshots
 {
-    private static readonly string Root = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "memo-snapshots");
+    private static readonly string Root = Path.Combine(AppStoragePaths.LocalRoot, "memo-snapshots");
     private static readonly string Setting = Path.Combine(Root, "enabled.txt");
     private const int MaxSnapshotBytes = 1_100_000;
     private const int MaxEntriesPerMemo = 25;

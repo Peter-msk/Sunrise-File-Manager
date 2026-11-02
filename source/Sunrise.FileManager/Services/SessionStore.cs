@@ -46,9 +46,7 @@ public sealed class AppSession
 
 public static class SessionStore
 {
-    public static string FilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "session.json");
+    public static string FilePath => Path.Combine(AppStoragePaths.LocalRoot, "session.json");
 
     public static AppSession Load(out string? warning) => Load(FilePath, out warning);
 

@@ -22,9 +22,7 @@ public sealed partial class AiOllamaService
          uri.Host.Equals("::1", StringComparison.OrdinalIgnoreCase)) &&
         string.IsNullOrEmpty(uri.UserInfo) && string.IsNullOrEmpty(uri.Query) && string.IsNullOrEmpty(uri.Fragment);
 
-    public static string ConfigFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "ollama_config.json");
+    public static string ConfigFilePath => Path.Combine(AppStoragePaths.LocalRoot, "ollama_config.json");
 
     public static OllamaUserConfig LoadConfig() => LoadConfig(ConfigFilePath);
 

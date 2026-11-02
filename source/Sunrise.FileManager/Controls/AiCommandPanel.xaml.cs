@@ -298,7 +298,7 @@ public partial class AiCommandPanel : UserControl
             if (ReferenceEquals(_cancellation, cancellation))
                 Status.Text = $"실행 {done}/{rows.Count} · {Path.GetFileName(row.Before)} · {row.Status}";
         });
-        string audit = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Sunrise", "FileManager", "AiAudit");
+        string audit = Path.Combine(AppStoragePaths.LocalRoot, "AiAudit");
         try
         {
             var result = await Task.Run(() => AiPlanService.ExecuteAsync(plan, true, audit, stepProgress, cancellation.Token, activity, recycleApproved: recycleApproved));

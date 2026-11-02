@@ -16,8 +16,7 @@ public static class SunriseControlService
     public const string ControlId = "sunrise_file_manager";
     public const string Version = "1.3.0";
     public const string Url = "https://raw.githubusercontent.com/Peter-msk/Sunrise_Control/main/control.txt";
-    private static readonly string CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "control-v1-cache.json");
+    private static readonly string CachePath = Path.Combine(AppStoragePaths.LocalRoot, "control-v1-cache.json");
     private static readonly HttpClient Client = MakeClient();
 
     public sealed record Policy(string Operation, string Update, string MinimumVersion, string Message, string Source)
