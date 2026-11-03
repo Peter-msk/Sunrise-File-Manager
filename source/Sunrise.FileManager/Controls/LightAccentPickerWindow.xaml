@@ -1,0 +1,83 @@
+<Window x:Class="Sunrise.FileManager.Controls.LightAccentPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Style="{StaticResource AppWindow}" Title="라이트 맞춤 색상"
+        Width="590" Height="610" MinWidth="490" MinHeight="520"
+        Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}"
+        WindowStartupLocation="CenterOwner" Closing="Picker_Closing" PreviewKeyDown="Picker_KeyDown">
+ <Grid Margin="15">
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+  </Grid.RowDefinitions>
+  <StackPanel Grid.Row="0" Margin="0,0,0,12">
+   <TextBlock Text="나만의 라이트 컬러" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+   <TextBlock Text="색상을 고르면 열린 프로그램에 즉시 미리보기로 반영됩니다. 적용을 누르기 전까지는 저장되지 않습니다."
+              FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Margin="0,5,0,0"/>
+   <TextBlock x:Name="SelectionStatus" Text="현재 설정: Sunrise 기본값" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="0,5,0,0"/>
+  </StackPanel>
+  <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+   <StackPanel>
+  <Border CornerRadius="8" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" Background="{DynamicResource ThemeSurface}" Padding="12" Margin="0,0,0,12">
+   <StackPanel>
+    <TextBlock Text="추천 색상" FontWeight="SemiBold" Margin="0,0,0,9"/>
+    <UniformGrid Columns="4" Rows="2">
+     <Button Tag="#1476B8" Content="오션 블루" Click="Preset_Click" Margin="3" MinHeight="37" ToolTip="#1476B8"/>
+     <Button Tag="#258261" Content="포레스트" Click="Preset_Click" Margin="3" MinHeight="37" ToolTip="#258261"/>
+     <Button Tag="#7756AD" Content="퍼플" Click="Preset_Click" Margin="3" MinHeight="37" ToolTip="#7756AD"/>
+     <Button Tag="#B64F68" Content="로즈" Click="Preset_Click" Margin="3" MinHeight="37" ToolTip="#B64F68"/>
+     <Button Tag="#B65D22" Content="오렌지" Click="Preset_Click" Margin="3" MinHeight="37" ToolTip="#B65D22"/>
+     <Button Tag="#237F92" Content="틸" Click="Preset_Click" Margin="3" MinHeight="37" ToolTip="#237F92"/>
+     <Button Tag="#626B77" Content="슬레이트" Click="Preset_Click" Margin="3" MinHeight="37" ToolTip="#626B77"/>
+     <Button Tag="#096B94" Content="Sunrise" Click="Preset_Click" Margin="3" MinHeight="37" ToolTip="#096B94"/>
+    </UniformGrid>
+   </StackPanel>
+  </Border>
+  <Border CornerRadius="8" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" Background="{DynamicResource ThemeSurface}" Padding="12" Margin="0,0,0,12">
+   <Grid>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Border x:Name="ColorSwatch" Width="66" Height="66" CornerRadius="7" BorderThickness="1" BorderBrush="{DynamicResource PanelBorder}" Background="#096B94" Margin="0,0,14,0"/>
+    <StackPanel Grid.Column="1">
+     <TextBlock Text="원하는 색상 직접 입력" FontWeight="SemiBold" Margin="0,0,0,6"/>
+     <StackPanel Orientation="Horizontal">
+      <TextBox x:Name="HexBox" AutomationProperties.Name="메인 컬러 6자리 HEX 코드" Width="110" MaxLength="7" FontSize="14" Padding="6,5" TextChanged="HexBox_TextChanged" ToolTip="예: #1476B8"/>
+      <TextBlock Text="예: #1476B8" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+     </StackPanel>
+     <TextBlock x:Name="HexError" Foreground="{DynamicResource ThemeNoticeText}" Text="" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0" AutomationProperties.LiveSetting="Polite"/>
+    </StackPanel>
+    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="기본값 복원을 누르면 Sunrise 공식 라이트 색상으로 돌아갑니다." FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="0,9,0,0"/>
+   </Grid>
+  </Border>
+  <Border CornerRadius="8" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" Background="{DynamicResource ThemeSurface}" Padding="12">
+   <Grid>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <TextBlock Grid.Row="0" Text="RGB 미세 조정 (0~255)" FontWeight="SemiBold" Margin="0,0,0,6"/>
+    <Grid Grid.Row="1" Margin="0,6,0,3">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
+     <TextBlock Grid.Column="0" Text="R" Width="22" VerticalAlignment="Center"/>
+     <Slider Grid.Column="1" x:Name="RedSlider" Minimum="0" Maximum="255" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="RgbSlider_ValueChanged" AutomationProperties.Name="빨간색 강도"/>
+     <TextBlock Grid.Column="2" x:Name="RedValue" Width="42" TextAlignment="Right" VerticalAlignment="Center"/>
+    </Grid>
+    <Grid Grid.Row="2" Margin="0,6,0,3">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
+     <TextBlock Grid.Column="0" Text="G" Width="22" VerticalAlignment="Center"/>
+     <Slider Grid.Column="1" x:Name="GreenSlider" Minimum="0" Maximum="255" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="RgbSlider_ValueChanged" AutomationProperties.Name="초록색 강도"/>
+     <TextBlock Grid.Column="2" x:Name="GreenValue" Width="42" TextAlignment="Right" VerticalAlignment="Center"/>
+    </Grid>
+    <Grid Grid.Row="3" Margin="0,6,0,3">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
+     <TextBlock Grid.Column="0" Text="B" Width="22" VerticalAlignment="Center"/>
+     <Slider Grid.Column="1" x:Name="BlueSlider" Minimum="0" Maximum="255" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="RgbSlider_ValueChanged" AutomationProperties.Name="파란색 강도"/>
+     <TextBlock Grid.Column="2" x:Name="BlueValue" Width="42" TextAlignment="Right" VerticalAlignment="Center"/>
+    </Grid>
+   </Grid>
+  </Border>
+   </StackPanel>
+  </ScrollViewer>
+  <DockPanel Grid.Row="2" Margin="0,13,0,0" LastChildFill="False">
+   <Button Content="기본값 복원" DockPanel.Dock="Left" Padding="12,7" Click="RestoreDefault_Click" ToolTip="기본 Sunrise 라이트 팔레트 미리보기"/>
+   <Button Content="취소" DockPanel.Dock="Right" Padding="16,7" Margin="8,0,0,0" IsCancel="True" Click="Cancel_Click"/>
+   <Button Content="적용 및 저장" DockPanel.Dock="Right" Padding="16,7" Margin="8,0,0,0" IsDefault="True" Click="Apply_Click"/>
+  </DockPanel>
+ </Grid>
+</Window>

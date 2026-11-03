@@ -1,102 +1,253 @@
 <Window x:Class="Sunrise.FileManager.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:Sunrise.FileManager.Controls"
- Style="{StaticResource AppWindow}" Title="Sunrise File Manager 1.3.0" Width="1520" Height="930" MinWidth="1010" MinHeight="560" WindowStartupLocation="CenterScreen" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown">
+ Style="{StaticResource AppWindow}" Title="Sunrise File Manager 1.8.0" Width="1520" Height="930" MinWidth="800" MinHeight="530" WindowStartupLocation="CenterScreen" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown">
+ <Window.Resources>
+  <!-- Component-owned A-layout utility rail. Keep the navy icon hover color legible; do not style the folder tree. -->
+  <Style x:Key="UtilityRailIconButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+   <Setter Property="Background" Value="{DynamicResource ThemeUtilityRail}"/>
+   <Setter Property="Foreground" Value="{DynamicResource ThemeUtilityRailText}"/>
+   <Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="BorderBrush" Value="Transparent"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+    <Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource ThemeUtilityRailHover}"/></Trigger>
+     <!-- Keep selected white icons on their strong accent surface while hovered. -->
+     <MultiTrigger><MultiTrigger.Conditions>
+      <Condition Property="IsMouseOver" Value="True"/>
+      <Condition Property="Tag" Value="True"/>
+     </MultiTrigger.Conditions><Setter TargetName="Surface" Property="Background" Value="{DynamicResource ThemeSplitActive}"/></MultiTrigger>
+     <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource ThemeSplitActive}"/></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource ThemeUtilityRailText}"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.40"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+ </Window.Resources>
  <Grid>
-  <Grid.RowDefinitions><RowDefinition Height="Auto" MinHeight="56"/><RowDefinition x:Name="TransferToolbarRow" Height="0"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-  <Border Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1" Padding="14,0">
-   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
-     <Border Background="{DynamicResource Brand}" Width="30" Height="30" CornerRadius="6" Margin="0,0,10,0"><Path Fill="{DynamicResource ThemeFolderIcon}" Stretch="Uniform" Margin="6" Data="M0,2 L6,2 9,5 20,5 20,17 0,17 Z"/></Border>
-     <TextBlock Text="Sunrise File Manager" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center"/>
-    </StackPanel>
-    <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-     <ComboBox x:Name="UiScaleSelector" Width="84" Margin="0,0,6,0" ToolTip="전체 UI 배율 (기본 80%)" SelectionChanged="UiScale_SelectionChanged"/>
-     <Button x:Name="HeaderThemeButton" Content="테마" Style="{StaticResource ExplorerCommand}" Click="ThemeCycle_Click"
-       ToolTip="테마 순환: PC 설정 적용 → 라이트 → 다크" Margin="0,0,6,0" Padding="10,5"/>
-     <Border Background="{DynamicResource ThemeSoftAlt}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="5" Padding="2" Margin="0,0,6,0">
-      <StackPanel Orientation="Horizontal">
-       <Button x:Name="OneButton" Style="{StaticResource ExplorerToggle}" Content="단일" Click="One_Click" ToolTip="단일 폴더 보기 (Ctrl+1)"/>
-       <Button x:Name="TwoButton" Style="{StaticResource ExplorerToggle}" Content="2분할" Click="Two_Click" ToolTip="두 개 탐색기 분할 (Ctrl+2)"/>
-       <Button x:Name="ThreeButton" Style="{StaticResource ExplorerToggle}" Content="3분할" Click="Three_Click" ToolTip="세 개 탐색기 분할 (Ctrl+3)"/>
-       <Button x:Name="FourButton" Style="{StaticResource ExplorerToggle}" Content="4분할" Click="Four_Click" ToolTip="네 개 탐색기 분할 (Ctrl+4)"/>
-      </StackPanel>
-     </Border>
-     <Button x:Name="AiToggleButton" Style="{StaticResource PrimaryButton}" Content="AI 파일 정리" Click="AiToggle_Click" ToolTip="AI 파일 검색·정리 팝업 열기/닫기 (F8)" Margin="0,0,6,0"/>
-     <Menu Style="{StaticResource SunrisePaneMenu}" VerticalAlignment="Center" MinHeight="34">
-      <MenuItem Header="설정 · 기능 ▾" Padding="12,7">
-       <MenuItem Header="AI 연결 및 설치" Click="AiConnect_Click"/>
-       <Separator/>
-       <MenuItem Header="상세정보 · 메모 켜기/끄기" Click="InspectorToggle_Click"/>
-       <MenuItem Header="미리보기 켜기/끄기" Click="MainPreview_Click"/>
-       <Separator/>
-       <MenuItem Header="분할 배치 전환" Click="CycleSplitPreset_Click"/>
-       <Separator/>
-       <MenuItem Header="화면 테마">
-        <MenuItem x:Name="ThemeSystemMenuItem" Header="PC 설정 적용" IsCheckable="True" Click="ThemeSystem_Click"/>
-        <MenuItem x:Name="ThemeLightMenuItem" Header="라이트 모드" IsCheckable="True" Click="ThemeLight_Click"/>
-        <MenuItem x:Name="ThemeDarkMenuItem" Header="다크 모드" IsCheckable="True" Click="ThemeDark_Click"/>
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <!-- R31: Single-row header. Quick actions removed; brand, split, scale, theme and settings only. -->
+  <Grid Grid.Row="0" x:Name="OfficialAShellHeader" Background="{DynamicResource ThemeSurface}">
+   <Grid.RowDefinitions><RowDefinition Height="42"/></Grid.RowDefinitions>
+   <Border Grid.Row="0" Background="{DynamicResource ThemeShellBrand}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1" Padding="10,0">
+    <Grid>
+     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+      <Image Source="/Sunrise.FileManager;component/Assets/SunriseFileManager.ico" Width="22" Height="22" Margin="0,0,7,0" RenderOptions.BitmapScalingMode="HighQuality" ToolTip="Sunrise File Manager 공식 제품 아이콘"/>
+      <TextBlock Text="Sunrise File Manager" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemeShellBrandText}" VerticalAlignment="Center"/>
+      <TextBlock Text="v1.8.0" Foreground="{DynamicResource ThemeShellBrandMuted}" FontSize="11" Margin="7,1,0,0" VerticalAlignment="Center"/>
+       <!-- R05: EIASS is a visible top-level workspace menu beside the product name
+            in every split, without the narrow right-side command overflow. -->
+       <Border Background="{DynamicResource ThemeSoftAlt}" BorderBrush="{DynamicResource PanelBorder}"
+               BorderThickness="1" CornerRadius="5" Margin="12,0,0,0" VerticalAlignment="Center">
+        <Menu Style="{StaticResource SunrisePaneMenu}" Background="Transparent" MinHeight="32">
+         <MenuItem x:Name="EiassMainMenu" Header="EIASS ▾" Padding="10,6" AutomationProperties.Name="EIASS 전용 메뉴">
+          <MenuItem Header="EIASS 제출용 문서명 설정…" Tag="Eiass" Click="MenuShellCommand_Click"
+                    ToolTip="현재 활성 탐색창에서 선택한 PDF의 EIASS 제출 문서명을 검토하고 변경"/>
+          <Separator/>
+          <MenuItem Header="환경평가 용역 폴더 계획…" Click="EiaWorkspacePlanning_Click"
+                    ToolTip="사업별 폴더 계획 미리보기·검토 및 실행 전 재점검. 실제 자동 생성은 Windows·권한·NAS 검증 전 비활성입니다."/>
+         </MenuItem>
+        </Menu>
+       </Border>
+     </StackPanel>
+     <ScrollViewer x:Name="HeaderPrimaryViewport" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False" VerticalAlignment="Center" HorizontalAlignment="Stretch" Focusable="False">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+       <TextBlock Text="분할" FontSize="12" Foreground="{DynamicResource ThemeShellBrandMuted}" VerticalAlignment="Center" Margin="0,0,7,0"/>
+       <Button x:Name="OneButton" AutomationProperties.Name="단일 화면 즉시 적용" Style="{StaticResource ShellSplitButton}" Content="단일" Click="One_Click" MinWidth="55" Padding="8,5" Margin="0,0,4,0" ToolTip="단일 화면으로 즉시 전환 (Ctrl+1)"/>
+       <Button x:Name="TwoButton" AutomationProperties.Name="2분할 배치 목록" Style="{StaticResource ShellSplitButton}" Content="2분할 ▾" Click="Two_Click" MinWidth="65" Padding="8,5" Margin="0,0,4,0" ToolTip="2분할 배치 선택 (Ctrl+2: 마지막 배치)"/>
+       <Button x:Name="ThreeButton" AutomationProperties.Name="3분할 배치 목록" Style="{StaticResource ShellSplitButton}" Content="3분할 ▾" Click="Three_Click" MinWidth="65" Padding="8,5" Margin="0,0,4,0" ToolTip="3분할 배치 선택 (Ctrl+3: 마지막 배치)"/>
+       <Button x:Name="FourButton" AutomationProperties.Name="4분할 배치 목록" Style="{StaticResource ShellSplitButton}" Content="4분할 ▾" Click="Four_Click" MinWidth="65" Padding="8,5" Margin="0,0,12,0" ToolTip="4분할 배치 선택 (Ctrl+4: 마지막 배치)"/>
+       <TextBlock Text="배율" FontSize="12" Foreground="{DynamicResource ThemeShellBrandMuted}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+       <ComboBox x:Name="UiScaleSelector" Style="{StaticResource ShellHeaderScale}" Width="78" Margin="0,0,8,0" ToolTip="전체 UI 배율 (기본 80%)" SelectionChanged="UiScale_SelectionChanged"/>
+       <Button x:Name="HeaderThemeButton" Content="테마" Style="{StaticResource ShellHeaderButton}" MinWidth="56" Padding="9,5" Click="ThemeCycle_Click" ToolTip="PC 설정 적용 → 라이트 → 다크"/>
+     <Border Background="{DynamicResource ThemeSoftAlt}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="5" Margin="9,0,0,0" VerticalAlignment="Center">
+     <Menu Style="{StaticResource SunrisePaneMenu}" VerticalAlignment="Center" MinHeight="32" Background="Transparent">
+      <MenuItem Header="설정 · 기능 ▾" Padding="10,6">
+       <!-- R61: retain command handlers, tags, names and gestures; group the entry points. -->
+       <MenuItem Header="파일 관리">
+        <MenuItem Header="파일 작업">
+         <MenuItem Header="새 폴더" Tag="NewFolder" Click="MenuShellCommand_Click"/>
+         <MenuItem Header="이름 변경" Tag="Rename" Click="MenuShellCommand_Click"/>
+         <MenuItem Header="잘라내기" Tag="Cut" Click="MenuShellCommand_Click" InputGestureText="Ctrl+X"/>
+         <MenuItem Header="복사" Tag="Copy" Click="MenuShellCommand_Click" InputGestureText="Ctrl+C"/>
+         <MenuItem Header="붙여넣기" Tag="Paste" Click="MenuShellCommand_Click" InputGestureText="Ctrl+V"/>
+         <MenuItem Header="삭제" Tag="Delete" Click="MenuShellCommand_Click"/>
+         <Separator/>
+         <MenuItem Header="실행 취소" Tag="Undo" Click="MenuShellCommand_Click" InputGestureText="Ctrl+Z"/>
+         <MenuItem Header="다시 실행" Tag="Redo" Click="MenuShellCommand_Click" InputGestureText="Ctrl+Y"/>
+        </MenuItem>
+        <MenuItem Header="압축 · 도구">
+         <MenuItem Header="ZIP 압축" Tag="Zip" Click="MenuShellCommand_Click"/>
+         <MenuItem Header="압축 풀기" Tag="Extract" Click="MenuShellCommand_Click"/>
+        </MenuItem>
        </MenuItem>
-       <Separator/>
-       <MenuItem Header="공지사항 · 버전 정보" Click="Notice_Click"/>
-       <MenuItem Header="업데이트 확인" Click="UpdateCheck_Click"/>
+       <MenuItem Header="검색 · 문서">
+        <MenuItem Header="스마트 검색 · 필터…" Click="SmartSearch_Click"/>
+        <MenuItem Header="선택 항목 미리보기" Click="MainPreview_Click"/>
+        <MenuItem Header="스마트 파일 메모" Click="MemoToggle_Click"/>
+        <MenuItem Header="상세정보" Click="DetailsPanelToggle_Click"/>
+       </MenuItem>
+       <MenuItem Header="분할 · 작업 공간">
+        <MenuItem Header="파일 작업 공간 집중" InputGestureText="Alt+Shift+F" Click="FocusWorkspace_Click" ToolTip="보조 패널을 안전하게 닫습니다. 저장하지 않은 메모가 있으면 먼저 확인합니다."/>
+        <MenuItem Header="다음 작업 영역으로 이동" InputGestureText="F6" Click="NextWorkspaceFocus_Click" ToolTip="열린 파일 탐색·상세정보·메모·미리보기 영역 사이로 키보드 포커스만 이동합니다."/>
+        <MenuItem Header="이전 작업 영역으로 이동" InputGestureText="Shift+F6" Click="PreviousWorkspaceFocus_Click" ToolTip="현재 파일 선택과 작성 중인 메모는 유지합니다."/>
+        <Separator/>
+        <MenuItem Header="새 독립 창 열기" InputGestureText="Ctrl+Shift+W" Click="NewWindow_Click"/>
+        <MenuItem Header="현재 분할 배치 선택…" Click="CurrentSplitLayoutGallery_Click"/>
+        <MenuItem Header="분할창 위치 맞바꾸기" Click="SwapPanes_Click" ToolTip="활성 분할창과 다음 분할창의 위치·탭 상태를 맞바꿉니다."/>
+        <MenuItem Header="분할창을 같은 폴더로 동기화" Click="SyncPanes_Click"/>
+       </MenuItem>
+       <MenuItem Header="전송 · 복구">
+        <MenuItem Header="분할창 간 파일 복사…" Click="CrossPaneCopy_Click"/>
+        <MenuItem Header="분할창 간 검증 후 안전 이동…" Click="CrossPaneMove_Click"/>
+        <MenuItem Header="폴더 비교 · 안전 단방향 동기화…" Click="FolderSync_Click" ToolTip="비교 결과를 검토한 뒤 대상에 없는 항목만 추가합니다. 삭제·덮어쓰기는 하지 않습니다."/>
+        <MenuItem Header="중단 작업 · 복구 기록">
+         <MenuItem Header="전송 복구 기록 확인…" Click="RecoveryJournal_Click"/>
+         <MenuItem Header="중단 복사 임시파일 직접 정리…" Click="ResumePartCleanup_Click"/>
+         <MenuItem Header="중단 클라우드 다운로드 임시파일 정리…" Click="CloudDownloadPartCleanup_Click"/>
+         <MenuItem Header="중단 클라우드 업로드 세션 정리…" Click="CloudUploadSessionCleanup_Click"/>
+         <MenuItem Header="중단 클라우드 폴더 복구 기록 정리…" Click="CloudFolderRecoveryCleanup_Click"/>
+        </MenuItem>
+       </MenuItem>
+       <MenuItem Header="클라우드 · AI">
+        <MenuItem Header="Google Drive · OneDrive 계정 및 파일 관리" Click="CloudDriveManage_Click"/>
+        <MenuItem Header="AI 연결 및 설치" Click="AiConnect_Click"/>
+       </MenuItem>
+       <MenuItem Header="패널 · 화면">
+        <MenuItem Header="파일 상세정보 켜기/끄기" x:Name="DetailsMenuItem" IsCheckable="True" Click="DetailsPanelToggle_Click"/>
+        <MenuItem Header="스마트 파일 메모 켜기/끄기" x:Name="MemoMenuItem" IsCheckable="True" Click="MemoToggle_Click"/>
+        <MenuItem Header="미리보기 켜기/끄기" Click="MainPreview_Click"/>
+        <MenuItem x:Name="SingleUtilityMenuItem" Header="우측 패널 하나씩 보기" IsCheckable="True" Click="SingleUtilityPanel_Click" ToolTip="선택 시 공용 메모·상세정보·미리보기 중 하나만 너비를 차지합니다."/>
+        <MenuItem Header="화면 테마">
+         <MenuItem x:Name="ThemeSystemMenuItem" Header="PC 설정 적용" IsCheckable="True" Click="ThemeSystem_Click"/>
+         <MenuItem x:Name="ThemeLightMenuItem" Header="라이트 모드" IsCheckable="True" Click="ThemeLight_Click"/>
+         <MenuItem x:Name="ThemeDarkMenuItem" Header="다크 모드" IsCheckable="True" Click="ThemeDark_Click"/>
+         <Separator/>
+         <MenuItem Header="라이트 맞춤 색상 선택…" Click="LightAccentSettings_Click" ToolTip="라이트 모드에서 색상 프리셋·RGB 조절·HEX 입력, 미리보기 및 저장"/>
+        </MenuItem>
+       </MenuItem>
+       <MenuItem Header="프로그램 정보">
+        <MenuItem Header="공지사항 · 버전 정보" Click="Notice_Click"/>
+        <MenuItem Header="업데이트 확인" Click="UpdateCheck_Click"/>
+       </MenuItem>
       </MenuItem>
      </Menu>
-     <!-- Existing named controls remain for code compatibility, but are not part of the title toolbar. -->
-     <StackPanel Visibility="Collapsed" IsHitTestVisible="False">
-      <ComboBox x:Name="SplitPresetSelector" Width="142" SelectionChanged="SplitPresetSelector_SelectionChanged"/>
-      <Button x:Name="CycleSplitPresetButton" Content="배치 전환" Click="CycleSplitPreset_Click"/>
-      <Button x:Name="InspectorToggleButton" Content="상세정보 · 메모" Click="InspectorToggle_Click"/>
-      <Button x:Name="MainPreviewButton" Content="미리보기" Click="MainPreview_Click"/>
-      <Button x:Name="AiConnectButton" Content="AI 연결" Click="AiConnect_Click"/>
-      <ComboBox x:Name="ThemeSelector" SelectionChanged="ThemeSelector_SelectionChanged"><ComboBoxItem Content="PC 설정" Tag="System"/><ComboBoxItem Content="라이트" Tag="Light"/><ComboBoxItem Content="다크" Tag="Dark"/></ComboBox>
-     </StackPanel>
-    </WrapPanel>
-   </Grid>
-  </Border>
-  <Border x:Name="TransferToolbar" Grid.Row="1" Background="{DynamicResource ThemeTransferBar}" Padding="12,4" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1" Visibility="Collapsed">
-   <WrapPanel VerticalAlignment="Center">
-    <TextBlock Text="패널 간 빠른 작업 (Q-Dir)" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
-    <ComboBox x:Name="SourceSelector" Width="104" Margin="0,0,6,0"/><TextBlock Text="→" VerticalAlignment="Center" Margin="0,0,6,0"/>
-    <ComboBox x:Name="DestinationSelector" Width="104" Margin="0,0,10,0"/>
-    <Button x:Name="CopyButton" Content="복사" Click="Copy_Click" Margin="0,0,4,0" ToolTip="원본 창의 선택 항목을 대상 창 폴더로 복사"/>
-    <Button x:Name="MoveButton" Content="이동" Click="Move_Click" Margin="0,0,8,0" ToolTip="원본 창의 선택 항목을 대상 창 폴더로 이동"/>
-    <ComboBox x:Name="CollisionSelector" Width="134" SelectedIndex="0" Margin="0,0,10,0"><ComboBoxItem Content="중복: 건너뛰기"/><ComboBoxItem Content="중복: 새 이름"/></ComboBox>
-    <Button x:Name="SwapPanesButton" Content="창 맞바꾸기" Click="SwapPanes_Click" Margin="0,0,4,0" ToolTip="원본 창과 대상 창의 작업 폴더·탭 상태를 서로 맞바꿉니다 (Q-Dir 스왑)"/>
-    <Button x:Name="SyncPanesButton" Content="폴더 동기화" Click="SyncPanes_Click" Margin="0,0,12,0" ToolTip="모든 분할 창을 현재 활성 창의 작업 폴더 경로로 동기화합니다"/>
-    <TextBlock Text="동일 드라이브 드래그: 이동 · Ctrl+드래그: 복사 · 분할 변경 시 작업 폴더 자동 보존" FontSize="11.5" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
-   </WrapPanel>
-  </Border>
-  <!-- The preview stays in the rightmost column; AI work runs in an independent popup window. -->
-  <Grid x:Name="WorkspaceShell" Grid.Row="2" Margin="6" SnapsToDevicePixels="True">
-   <Grid.ColumnDefinitions>
-    <ColumnDefinition Width="*"/>
-    <ColumnDefinition x:Name="PreviewDividerColumn" Width="0"/>
-    <ColumnDefinition x:Name="PreviewColumn" Width="0"/>
-   </Grid.ColumnDefinitions>
+     </Border>
+      </StackPanel>
+     </ScrollViewer>
+    </Grid>
+   </Border>
+   <!-- Compatibility-only state holders; no quick actions are rendered in the header. -->
+   <StackPanel Grid.Row="0" Visibility="Collapsed" IsHitTestVisible="False" Focusable="False">
+    <Button x:Name="AiToggleButton" Content="AI 파일 정리"/>
+    <Button x:Name="AiConnectButton" Content="AI 연결"/>
+    <Button x:Name="MemoToggleButton" Content="스마트 파일 메모"/>
+    <Button x:Name="MainPreviewButton" Content="미리보기"/>
+    <ComboBox x:Name="SplitPresetSelector" SelectionChanged="SplitPresetSelector_SelectionChanged"/>
+    <Button x:Name="CycleSplitPresetButton" Content="배치 전환"/>
+    <ComboBox x:Name="ThemeSelector" SelectionChanged="ThemeSelector_SelectionChanged">
+     <ComboBoxItem Content="PC 설정" Tag="System"/><ComboBoxItem Content="라이트" Tag="Light"/><ComboBoxItem Content="다크" Tag="Dark"/>
+    </ComboBox>
+   </StackPanel>
+  </Grid>
+  <!-- R54: Keep the tool rail pinned. A separately scrollable file/inspector surface
+       preserves approved panel minimums instead of clipping or closing unsaved memo. -->
+  <Grid x:Name="WorkspaceSurfaceHost" Grid.Row="1" Margin="6" SnapsToDevicePixels="True">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="0"/><ColumnDefinition Width="0"/><ColumnDefinition x:Name="UtilityRailColumn" Width="54"/></Grid.ColumnDefinitions>
+   <ScrollViewer x:Name="AuxiliaryLayoutViewport" Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False" AutomationProperties.Name="파일 및 보조 패널 가로 이동 영역">
+   <!-- WorkspaceShell retains its component ownership and independent split-pane scroll area. -->
+   <Grid x:Name="WorkspaceShell" Grid.Row="1" SnapsToDevicePixels="True">
+    <Grid.ColumnDefinitions>
+     <ColumnDefinition Width="*"/>
+     <ColumnDefinition x:Name="PreviewDividerColumn" Width="0"/>
+     <ColumnDefinition x:Name="PreviewColumn" Width="0"/>
+    </Grid.ColumnDefinitions>
    <Grid x:Name="FileAreaShell" Grid.Column="0">
     <Grid.ColumnDefinitions>
      <ColumnDefinition Width="*"/>
-     <ColumnDefinition x:Name="InspectorDividerColumn" Width="11"/>
-     <ColumnDefinition x:Name="InspectorColumn" Width="330"/>
+     <ColumnDefinition x:Name="DetailsPanelDividerColumn" Width="11"/>
+     <ColumnDefinition x:Name="DetailsPanelColumn" Width="300"/>
+     <ColumnDefinition x:Name="MemoDividerColumn" Width="11"/>
+     <ColumnDefinition x:Name="MemoColumn" Width="330"/>
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions><RowDefinition Height="*"/></Grid.RowDefinitions>
-    <ScrollViewer x:Name="WorkspaceViewport" Grid.Row="0" Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" SnapsToDevicePixels="True">
+    <ScrollViewer AutomationProperties.Name="분할 파일 탐색 작업 공간" x:Name="WorkspaceViewport" Grid.Row="0" Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" CanContentScroll="False" SnapsToDevicePixels="True">
      <Grid x:Name="Workspace" Width="800" Height="500"/>
     </ScrollViewer>
-    <GridSplitter Style="{StaticResource SunriseVerticalSplitter}" x:Name="InspectorSplitter" Grid.Row="0" Grid.Column="1" Background="{DynamicResource ThemeSplitter}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="True"/>
-    <local:FileInspector x:Name="Inspector" Grid.Row="0" Grid.Column="2"/>
+    <GridSplitter Style="{StaticResource SunriseVerticalSplitter}" x:Name="DetailsPanelSplitter" Grid.Row="0" Grid.Column="1" Background="{DynamicResource ThemeSplitter}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="True"/>
+    <local:FileDetailsPanel x:Name="FileDetails" Grid.Row="0" Grid.Column="2"/>
+    <GridSplitter Style="{StaticResource SunriseVerticalSplitter}" x:Name="MemoSplitter" Grid.Row="0" Grid.Column="3" Background="{DynamicResource ThemeSplitter}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="True"/>
+    <local:FileMemoPanel x:Name="MemoPanel" Grid.Row="0" Grid.Column="4"/>
    </Grid>
    <GridSplitter Style="{StaticResource SunriseVerticalSplitter}" x:Name="PreviewColumnSplitter" Grid.Column="1" Background="{DynamicResource ThemeSplitter}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="True" Visibility="Collapsed"/>
    <local:FilePreviewPanel x:Name="PreviewPane" Grid.Column="2" Visibility="Collapsed"/>
+   </Grid>
+   </ScrollViewer>
+   <!-- A-layout utility rail remains visible while auxiliary panels scroll horizontally. -->
+   <Border Grid.Column="3" Background="{DynamicResource ThemeUtilityRail}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1,0,0,0" Padding="1,0">
+    <!-- Independent right-side tools scroll vertically at the minimum window height. -->
+    <ScrollViewer AutomationProperties.Name="보조 도구 패널" x:Name="UtilityRailViewport" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False">
+     <StackPanel HorizontalAlignment="Center" Margin="0,6">
+     <TextBlock x:Name="ActivePaneIndicator" Text="1/1" HorizontalAlignment="Center" Foreground="{DynamicResource ThemeUtilityRailText}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,4" ToolTip="현재 공용 상세정보·미리보기·메모에 연결된 활성 분할창"/>
+     <!-- Compact, nonblocking overflow cue. It does not resize or discard any split pane. -->
+     <TextBlock x:Name="WorkspaceOverflowIndicator" Visibility="Collapsed" HorizontalAlignment="Center" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemeUtilityRailText}" Margin="0,0,0,4" AutomationProperties.Name="분할 작업 공간 스크롤 안내"/>
+     <Separator Margin="8,0,8,8"/>
+     <!-- Smart search owns a permanent right-rail entry; no top quick-command bar. -->
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailSmartSearchButton" ToolTip="스마트 검색 · 필터: 검색 위치와 파일 유형을 선택하여 찾기" Click="SmartSearch_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="스마트 검색 및 필터 열기">
+      <Viewbox Width="24" Height="24" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M11,3 A8,8 0 1 0 11,19 A8,8 0 1 0 11,3 M17,17 L23,23 M8,9 L14,9 M8,12 L13,12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent"/></Viewbox>
+     </Button>
+     <Separator Margin="5,5"/>
+
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailDetailsButton" ToolTip="파일 상세정보 (Alt+Shift+P)" Click="DetailsPanelToggle_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="상세정보">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M5,2 L16,2 L21,7 L21,22 L5,22 Z M16,2 L16,7 L21,7 M9,12 L17,12 M9,16 L17,16" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+      </Button>
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailMemoButton" ToolTip="스마트 파일 메모 (Alt+Shift+M)" Click="MemoToggle_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="스마트 메모">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M4,3 L18,3 L18,21 L4,21 Z M8,8 L15,8 M8,12 L15,12 M8,16 L13,16 M19,14 L22,11" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+      </Button>
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailPreviewButton" ToolTip="선택 파일 미리보기 (Ctrl+Shift+P)" Click="MainPreview_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="미리보기">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M2,12 C6,5 18,5 22,12 C18,19 6,19 2,12 Z M12,9 A3,3 0 1 1 12,15 A3,3 0 1 1 12,9" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+      </Button>
+     <Separator Margin="5,8"/>
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailAiButton" ToolTip="AI 파일 검색·정리 (F8)" Click="AiToggle_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="AI 파일 정리">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M12,2 L14,9 L21,12 L14,15 L12,22 L10,15 L3,12 L10,9 Z M19,2 L19,6 M17,4 L21,4" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+      </Button>
+     <!-- R15: independent cloud-drive launchers. These open the existing provider-specific manager;
+          they do not pretend the remote providers are mounted Explorer panes. -->
+     <Separator Margin="5,8"/>
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailGoogleDriveButton" ToolTip="Google Drive 계정 및 원격 파일 관리" Click="RailGoogleDrive_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="Google Drive 열기">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M8,3 L14,3 L22,17 L18,23 L2,23 L6,17 Z M8,3 L6,17 M14,3 L22,17 M6,17 L22,17" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+     </Button>
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailOneDriveButton" ToolTip="OneDrive 계정 및 원격 파일 관리" Click="RailOneDrive_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="OneDrive 열기">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M8,18 L6,18 C3.8,18 2,16.2 2,14 C2,11.8 3.7,10 5.8,10 C6.6,6.3 9.6,4 13,4 C16.6,4 19.4,6.7 19.7,10.3 C22,10.7 23.5,12.6 23.5,14.8 C23.5,17.5 21.5,19 18.8,19 L8,19" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+     </Button>
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailCrossPaneCopyButton" ToolTip="선택한 파일 여러 개를 다른 분할창으로 복사 (원본 보존, 덮어쓰기 금지)" Click="CrossPaneCopy_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="분할창 간 파일 복사">
+      <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M3,6 L15,6 L15,3 M15,6 L12,3 M21,18 L9,18 L9,21 M9,18 L12,21 M3,10 L3,17 L7,17 M21,14 L21,7 L17,7" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent"/></Viewbox>
+     </Button>
+     <Separator Margin="5,8"/>
+     <Button Style="{StaticResource UtilityRailIconButton}" Foreground="{DynamicResource ThemeUtilityRailText}" ToolTip="전송 복구 기록 확인" Click="RecoveryJournal_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="작업 복구 기록">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M5,7 L2,7 L2,2 M2,7 C5,2 12,1 17,4 C22,7 23,14 19,19 C15,23 7,23 4,19 M12,7 L12,13 L17,15" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+      </Button>
+     <Separator Margin="5,8"/>
+     <Button Style="{StaticResource UtilityRailIconButton}" x:Name="RailSingleUtilityButton" ToolTip="우측 메모·상세정보·미리보기를 동시에 펼치지 않고 하나씩 표시 (다시 누르면 동시 보기 허용)" Click="SingleUtilityPanel_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="공용 패널 하나씩 보기">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M3,3 L21,3 L21,21 L3,21 Z M15,3 L15,21 M17,8 L19,8 M17,12 L19,12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+      </Button>
+     <Button Style="{StaticResource UtilityRailIconButton}" Foreground="{DynamicResource ThemeUtilityRailText}" ToolTip="파일 작업 공간 집중 (Alt+Shift+F) · 저장하지 않은 메모는 먼저 확인" Click="FocusWorkspace_Click" Width="44" Height="42" Margin="0,2" Padding="0" AutomationProperties.Name="파일 작업 집중">
+       <Viewbox Width="22" Height="22" Stretch="Uniform" IsHitTestVisible="False"><Path Data="M3,9 L3,3 L9,3 M15,3 L21,3 L21,9 M21,15 L21,21 L15,21 M9,21 L3,21 L3,15" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/></Viewbox>
+      </Button>
+     </StackPanel>
+    </ScrollViewer>
+   </Border>
   </Grid>
-  <Border Grid.Row="3" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0" Padding="14,7">
-   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="145"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-    <StackPanel Margin="0,0,12,0"><TextBlock x:Name="JobStatus" Text="준비됨 · Windows 기본 탐색기 호환 모드" Foreground="{DynamicResource TextMuted}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/><TextBlock x:Name="JobDetail" Visibility="Collapsed" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource TextMuted}"/></StackPanel>
+  <Border Grid.Row="2" Background="{DynamicResource ThemeStatus}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0" Padding="14,7">
+   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="145"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel Margin="0,0,12,0"><TextBlock AutomationProperties.LiveSetting="Polite" x:Name="JobStatus" Text="준비됨 · Windows 기본 탐색기 호환 모드" Foreground="{DynamicResource TextMuted}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/><TextBlock x:Name="JobDetail" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" Visibility="Collapsed" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource TextMuted}"/></StackPanel>
     <ProgressBar x:Name="JobProgress" Visibility="Collapsed" Grid.Column="1" Minimum="0" Maximum="100" Height="7" VerticalAlignment="Center" Margin="0,0,12,0"/>
-    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-     <Button Content="공지사항" Style="{StaticResource ExplorerCommand}" Click="Notice_Click" MinHeight="25" Padding="10,3" FontSize="12" ToolTip="Sunrise File Manager 최신 공지 확인"/>
-     <Button Content="업데이트" Style="{StaticResource ExplorerCommand}" Click="UpdateCheck_Click" MinHeight="25" Padding="10,3" FontSize="12" ToolTip="최신 버전 확인 및 업데이트 다운로드" Margin="3,0,0,0"/>
-    </StackPanel>
-    <Button x:Name="CancelJobButton" Visibility="Collapsed" Grid.Column="3" Content="취소" Click="CancelJob_Click" IsEnabled="False" Padding="8,2" MinHeight="24"/>
+    <!-- Both former footer commands opened the same Sunrise Control window.
+         Keep both settings-menu entry points for keyboard/user workflow compatibility. -->
+    <!-- Notice/update remains accessible through Settings · Features; the status bar is for work progress. -->
+    <StackPanel Grid.Column="2" Orientation="Horizontal"><Button x:Name="PauseJobButton" Content="일시 중지" Visibility="Collapsed" Click="PauseJob_Click" Padding="8,2" MinHeight="28" Margin="0,0,4,0"/><Button x:Name="CancelJobButton" Visibility="Collapsed" Content="취소" Click="CancelJob_Click" IsEnabled="False" Padding="8,2" MinHeight="28"/></StackPanel>
    </Grid>
   </Border>
  </Grid>

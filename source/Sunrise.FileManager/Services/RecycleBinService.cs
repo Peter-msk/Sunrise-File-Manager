@@ -4,10 +4,18 @@ using Sunrise.FileManager.Models;
 namespace Sunrise.FileManager.Services;
 
 // Shell owns the item identities and restoration. No physical $Recycle.Bin file is exposed to file operations.
-public sealed record RecycleRestoreResult(int Requested, int Missing, IReadOnlyList<string> Errors);
+public sealed record RecycleRestoreResult(int Requested, int Missing, IReadOnlyList<string> Errors, int Completed = 0, bool Aborted = false);
+public sealed record RecycleEmptyResult(int Remaining, bool Aborted);
 public static class RecycleBinService
 {
     private static string Key(string identity) => "recycle-item:" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(identity));
+    private static string DecodeKey(string key)
+    {
+        const string prefix = "recycle-item:";
+        if (!key.StartsWith(prefix, StringComparison.Ordinal))
+            throw new ArgumentException("휴지통 항목의 식별자가 아닙니다.", nameof(key));
+        return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(key[prefix.Length..]));
+    }
     private static void Release(object? value) { if (value is not null && Marshal.IsComObject(value)) Marshal.FinalReleaseComObject(value); }
     private static Task<T> Sta<T>(Func<T> action, CancellationToken token)
     {
@@ -60,7 +68,68 @@ public static class RecycleBinService
         }
         finally { Release(items); Release(folder); Release(shell); }
     }, token);
-    public static Task<RecycleRestoreResult> RestoreAsync(IReadOnlyList<string> keys, CancellationToken token) => Sta(() =>
+    public static Task<RecycleRestoreResult> RestoreAsync(IReadOnlyList<string> keys, CancellationToken token)
+        => ExecuteVerbAsync(keys, token, "undelete");
+    // A single IFileOperation transaction: one application confirmation, no per-item Shell verbs.
+    public static Task<RecycleRestoreResult> PermanentlyDeleteAsync(IReadOnlyList<string> keys, CancellationToken token)
+        => Sta(() =>
+        {
+            var selected = keys.Distinct(StringComparer.Ordinal).ToArray();
+            if (selected.Length == 0) return new RecycleRestoreResult(0, 0, [], 0);
+            if (selected.Length > 20000) throw new IOException("한 번에 20,000개 이하를 선택하세요.");
+            var identities = selected.Select(DecodeKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            token.ThrowIfCancellationRequested();
+            var before = ReadLiveIdentities(token);
+            var live = identities.Where(before.Contains).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            int missing = identities.Count - live.Count;
+            if (live.Count == 0) return new RecycleRestoreResult(0, missing, [], 0);
+            var operation = RecycleBinNativeDelete.Delete(live, token);
+            // Queue success != deletion success. Re-read the namespace after the one batch.
+            var after = ReadLiveIdentities(CancellationToken.None);
+            int completed = live.Count(identity => !after.Contains(identity));
+            var errors = operation.Errors.ToList();
+            if (operation.Aborted) errors.Add("Windows에서 일부 삭제 작업이 취소되었습니다.");
+            if (completed < live.Count && errors.Count == 0)
+                errors.Add("일부 항목이 휴지통에 남아 있습니다. 권한 및 사용 중인 파일을 확인하세요.");
+            return new RecycleRestoreResult(operation.Queued, missing, errors, completed, operation.Aborted);
+        }, token);
+
+    private static HashSet<string> ReadLiveIdentities(CancellationToken token)
+    {
+        object? shell = null, folder = null, items = null;
+        var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            shell = Activator.CreateInstance(Type.GetTypeFromProgID("Shell.Application")!);
+            folder = ((dynamic)shell!).NameSpace(10) ?? throw new IOException("휴지통을 열 수 없습니다.");
+            items = ((dynamic)folder).Items();
+            int count = ((dynamic)items).Count;
+            for (int i = 0; i < count; ++i)
+            {
+                token.ThrowIfCancellationRequested();
+                object? item = null;
+                try { item = ((dynamic)items).Item(i); found.Add((string)((dynamic)item!).Path); }
+                catch (COMException ex) { throw new IOException("휴지통을 다시 조회하지 못했습니다. 삭제 결과를 확정할 수 없습니다.", ex); }
+                finally { Release(item); }
+            }
+            return found;
+        }
+        finally { Release(items); Release(folder); Release(shell); }
+    }
+
+    // Windows owns whole-bin deletion, including metadata and every volume. No direct $Recycle.Bin IO.
+    public static Task<RecycleEmptyResult> EmptyAsync(CancellationToken token) => Sta(() =>
+    {
+        token.ThrowIfCancellationRequested();
+        int hr = SHEmptyRecycleBin(IntPtr.Zero, null, 0x00000001); // SHERB_NOCONFIRMATION
+        bool aborted = hr == unchecked((int)0x800704C7);
+        if (hr < 0 && !aborted) Marshal.ThrowExceptionForHR(hr);
+        return new RecycleEmptyResult(ReadLiveIdentities(CancellationToken.None).Count, aborted);
+    }, token);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SHEmptyRecycleBin(IntPtr hwnd, string? rootPath, uint flags);
+    private static Task<RecycleRestoreResult> ExecuteVerbAsync(IReadOnlyList<string> keys, CancellationToken token, string verb) => Sta(() =>
     {
         var requestedKeys = keys.ToHashSet(StringComparer.Ordinal);
         if (requestedKeys.Count > 20000) throw new IOException("한 번에 20,000개 이하를 선택하세요.");
@@ -87,15 +156,15 @@ public static class RecycleBinService
                 catch (COMException ex) { if (errors.Count < 20) errors.Add("목록 변경 또는 접근 제한: " + ex.Message); }
                 finally { Release(item); }
             }
-            // Snapshot all matching Shell items before invoking verbs; restoration can mutate the live collection.
+            // Snapshot COM identities before invoking verbs; each action changes the live collection.
             int requested = 0;
             foreach (object item in matched)
             {
                 token.ThrowIfCancellationRequested();
-                try { ((dynamic)item).InvokeVerb("undelete"); requested++; }
-                catch (COMException ex) { if (errors.Count < 20) errors.Add("복원 요청 실패: " + ex.Message); }
+                try { ((dynamic)item).InvokeVerb(verb); requested++; }
+                catch (COMException ex) { if (errors.Count < 20) errors.Add("Windows Shell 작업 실패: " + ex.Message); }
             }
-            return new RecycleRestoreResult(requested, requestedKeys.Count - matched.Count, errors);
+            return new RecycleRestoreResult(requested, requestedKeys.Count - matched.Count, errors, requested);
         }
         finally
         {

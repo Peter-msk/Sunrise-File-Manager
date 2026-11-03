@@ -4,7 +4,7 @@
         Width="420" Height="174" MinWidth="340" MaxHeight="220"
         WindowStartupLocation="CenterOwner" WindowStyle="SingleBorderWindow"
         ResizeMode="NoResize" ShowInTaskbar="False">
-    <Grid Margin="16">
+    <Grid Margin="16" Background="{DynamicResource ThemeSurface}">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="38"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <TextBlock x:Name="PromptText" Text="이름" FontSize="12" Margin="0,0,0,8"/>
         <TextBox Grid.Row="1" x:Name="NameBox" MinHeight="30" VerticalContentAlignment="Center"/>

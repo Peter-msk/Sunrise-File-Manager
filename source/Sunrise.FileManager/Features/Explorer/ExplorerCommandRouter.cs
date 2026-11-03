@@ -170,6 +170,11 @@ public static class ExplorerCommandRouter
             return false;
         try
         {
+            // Mapped SMB/DFS paths can share a drive letter without sharing a rename-capable volume.
+            // Never choose a destructive implicit drag-move for a network endpoint.
+            if (Sunrise.FileManager.Services.NetworkTransferDiagnostics.IsNetworkPath(targetFolder) ||
+                sourcePaths.Any(Sunrise.FileManager.Services.NetworkTransferDiagnostics.IsNetworkPath))
+                return false;
             string? targetRoot = Path.GetPathRoot(Path.GetFullPath(targetFolder));
             if (string.IsNullOrEmpty(targetRoot)) return false;
             return sourcePaths.All(src =>

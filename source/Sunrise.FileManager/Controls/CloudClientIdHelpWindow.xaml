@@ -1,0 +1,37 @@
+<Window x:Class="Sunrise.FileManager.Controls.CloudClientIdHelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Style="{StaticResource AppWindow}" Title="앱 Client ID 발급 안내"
+        Width="660" Height="580" MinWidth="470" MinHeight="440"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="CanResize"
+        Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}">
+ <Grid Margin="15">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <StackPanel Grid.Row="0" Margin="0,0,0,8">
+   <TextBlock x:Name="ProviderHeading" FontSize="18" FontWeight="SemiBold"/>
+   <TextBlock Text="Sunrise에 필요한 것은 공개 앱 식별자(Client ID)입니다. 계정 비밀번호나 Client Secret은 입력하지 마세요."
+              TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" FontSize="12" Margin="0,5,0,0"/>
+  </StackPanel>
+  <Border Grid.Row="1" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="7" Background="{DynamicResource ThemeSurface}" Padding="12">
+   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" KeyboardNavigation.TabNavigation="Continue">
+    <StackPanel>
+     <TextBlock Text="발급 절차" FontWeight="SemiBold" Margin="0,0,0,7"/>
+     <ItemsControl x:Name="StepsList" AutomationProperties.Name="앱 Client ID 발급 절차">
+      <ItemsControl.ItemTemplate>
+       <DataTemplate>
+        <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,0,0,11"/>
+       </DataTemplate>
+      </ItemsControl.ItemTemplate>
+     </ItemsControl>
+     <Separator Margin="0,4,0,9"/>
+     <TextBlock Text="인증·권한 관련 주의사항" FontWeight="SemiBold" Margin="0,0,0,6"/>
+     <TextBlock x:Name="SecurityNote" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}"/>
+    </StackPanel>
+   </ScrollViewer>
+  </Border>
+  <DockPanel Grid.Row="2" Margin="0,11,0,0" LastChildFill="False">
+   <Button x:Name="CloseButton" DockPanel.Dock="Right" Content="닫기" IsCancel="True" Click="Close_Click" Padding="16,6"/>
+   <Button x:Name="OfficialGuideButton" DockPanel.Dock="Left" Content="공식 발급 페이지 열기" Click="OpenOfficial_Click" Padding="13,6" Margin="0,0,8,0"/>
+  </DockPanel>
+ </Grid>
+</Window>

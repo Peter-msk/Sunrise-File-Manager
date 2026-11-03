@@ -15,12 +15,13 @@ public sealed class ExplorerTab : INotifyPropertyChanged
         _history.Add(path);
     }
 
+    public string SearchText { get; set; } = "";
     public string CurrentPath => _history[_position];
     public string Title
     {
         get
         {
-            if (Sunrise.FileManager.Services.WindowsKnownLocations.IsRecycleBin(CurrentPath)) return "휴지통";
+            if (Sunrise.FileManager.Services.WindowsKnownLocations.IsVirtual(CurrentPath)) return Sunrise.FileManager.Services.WindowsKnownLocations.Title(CurrentPath);
             string path = CurrentPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             return Path.GetFileName(path) is { Length: > 0 } name ? name : CurrentPath;
         }

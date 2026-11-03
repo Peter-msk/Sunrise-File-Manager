@@ -2,20 +2,25 @@
  <Border Margin="2" BorderThickness="1" Background="{DynamicResource ThemeSurface}" CornerRadius="3">
   <Border.Style><Style TargetType="Border"><Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/><Style.Triggers><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger></Style.Triggers></Style></Border.Style>
   <Grid>
-   <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="36"/><RowDefinition x:Name="AddressRow" Height="42"/><RowDefinition x:Name="BreadcrumbRow" Height="28"/><RowDefinition Height="*"/><RowDefinition Height="30"/></Grid.RowDefinitions>
+   <Grid.RowDefinitions><RowDefinition x:Name="PaneMenuRow" Height="36"/><RowDefinition x:Name="TabRow" Height="36"/><RowDefinition x:Name="AddressRow" Height="42"/><RowDefinition x:Name="BreadcrumbRow" Height="28"/><RowDefinition Height="*"/><RowDefinition x:Name="FooterRow" Height="30"/></Grid.RowDefinitions>
 
 
 
    <!-- Row 0: Classic Windows menu for each split pane -->
-   <Menu Grid.Row="0" Style="{StaticResource SunrisePaneMenu}" BorderThickness="0,0,0,1" Padding="2,0">
+   <Menu x:Name="PaneClassicMenu" Grid.Row="0" Style="{StaticResource SunrisePaneMenu}" BorderThickness="0,0,0,1" Padding="2,0">
     <MenuItem x:Name="FileCommandMenu" Header="파일(_F)">
      <MenuItem Header="새 탭 열기" InputGestureText="Ctrl+T" Click="NewTab_Click"/>
      <Separator/>
      <MenuItem Header="새 폴더" InputGestureText="Ctrl+Shift+N" Click="NewFolder_Click"/>
      <MenuItem Header="새 파일" InputGestureText="Ctrl+N" Click="NewFile_Click"/>
+     <MenuItem x:Name="ShellNewTemplatesMenu" Header="Windows 등록 문서 만들기" SubmenuOpened="ShellNewTemplates_Opened"/>
      <Separator/>
      <MenuItem Header="열기" InputGestureText="Enter" Click="ContextOpen_Click"/>
      <MenuItem Header="연결 프로그램 선택" Click="ContextOpenWith_Click"/>
+     <MenuItem Header="Windows 확장 메뉴…" Click="WindowsMenu_Click"/>
+     <MenuItem Header="Windows 공유…" Click="WindowsShare_Click"/>
+       <MenuItem Header="클라우드 파일 · 항상 이 장치에 유지" Tag="keep" Click="CloudOffline_Click"/>
+       <MenuItem Header="클라우드 파일 · 공간 확보 요청" Tag="free" Click="CloudOffline_Click"/>
      <Separator/>
      <MenuItem Header="CMD에서 열기" Click="OpenCmd_Click"/>
      <MenuItem Header="Windows 탐색기에서 열기" Click="OpenWindowsExplorer_Click"/>
@@ -27,22 +32,53 @@
      <MenuItem Header="잘라내기" InputGestureText="Ctrl+X" Click="ClipboardCut_Click"/>
      <MenuItem Header="복사" InputGestureText="Ctrl+C" Click="ClipboardCopy_Click"/>
      <MenuItem Header="붙여넣기" InputGestureText="Ctrl+V" Click="ClipboardPaste_Click"/>
+     <MenuItem Header="바로가기 붙여넣기" Click="PasteShortcut_Click"/>
+     <MenuItem Header="바로가기 만들기" Click="CreateShortcut_Click"/>
      <MenuItem Header="이름 바꾸기" InputGestureText="F2" Click="Rename_Click"/>
+     <MenuItem x:Name="EiassCommandMenuItem" Header="EIASS 제출용 문서명 설정…" Click="EiassRename_Click"/>
      <MenuItem Header="복제" InputGestureText="Ctrl+D" Click="Duplicate_Click"/>
      <Separator/>
      <MenuItem Header="삭제" InputGestureText="Delete" Click="Recycle_Click"/>
      <MenuItem Header="영구 삭제" InputGestureText="Shift+Delete" Click="PermanentDelete_Click"/>
      <Separator/>
-     <MenuItem Header="모두 선택" InputGestureText="Ctrl+A" Click="SelectAll_Click"/>
+     <MenuItem Header="모두 선택 (현재 페이지)" InputGestureText="Ctrl+A" Click="SelectAll_Click"/>
+     <MenuItem Header="조건 일치 전체 결과 선택 (최대 20,000개)" Click="SelectAllResults_Click"/>
+     <MenuItem Header="선택 해제" InputGestureText="Esc" Click="ClearSelection_Click"/>
+     <MenuItem Header="선택 반전 (현재 페이지)" Click="InvertSelection_Click"/>
     </MenuItem>
-    <MenuItem Header="보기(_V)">
+    <MenuItem x:Name="ViewCommandMenu" Header="보기(_V)">
+     <MenuItem Header="현재 폴더 고급 필터…" Click="AdvancedFilter_Click"/>
+     <MenuItem Header="파일·폴더 유형별 검색 옵션…" Click="SearchOptions_Click"/>
+     <MenuItem Header="검색 범위">
+      <MenuItem Header="현재 폴더 이름 필터" Tag="Current" Click="SearchScope_Click"/>
+      <MenuItem Header="하위 폴더 포함 · 이름" Tag="Descendants" Click="SearchScope_Click"/>
+      <MenuItem Header="하위 폴더 포함 · 이름과 본문" Tag="Contents" Click="SearchScope_Click"/>
+      <MenuItem Header="Windows 인덱스 · 이름과 본문" Tag="Index" Click="SearchScope_Click"/>
+     </MenuItem>
+     <MenuItem Header="그룹 기준">
+      <MenuItem Header="그룹 없음" Tag="" Click="GroupField_Click"/>
+      <MenuItem Header="파일 종류" Tag="TypeName" Click="GroupField_Click"/>
+      <MenuItem Header="수정한 날짜" Tag="ModifiedGroup" Click="GroupField_Click"/>
+      <MenuItem Header="크기" Tag="SizeGroup" Click="GroupField_Click"/>
+      <MenuItem Header="상위 폴더" Tag="ParentFolder" Click="GroupField_Click"/>
+     </MenuItem>
      <MenuItem Header="새로 고침" InputGestureText="F5" Click="Refresh_Click"/>
      <Separator/>
      <MenuItem Header="탐색 창 켜기/끄기" Click="TreeToggle_Click"/>
-     <MenuItem Header="상세 정보 켜기/끄기" Click="DetailsToggle_Click"/>
+     <MenuItem x:Name="NavigationAutoHideMenu" Header="탐색 창 자동 숨김" IsCheckable="True" Click="NavigationAutoHide_Click"/>
+     <MenuItem Header="파일 상세정보 켜기/끄기" InputGestureText="Alt+Shift+P" Click="DetailsToggle_Click"/>
+     <MenuItem Header="스마트 파일 메모 켜기/끄기" InputGestureText="Alt+Shift+M" Click="MemoToggle_Click"/>
      <MenuItem Header="미리보기 켜기/끄기" Click="PreviewToggle_Click"/>
      <Separator/>
      <!-- R12: view/filter controls stay accessible when compact panes hide the toolbar combos -->
+     <MenuItem x:Name="ColumnVisibilityMenu" Header="자세히 보기 표시 열">
+      <MenuItem Header="수정한 날짜" Tag="2" IsCheckable="True" Click="DetailColumn_Click"/>
+      <MenuItem Header="유형" Tag="3" IsCheckable="True" Click="DetailColumn_Click"/>
+      <MenuItem Header="크기" Tag="4" IsCheckable="True" Click="DetailColumn_Click"/>
+      <MenuItem Header="메모" Tag="5" IsCheckable="True" Click="DetailColumn_Click"/>
+      <MenuItem Header="만든 날짜" Tag="6" IsCheckable="True" Click="DetailColumn_Click"/>
+      <MenuItem Header="클라우드 상태" Tag="9" IsCheckable="True" Click="DetailColumn_Click"/>
+     </MenuItem>
      <MenuItem Header="표시 방식">
       <MenuItem Header="자세히" Tag="0" Click="ViewModeMenu_Click"/>
       <MenuItem Header="목록" Tag="1" Click="ViewModeMenu_Click"/>
@@ -68,22 +104,43 @@
       <MenuItem Header="색상 구분 켜기/끄기" Click="ToggleColorCodingMenu_Click"/>
      </MenuItem>
     </MenuItem>
-    <MenuItem Header="즐겨찾기(_A)">
+    <MenuItem x:Name="FavoritesCommandMenu" Header="즐겨찾기(_A)">
      <MenuItem Header="현재 폴더 고정" Click="ContextPinFolder_Click"/>
     </MenuItem>
-    <MenuItem Header="추가 기능(_X)">
+    <MenuItem x:Name="ToolsCommandMenu" Header="추가 기능(_X)">
+     <MenuItem Header="최근 파일 · 관련 폴더" Tag="shell:Recent" Click="WindowsLocations_Click"/>
+     <MenuItem Header="Windows 라이브러리" Tag="shell:Libraries" Click="WindowsLocations_Click"/>
+     <MenuItem Header="네트워크 장치 · 공유" Tag="shell:NetworkPlacesFolder" Click="WindowsLocations_Click"/>
+     <MenuItem Header="네트워크 드라이브 연결…" Click="ConnectDrive_Click"/>
+     <MenuItem Header="네트워크 드라이브 연결 끊기…" Click="DisconnectDrive_Click"/>
+     <MenuItem Header="OneDrive 계정 폴더" Click="OneDriveAccounts_Click"/>
+     <MenuItem Header="사진 모아보기" Click="PhotoGallery_Click"/>
+     <MenuItem Header="Windows OCR로 이미지·PDF 텍스트 읽기…" Click="OcrRead_Click"/>
+     <Separator/>
      <MenuItem Header="ZIP 압축" Click="ZipCompress_Click"/>
-     <MenuItem Header="ZIP 압축 풀기" Click="ZipExtract_Click"/>
+     <MenuItem Header="TAR 압축" Click="TarCompress_Click"/>
+     <MenuItem Header="7z 압축" Tag="7z" Click="TarCompress_Click"/>
+     <MenuItem Header="ZIP·7z·RAR·TAR 압축 풀기" Click="ZipExtract_Click"/>
+     <MenuItem Header="암호 입력 후 압축 풀기…" Click="PasswordExtract_Click"/>
+     <MenuItem Header="압축 파일 내용·선택 항목 풀기…" Click="ArchiveContents_Click"/>
      <MenuItem Header="목록 내보내기" Click="ExportList_Click"/>
+     <MenuItem Header="전체 결과 목록 내보내기…" Click="ExportAllResults_Click"/>
     </MenuItem>
-    <MenuItem Header="정보(_I)">
+    <MenuItem x:Name="InfoCommandMenu" Header="정보(_I)">
      <MenuItem Header="속성" InputGestureText="Alt+Enter" Click="ContextProperties_Click"/>
+     <MenuItem Header="태그 · 작성자 · 평점 편집…" Click="MetadataEdit_Click"/>
+     <MenuItem Header="파일 속성 변경">
+      <MenuItem Header="숨김 설정" Tag="hidden-on" Click="SetFileAttribute_Click"/>
+      <MenuItem Header="숨김 해제" Tag="hidden-off" Click="SetFileAttribute_Click"/>
+      <MenuItem Header="읽기 전용 설정 (파일)" Tag="readonly-on" Click="SetFileAttribute_Click"/>
+      <MenuItem Header="읽기 전용 해제 (파일)" Tag="readonly-off" Click="SetFileAttribute_Click"/>
+     </MenuItem>
     </MenuItem>
    </Menu>
 
    <!-- Row 1: Windows 11 Style Top Folder Tab Bar -->
    <Grid Grid.Row="1" Background="{DynamicResource ThemeTab}">
-    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="32"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="32"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <TextBlock x:Name="PaneTitle" Text="탐색기" FontSize="11" ToolTip="현재 탐색기 분할 창" FontWeight="SemiBold" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="10,0,10,0"/>
     <ScrollViewer x:Name="TabScroll" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="Tabs_PreviewMouseWheel" ToolTip="마우스 휠로 탭을 좌우로 이동합니다. (Ctrl+T: 새 탭, Ctrl+W: 탭 닫기)">
      <ItemsControl x:Name="TabStrip"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
@@ -96,21 +153,82 @@
     </ScrollViewer>
     <Button Style="{StaticResource ExplorerNavButton}" Grid.Column="2" Content="+" Click="NewTab_Click" ToolTip="새 탭 열기 (Ctrl+T)" FontSize="18" Padding="0"/>
     <TextBlock Grid.Column="3" x:Name="PaneStatus" MaxWidth="175" FontSize="11" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" VerticalAlignment="Center" Margin="6,0,8,0"/>
+    <!-- DEV29: classic menus remain on the top row in every split. Retain the legacy flyout as an inert compatibility resource. -->
+    <Button x:Name="PaneMoreButton" Grid.Column="4" Visibility="Collapsed" Width="34" MinHeight="28" Margin="0,2,3,2"
+            Content="⋯" FontSize="19" Padding="0" VerticalAlignment="Center"
+            AutomationProperties.Name="이 탐색창의 고급 명령"
+            ToolTip="고급 명령: 이 탐색창의 파일·편집·보기·즐겨찾기·압축·속성 메뉴" Click="PaneMore_Click">
+     <Button.ContextMenu>
+      <ContextMenu x:Name="PaneMoreContextMenu" Placement="Bottom" StaysOpen="False"/>
+     </Button.ContextMenu>
+    </Button>
    </Grid>
 
    <!-- Row 1: Windows Explorer Navigation Buttons (← → ↑ ⟳), Address Bar, and Search Box -->
-   <Grid Grid.Row="2" Margin="8,4">
-    <Grid.RowDefinitions><RowDefinition Height="34"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <Grid x:Name="AddressCommandHost" Grid.Row="2" Margin="8,4">
+    <Grid.RowDefinitions><RowDefinition x:Name="AddressInputRow" Height="34"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="*"/><ColumnDefinition Width="46"/><ColumnDefinition x:Name="SearchColumn" Width="230"/></Grid.ColumnDefinitions>
     <Button Style="{StaticResource ExplorerNavButton}" Grid.Column="0" x:Name="BackButton" Content="←" Click="Back_Click" Padding="0" ToolTip="뒤로 (Alt+Left / Backspace / 마우스 뒤로 버튼)"/>
     <Button Style="{StaticResource ExplorerNavButton}" Grid.Column="1" x:Name="ForwardButton" Content="→" Click="Forward_Click" Padding="0" ToolTip="앞으로 (Alt+Right / 마우스 앞으로 버튼)"/>
     <Button Style="{StaticResource ExplorerNavButton}" Grid.Column="2" x:Name="UpButton" Content="↑" Click="Up_Click" Padding="0" ToolTip="상위 폴더로 이동 (Alt+Up)"/>
-    <Button Style="{StaticResource ExplorerNavButton}" Grid.Column="3" Content="⟳" Click="Refresh_Click" Padding="0" ToolTip="새로 고침 (F5 / Ctrl+R)"/>
-    <TextBox Grid.Column="4" x:Name="AddressBox" Height="34" VerticalAlignment="Center" KeyDown="AddressBox_KeyDown" ToolTip="폴더 경로 입력 (Alt+D / Ctrl+L / F4 · %TEMP%, %USERPROFILE% 환경변수 지원)" Margin="6,0,0,0"/>
-    <Button Grid.Column="5" Content="이동" Click="Go_Click" Style="{StaticResource ExplorerNavButton}" ToolTip="입력한 경로로 이동 (Enter)"/>
+    <Button x:Name="RefreshNavButton" Style="{StaticResource ExplorerNavButton}" Grid.Column="3" Content="⟳" Click="Refresh_Click" Padding="0" ToolTip="새로 고침 (F5 / Ctrl+R)"/>
+    <!-- Address text remains editable; the popup is owned by this pane, not the app-wide ComboBox theme. -->
+    <Grid Grid.Column="4" x:Name="AddressHost" Margin="6,0,0,0" Height="34">
+     <TextBox x:Name="AddressBox" Height="34" Padding="9,5,30,5" VerticalAlignment="Center" KeyDown="AddressBox_KeyDown"
+              PreviewMouseLeftButtonUp="AddressBox_PreviewMouseLeftButtonUp"
+              ToolTip="클릭: 폴더 트리 · 직접 입력: Enter · Alt+D / Ctrl+L / F4 · 환경변수 지원"/>
+     <Button x:Name="AddressDropButton" Content="⌄" Width="27" Height="30" MinHeight="28" HorizontalAlignment="Right" VerticalAlignment="Center"
+             Padding="0" BorderThickness="0" Background="Transparent" Focusable="False"
+             ToolTip="폴더 탐색 트리 펼치기" Click="AddressDropButton_Click"/>
+     <Popup x:Name="AddressPopup" PlacementTarget="{Binding ElementName=AddressHost}" Placement="Bottom"
+            StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
+      <Border x:Name="AddressPopupSurface" BorderThickness="1" BorderBrush="{DynamicResource ThemeInputBorder}"
+              Background="{DynamicResource ThemeComboPopup}" Padding="2" CornerRadius="3">
+       <!-- A real expandable explorer navigation tree, not a flat path-history list.
+            Materialized on first use to avoid duplicating all drive nodes at startup. -->
+       <ContentControl x:Name="AddressPopupContent" Height="390"/>
+      </Border>
+     </Popup>
+    </Grid>
+    <Button x:Name="GoNavButton" Grid.Column="5" Content="이동" Click="Go_Click" Style="{StaticResource ExplorerNavButton}" ToolTip="입력한 경로로 이동 (Enter)"/>
     <Grid x:Name="SearchHost" Grid.Column="6" Margin="8,0,0,0" Height="34">
-     <TextBox x:Name="SearchBox" Height="34" TextChanged="SearchBox_TextChanged" KeyDown="SearchBox_KeyDown" Padding="9,5" ToolTip="현재 폴더에서 검색 (Ctrl+F / Ctrl+E / F3 · Esc로 초기화)"/>
-     <TextBlock Text="현재 폴더에서 검색" Foreground="{DynamicResource TextMuted}" Margin="10,0" VerticalAlignment="Center" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/></Grid.ColumnDefinitions>
+     <TextBox x:Name="SearchBox" Height="34" Grid.Column="0" MaxLength="1000" TextChanged="SearchBox_TextChanged" KeyDown="SearchBox_KeyDown" Padding="8,5" ToolTip="이름 검색 (Ctrl+F / Ctrl+E / F3 · Esc로 입력 초기화)"/>
+     <Button Grid.Column="1" x:Name="SearchOptionsButton" Height="34" MinHeight="30" Padding="3,0" Content="필터 ▾" Click="SearchOptions_Click" ToolTip="검색 대상: 전체/파일만/폴더만 · 파일 형식: 한글/PDF/CAD 등">
+      <Button.ContextMenu><ContextMenu x:Name="SearchOptionsMenu" Placement="Bottom" StaysOpen="False">
+       <MenuItem Header="검색 대상">
+        <MenuItem Header="전체 (파일 + 폴더)" Tag="All" Click="SearchTarget_Click"/>
+        <MenuItem Header="파일만" Tag="Files" Click="SearchTarget_Click"/>
+        <MenuItem Header="폴더만 (고속)" Tag="Folders" Click="SearchTarget_Click"/>
+       </MenuItem>
+       <Separator/>
+       <MenuItem Header="검색 범위" x:Name="SearchScopeOptionsMenu">
+        <MenuItem Header="현재 폴더" Tag="Current" Click="SearchScope_Click"/>
+        <MenuItem Header="하위 폴더 포함 · 이름" Tag="Descendants" Click="SearchScope_Click"/>
+        <MenuItem Header="하위 폴더 포함 · 이름 + 본문" Tag="Contents" Click="SearchScope_Click"/>
+        <MenuItem Header="Windows 인덱스" Tag="Index" Click="SearchScope_Click"/>
+       </MenuItem>
+       <Separator/>
+       <MenuItem Header="파일 형식" x:Name="SearchFileTypeMenu">
+        <MenuItem Header="모든 파일" Tag="All" Click="SearchFileType_Click"/>
+        <MenuItem Header="한글 (HWP/HWPX/HWT)" Tag="Hangul" Click="SearchFileType_Click"/>
+        <MenuItem Header="PDF" Tag="Pdf" Click="SearchFileType_Click"/>
+        <MenuItem Header="포토샵 (PSD/PSB)" Tag="Photoshop" Click="SearchFileType_Click"/>
+        <MenuItem Header="일러스트 (AI/EPS/SVG)" Tag="Illustrator" Click="SearchFileType_Click"/>
+        <MenuItem Header="CAD · 도면 (DWG/DXF/DGN/DWF/IFC)" Tag="Cad" Click="SearchFileType_Click"/>
+        <MenuItem Header="엑셀 · 표 (XLS/XLSX/XLSM/XLSB/CSV)" Tag="Excel" Click="SearchFileType_Click"/>
+        <MenuItem Header="이미지 (JPG/PNG/TIF/BMP/WEBP 등)" Tag="Image" Click="SearchFileType_Click"/>
+        <MenuItem Header="워드 (DOC/DOCX/RTF/ODT)" Tag="Word" Click="SearchFileType_Click"/>
+        <MenuItem Header="프레젠테이션 (PPT/PPTX/ODP)" Tag="PowerPoint" Click="SearchFileType_Click"/>
+        <MenuItem Header="압축 (ZIP/7Z/RAR/TAR 등)" Tag="Archive" Click="SearchFileType_Click"/>
+        <Separator/>
+        <MenuItem Header="직접 확장자 입력…" Click="SearchCustomExtensions_Click"/>
+       </MenuItem>
+       <Separator/>
+       <MenuItem Header="검색 대상·형식 초기화" Click="SearchOptionsReset_Click"/>
+      </ContextMenu></Button.ContextMenu>
+     </Button>
+     <TextBlock x:Name="SearchModeLabel" Grid.Column="0" Text="현재 폴더에서 검색" Foreground="{DynamicResource TextMuted}" Margin="10,0" VerticalAlignment="Center" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
     </Grid>
    </Grid>
 
@@ -118,16 +236,16 @@
    <Border Grid.Row="3" Background="{DynamicResource ThemeSoft}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,1" Padding="8,2">
     <Grid>
      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-     <TextBlock Grid.Column="0" Text="폴더 경로:" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="2,0,6,0"/>
+     <TextBlock x:Name="BreadcrumbCaption" Grid.Column="0" Text="폴더 경로:" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="2,0,6,0"/>
      <ScrollViewer x:Name="BreadcrumbScroll" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" PreviewMouseWheel="Breadcrumb_PreviewMouseWheel" ToolTip="마우스 휠로 긴 폴더 경로를 좌우로 스크롤합니다">
       <StackPanel x:Name="BreadcrumbPanel" Orientation="Horizontal" VerticalAlignment="Center"/>
      </ScrollViewer>
      <StackPanel x:Name="DisplayOptionsPanel" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
       <TextBlock Text="표시:" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-      <CheckBox x:Name="HiddenToggle" Content="숨긴 항목" IsChecked="True" Checked="ViewOption_Changed" Unchecked="ViewOption_Changed" FontSize="11" Margin="0,0,8,0" ToolTip="Windows 탐색기 보기 → 표시 → 숨긴 항목"/>
-      <CheckBox x:Name="ExtensionsToggle" Content="파일 확장명" IsChecked="True" Checked="ViewOption_Changed" Unchecked="ViewOption_Changed" FontSize="11" Margin="0,0,8,0" ToolTip="Windows 탐색기 보기 → 표시 → 파일 이름 확장명"/>
+      <CheckBox x:Name="HiddenToggle" Content="숨긴 항목" IsChecked="False" Checked="ViewOption_Changed" Unchecked="ViewOption_Changed" FontSize="11" Margin="0,0,8,0" ToolTip="Windows 탐색기 보기 → 표시 → 숨긴 항목"/>
+      <CheckBox x:Name="ExtensionsToggle" Content="파일 확장명" IsChecked="False" Checked="ViewOption_Changed" Unchecked="ViewOption_Changed" FontSize="11" Margin="0,0,8,0" ToolTip="Windows 탐색기 보기 → 표시 → 파일 이름 확장명"/>
       <CheckBox x:Name="CheckboxesToggle" Content="항목 확인란" IsChecked="False" Checked="ViewOption_Changed" Unchecked="ViewOption_Changed" FontSize="11" Margin="0,0,8,0" ToolTip="Windows 탐색기 보기 → 표시 → 항목 확인란"/>
-      <CheckBox x:Name="ColorFilterToggle" Content="색상 구분" IsChecked="True" Checked="ViewOption_Changed" Unchecked="ViewOption_Changed" FontSize="11" ToolTip="확장자·유형별 파일 이름 색상 강조 표시"/>
+      <CheckBox x:Name="ColorFilterToggle" Content="색상 구분" IsChecked="False" Checked="ViewOption_Changed" Unchecked="ViewOption_Changed" FontSize="11" ToolTip="확장자·유형별 파일 이름 색상 강조 표시"/>
      </StackPanel>
     </Grid>
    </Border>
@@ -181,64 +299,160 @@
     <Separator/>
     <!-- 5. Windows Explorer Pane Toggles (탐색 창 · 세부 정보 창 · 미리보기 창) -->
     <Button Foreground="{DynamicResource TextPrimary}" x:Name="TreeToggle" Visibility="Collapsed" Content="탐색 창" Click="TreeToggle_Click" ToolTip="좌측 폴더 탐색 트리 표시/숨김"/>
-    <Button Foreground="{DynamicResource TextPrimary}" x:Name="DetailsToggle" Visibility="Collapsed" Content="세부 정보" Click="DetailsToggle_Click" ToolTip="세부 정보 및 #memo 창 표시/숨김 (Alt+Shift+P)"/>
+    <Button Foreground="{DynamicResource TextPrimary}" x:Name="DetailsToggle" Visibility="Collapsed" Content="세부 정보" Click="DetailsToggle_Click" ToolTip="파일 상세정보 창 표시/숨김 (Alt+Shift+P)"/>
     <Button Foreground="{DynamicResource TextPrimary}" x:Name="PreviewToggle" Visibility="Collapsed" Content="미리보기" Click="PreviewToggle_Click" ToolTip="우측 독립 미리보기 창 표시/숨김 (Alt+P / Space)"/>
    </ToolBar>
 
    <!-- File navigation: reclaimed command-bar height -->
-   <Grid Grid.Row="4">
-    <Grid.ColumnDefinitions><ColumnDefinition x:Name="TreeColumn" Width="215"/><ColumnDefinition x:Name="TreeDividerColumn" Width="6"/><ColumnDefinition Width="*" MinWidth="100"/><ColumnDefinition x:Name="DetailsDividerColumn" Width="1"/><ColumnDefinition x:Name="DetailsColumn" Width="0"/></Grid.ColumnDefinitions>
-    <local:FolderTree Grid.Column="0" x:Name="NavigationTree"/>
-    <GridSplitter Grid.Column="1" x:Name="TreeDivider" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{DynamicResource PanelBorder}"/>
-    <DataGrid Grid.Column="2" x:Name="FilesGrid" MinColumnWidth="46" Margin="5,0,5,0" FontSize="13" SelectionMode="Extended" CanUserResizeColumns="True"
-              EnableRowVirtualization="True" EnableColumnVirtualization="True"
+   <Grid Grid.Row="4" x:Name="FileContentHost" ClipToBounds="True">
+    <Grid.ColumnDefinitions><ColumnDefinition x:Name="TreeColumn" Width="272"/><ColumnDefinition x:Name="TreeDividerColumn" Width="22"/><ColumnDefinition Width="*" MinWidth="100"/></Grid.ColumnDefinitions>
+    <Border Grid.Column="0" x:Name="NavigationDrawer" Panel.ZIndex="20" Width="272" HorizontalAlignment="Left" Background="{DynamicResource ThemeTreeCanvas}" MouseEnter="NavigationDrawer_MouseEnter" MouseLeave="NavigationDrawer_MouseLeave" ContextMenuOpening="NavigationDrawer_ContextMenuOpening" ContextMenuClosing="NavigationDrawer_ContextMenuClosing">
+     <Border.RenderTransform><TranslateTransform x:Name="NavigationTranslation"/></Border.RenderTransform>
+     <Grid>
+      <local:FolderTree x:Name="NavigationTree"/>
+      <!-- Visible and auto-hidden drawers share the same right-edge resize grip. -->
+      <Thumb x:Name="NavigationResizeThumb" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="12"
+             Cursor="SizeWE" Background="Transparent" Panel.ZIndex="15"
+             ToolTip="끌어서 탐색 창 너비 조절" DragStarted="NavigationResize_Started"
+             DragDelta="NavigationResize_Delta" DragCompleted="NavigationResize_Completed">
+       <Thumb.Template>
+        <ControlTemplate TargetType="Thumb">
+         <Border Background="Transparent">
+          <Border Width="2" Margin="0,12,3,12" HorizontalAlignment="Right" CornerRadius="1"
+                  Background="{DynamicResource PanelBorder}"/>
+         </Border>
+        </ControlTemplate>
+       </Thumb.Template>
+      </Thumb>
+     </Grid>
+    </Border>
+    <Border Grid.Column="1" x:Name="TreeDivider" Panel.ZIndex="30" Background="{DynamicResource ThemeNavigationRail}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1,0,1,0" MouseEnter="NavigationDrawer_MouseEnter" MouseLeave="NavigationDrawer_MouseLeave">
+     <StackPanel>
+      <StackPanel.Resources>
+       <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Foreground" Value="{DynamicResource ThemeNavigationRailText}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+       </Style>
+      </StackPanel.Resources>
+      <Button x:Name="NavigationToggleButton" Content="‹" Click="TreeToggle_Click" ToolTip="탐색 창 열기/닫기" Padding="0" Width="20" MinHeight="34"/>
+      <Button x:Name="NavigationAutoHideButton" Content="◇" Click="NavigationAutoHide_Click" ToolTip="탐색 창 자동 숨김 (가장자리에 마우스를 올려 펼치기)" Padding="0" Width="20" MinHeight="34"/>
+     </StackPanel>
+    </Border>
+    <DataGrid Grid.Column="2" x:Name="FilesGrid" RowHeaderWidth="0" MinColumnWidth="46" Margin="5,0,5,0" FontSize="13" SelectionMode="Extended" CanUserResizeColumns="True"
+              EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" EnableColumnVirtualization="False"
               VirtualizingPanel.VirtualizationMode="Recycling" SelectionChanged="FilesGrid_SelectionChanged"
               MouseDoubleClick="FilesGrid_MouseDoubleClick" Sorting="FilesGrid_Sorting"
               LoadingRow="FilesGrid_LoadingRow" PreviewMouseRightButtonDown="FilesGrid_PreviewMouseRightButtonDown"
               PreviewMouseWheel="FilesGrid_PreviewMouseWheel"
-              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+              ScrollViewer.HorizontalScrollBarVisibility="Visible"
               AllowDrop="True" PreviewDragOver="FilesGrid_PreviewDragOver" PreviewDrop="FilesGrid_PreviewDrop"
               DragLeave="FilesGrid_DragLeave" PreviewMouseLeftButtonDown="FilesGrid_PreviewMouseLeftButtonDown"
               PreviewMouseMove="FilesGrid_PreviewMouseMove" PreviewKeyDown="FilesGrid_PreviewKeyDown">
+     <DataGrid.Resources>
+      <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}"><Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+       <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="DataGridRow"><Border Background="{TemplateBinding Background}" SnapsToDevicePixels="True"><DataGridCellsPresenter x:Name="PART_CellsPresenter" SnapsToDevicePixels="True"/></Border></ControlTemplate></Setter.Value></Setter>
+      </Style>
+      <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}"><Setter Property="FocusVisualStyle" Value="{x:Null}"/><Setter Property="Background" Value="Transparent"/>
+       <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="DataGridCell"><Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True"><ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch"/></Border></ControlTemplate></Setter.Value></Setter>
+      </Style>
+     </DataGrid.Resources>
+     <DataGrid.GroupStyle>
+      <GroupStyle><GroupStyle.HeaderTemplate><DataTemplate><TextBlock Text="{Binding Name}" FontWeight="SemiBold" Padding="8,7" Foreground="{DynamicResource TextPrimary}"/></DataTemplate></GroupStyle.HeaderTemplate></GroupStyle>
+     </DataGrid.GroupStyle>
      <DataGrid.ContextMenu>
-      <ContextMenu>
+      <!-- Official A: common Windows file commands remain one-click accessible.
+           Context kinds are resolved on Opened; virtual Recycle Bin/This PC own their menus. -->
+      <ContextMenu x:Name="FilesContextMenu" Opened="FilesContextMenu_Opened">
        <ContextMenu.Resources>
         <Style TargetType="MenuItem" BasedOn="{StaticResource CompactContextMenuItem}"/>
         <Style TargetType="Separator" BasedOn="{StaticResource CompactContextSeparator}"/>
        </ContextMenu.Resources>
-       <MenuItem Header="연결 앱에서 원본 열기" InputGestureText="Enter" Click="ContextOpen_Click"/>
-       <MenuItem Header="연결 프로그램 선택…" Click="ContextOpenWith_Click"/>
-       <MenuItem Header="새 탭에서 폴더 열기" InputGestureText="Ctrl+T" Click="ContextOpenInNewTab_Click"/>
-       <MenuItem Header="우측 미리보기 켜기/끄기" InputGestureText="Alt+P / Space" Click="PreviewToggle_Click"/>
-       <MenuItem Header="선택 항목 온보드 AI 정리 / 요약 (F8)" Click="SendToAi_Click"/>
-       <MenuItem Header="즐겨찾기(빠른 이동)에 고정" Click="ContextPinFolder_Click"/>
+       <MenuItem Header="열기" Tag="single" InputGestureText="Enter" Click="ContextOpen_Click"/>
+       <MenuItem Header="새 탭에서 열기" Tag="single-folder" Click="ContextOpenInNewTab_Click"/>
+       <MenuItem Header="연결 프로그램 선택…" Tag="single-file" Click="ContextOpenWith_Click"/>
        <Separator/>
-       <MenuItem Header="실행 취소" InputGestureText="Ctrl+Z" Click="Undo_Click"/>
-       <MenuItem Header="다시 실행" InputGestureText="Ctrl+Y" Click="Redo_Click"/>
-       <MenuItem Header="잘라내기" InputGestureText="Ctrl+X" Click="ClipboardCut_Click"/>
-       <MenuItem Header="복사" InputGestureText="Ctrl+C" Click="ClipboardCopy_Click"/>
-       <MenuItem Header="붙여넣기" InputGestureText="Ctrl+V" Click="ClipboardPaste_Click"/>
-       <MenuItem Header="사본 만들기 (복제)" InputGestureText="Ctrl+D" Click="Duplicate_Click"/>
+       <MenuItem Header="잘라내기" Tag="selected" InputGestureText="Ctrl+X" Click="ClipboardCut_Click"/>
+       <MenuItem Header="복사" Tag="selected" InputGestureText="Ctrl+C" Click="ClipboardCopy_Click"/>
+       <MenuItem x:Name="ContextPasteItem" Header="붙여넣기" Tag="paste" InputGestureText="Ctrl+V" Click="ContextPaste_Click"/>
+       <MenuItem Header="이름 바꾸기" Tag="single" InputGestureText="F2" Click="Rename_Click"/>
+       <MenuItem Header="삭제" Tag="selected" InputGestureText="Delete" Click="Recycle_Click"/>
        <Separator/>
-       <MenuItem Header="새로 만들기 → 폴더" InputGestureText="Ctrl+Shift+N" Click="NewFolder_Click"/>
-       <MenuItem Header="새로 만들기 → 텍스트/문서 파일…" InputGestureText="Ctrl+N" Click="NewFile_Click"/>
-       <MenuItem Header="이름 바꾸기 / 일괄 이름 바꾸기" InputGestureText="F2" Click="Rename_Click"/>
+       <MenuItem Header="바로가기 붙여넣기" Tag="paste-shortcut" Click="PasteShortcut_Click"/>
+       <MenuItem Header="새로 만들기" Tag="blank">
+        <MenuItem Header="폴더" Click="NewFolder_Click"/>
+        <MenuItem Header="빈 파일" Click="NewFile_Click"/>
+        <MenuItem x:Name="ContextShellNewTemplatesMenu" Header="Windows 등록 문서 만들기" SubmenuOpened="ShellNewTemplates_Opened"/>
+       </MenuItem>
+       <MenuItem Header="정렬 기준" Tag="blank">
+        <MenuItem Header="이름" Tag="sort:Name" Click="ContextSort_Click"/>
+        <MenuItem Header="수정한 날짜" Tag="sort:ModifiedAt" Click="ContextSort_Click"/>
+        <MenuItem Header="유형" Tag="sort:TypeName" Click="ContextSort_Click"/>
+        <MenuItem Header="크기" Tag="sort:SizeBytes" Click="ContextSort_Click"/>
+        <Separator/>
+        <MenuItem Header="오름차순" Tag="order:asc" Click="ContextSort_Click"/>
+        <MenuItem Header="내림차순" Tag="order:desc" Click="ContextSort_Click"/>
+       </MenuItem>
+       <MenuItem Header="그룹 기준" Tag="blank">
+        <MenuItem Header="그룹 없음" Tag="" Click="GroupField_Click"/>
+        <MenuItem Header="파일 종류" Tag="TypeName" Click="GroupField_Click"/>
+        <MenuItem Header="수정한 날짜" Tag="ModifiedGroup" Click="GroupField_Click"/>
+        <MenuItem Header="크기" Tag="SizeGroup" Click="GroupField_Click"/>
+        <MenuItem Header="상위 폴더" Tag="ParentFolder" Click="GroupField_Click"/>
+       </MenuItem>
+       <MenuItem Header="보기" Tag="blank">
+        <MenuItem Header="자세히" Tag="0" Click="ViewModeMenu_Click"/>
+        <MenuItem Header="목록" Tag="1" Click="ViewModeMenu_Click"/>
+        <MenuItem Header="큰 아이콘" Tag="2" Click="ViewModeMenu_Click"/>
+        <MenuItem Header="작은 아이콘" Tag="3" Click="ViewModeMenu_Click"/>
+        <MenuItem Header="타일" Tag="4" Click="ViewModeMenu_Click"/>
+       </MenuItem>
+       <MenuItem Header="실행 취소" Tag="undo" InputGestureText="Ctrl+Z" Click="Undo_Click"/>
+       <MenuItem Header="다시 실행" Tag="redo" InputGestureText="Ctrl+Y" Click="Redo_Click"/>
+       <MenuItem Header="새로 고침" Tag="blank" InputGestureText="F5" Click="Refresh_Click"/>
+       <MenuItem Header="모두 선택" Tag="blank" InputGestureText="Ctrl+A" Click="SelectAll_Click"/>
        <Separator/>
-       <MenuItem Header="ZIP으로 압축하기…" Click="ZipCompress_Click"/>
-       <MenuItem Header="여기에 ZIP 압축 풀기" Click="ZipExtract_Click"/>
-       <MenuItem Header="현재 폴더 목록 내보내기 (CSV / 클립보드)" Click="ExportList_Click"/>
+       <!-- Preserve R03's direct Sunrise work commands; only the Windows basics were missing. -->
+       <MenuItem x:Name="EiassRenameMenuItem" Header="EIASS 문서명 설정…" Tag="selected" Click="EiassRename_Click"/>
+       <MenuItem Header="AI 정리·요약" Tag="selected" InputGestureText="F8" Click="SendToAi_Click"/>
+       <MenuItem Header="파일 작업" Tag="selected">
+        <MenuItem Header="사본 만들기" InputGestureText="Ctrl+D" Click="Duplicate_Click"/>
+        <MenuItem Header="바로가기 만들기" Click="CreateShortcut_Click"/>
+        <MenuItem Header="즐겨찾기에 고정" Click="ContextPinFolder_Click"/>
+        <MenuItem Header="영구 삭제…" InputGestureText="Shift+Delete" Click="PermanentDelete_Click"/>
+       </MenuItem>
+       <MenuItem Header="Sunrise 문서·도구" Tag="selected">
+        <MenuItem Header="미리보기" InputGestureText="Alt+P / Space" Click="PreviewToggle_Click"/>
+        <MenuItem Header="파일 상세정보" Click="DetailsToggle_Click"/>
+        <MenuItem Header="스마트 파일 메모" Click="MemoToggle_Click"/>
+        <Separator/>
+        <MenuItem Header="ZIP으로 압축…" Click="ZipCompress_Click"/>
+        <MenuItem Header="TAR로 압축…" Click="TarCompress_Click"/>
+        <MenuItem Header="7z로 압축…" Tag="7z" Click="TarCompress_Click"/>
+        <MenuItem Header="압축 풀기…" Click="ZipExtract_Click"/>
+        <MenuItem Header="암호 입력 후 풀기…" Click="PasswordExtract_Click"/>
+        <MenuItem Header="내용 보기·선택 항목 풀기…" Click="ArchiveContents_Click"/>
+        <Separator/>
+        <MenuItem Header="태그·작성자·평점 편집…" Click="MetadataEdit_Click"/>
+       </MenuItem>
+       <MenuItem Header="목록·경로" Tag="selected">
+        <MenuItem Header="현재 페이지 목록 내보내기…" Click="ExportList_Click"/>
+        <MenuItem Header="전체 결과 목록 내보내기…" Click="ExportAllResults_Click"/>
+        <Separator/>
+        <MenuItem Header="경로 복사" InputGestureText="Ctrl+Shift+C" Click="ContextCopyPath_Click"/>
+        <MenuItem Header="파일 이름 복사" Click="ContextCopyName_Click"/>
+       </MenuItem>
+       <MenuItem Header="클라우드 파일" Tag="selected">
+        <MenuItem Header="항상 이 장치에 유지" Tag="keep" Click="CloudOffline_Click"/>
+        <MenuItem Header="공간 확보 요청" Tag="free" Click="CloudOffline_Click"/>
+       </MenuItem>
        <Separator/>
-       <MenuItem Header="삭제 (휴지통으로 이동)" InputGestureText="Delete" Click="Recycle_Click"/>
-       <MenuItem Header="영구 삭제 (복원 불가)" InputGestureText="Shift+Delete" Click="PermanentDelete_Click"/>
-       <Separator/>
-       <MenuItem Header="모두 선택" InputGestureText="Ctrl+A" Click="SelectAll_Click"/>
-       <MenuItem Header="선택 반전" Click="InvertSelection_Click"/>
-       <Separator/>
-       <MenuItem Header="터미널(CMD)에서 열기" Click="OpenCmd_Click"/>
-       <MenuItem Header="Windows 기본 파일 탐색기에서 열기" Click="OpenWindowsExplorer_Click"/>
-       <MenuItem Header="경로로 복사" InputGestureText="Ctrl+Shift+C" Click="ContextCopyPath_Click"/>
-       <MenuItem Header="파일 이름 복사" Click="ContextCopyName_Click"/>
-       <MenuItem Header="속성" InputGestureText="Alt+Enter" Click="ContextProperties_Click"/>
+       <MenuItem Header="Windows 공유…" Tag="selected" Click="WindowsShare_Click"/>
+       <MenuItem Header="Windows 확장 메뉴…" Tag="selected" Click="WindowsMenu_Click"/>
+       <MenuItem Header="Windows 탐색기에서 열기" Tag="blank" Click="OpenWindowsExplorer_Click"/>
+       <MenuItem Header="속성" Tag="properties" InputGestureText="Alt+Enter" Click="ContextProperties_Click"/>
       </ContextMenu>
      </DataGrid.ContextMenu>
      <DataGrid.Columns>
@@ -257,16 +471,29 @@
         </DataTemplate>
        </DataGridTemplateColumn.CellTemplate>
       </DataGridTemplateColumn>
-      <DataGridTextColumn Header="이름" Binding="{Binding DisplayName}" SortMemberPath="Name" Width="2*" MinWidth="190">
-       <DataGridTextColumn.ElementStyle>
-        <Style TargetType="TextBlock">
-         <Setter Property="Foreground" Value="{Binding NameForeground}"/>
-         <Setter Property="VerticalAlignment" Value="Center"/>
-         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-         <Setter Property="ToolTip" Value="{Binding DisplayName}"/>
-        </Style>
-       </DataGridTextColumn.ElementStyle>
-      </DataGridTextColumn>
+      <!-- Single-item rename is edited in place; extension visibility follows this pane's setting. -->
+      <DataGridTemplateColumn Header="이름" SortMemberPath="Name" Width="2*" MinWidth="190">
+       <DataGridTemplateColumn.CellTemplate>
+        <DataTemplate>
+         <Grid>
+          <TextBlock x:Name="InlineNameLabel" Text="{Binding DisplayName}" Foreground="{Binding NameForeground}"
+                     VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+          <TextBox x:Name="InlineRenameEditor" Visibility="Collapsed" MinHeight="25" VerticalContentAlignment="Center"
+                   Padding="4,1" BorderThickness="1" BorderBrush="{DynamicResource Accent}"
+                   Text="{Binding RenameDraft, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                   IsVisibleChanged="InlineRenameEditor_IsVisibleChanged"
+                   PreviewKeyDown="InlineRenameEditor_PreviewKeyDown"
+                   LostKeyboardFocus="InlineRenameEditor_LostKeyboardFocus"/>
+         </Grid>
+         <DataTemplate.Triggers>
+          <DataTrigger Binding="{Binding IsRenaming}" Value="True">
+           <Setter TargetName="InlineNameLabel" Property="Visibility" Value="Collapsed"/>
+           <Setter TargetName="InlineRenameEditor" Property="Visibility" Value="Visible"/>
+          </DataTrigger>
+         </DataTemplate.Triggers>
+        </DataTemplate>
+       </DataGridTemplateColumn.CellTemplate>
+      </DataGridTemplateColumn>
       <DataGridTextColumn Header="수정한 날짜" Binding="{Binding ModifiedDisplay}" SortMemberPath="ModifiedAt" Width="152" />
       <DataGridTextColumn Header="유형" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}" Binding="{Binding TypeName}" SortMemberPath="TypeName" Width="112" />
       <DataGridTextColumn Header="크기" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}" Binding="{Binding SizeDisplay}" SortMemberPath="SizeBytes" Width="90" />
@@ -274,28 +501,22 @@
       <DataGridTextColumn Header="만든 날짜" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}" Binding="{Binding CreatedDisplay}" SortMemberPath="CreatedAt" Width="152" />
      <DataGridTextColumn x:Name="RecycleDeletedColumn" Header="삭제한 날짜" SortMemberPath="DeletedAt" Binding="{Binding DeletedDisplay}" Width="152" Visibility="Collapsed" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}"/>
       <DataGridTextColumn x:Name="RecycleOriginColumn" Header="원래 위치" SortMemberPath="OriginalLocation" Binding="{Binding OriginalLocation}" Width="220" Visibility="Collapsed" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}"/>
-     </DataGrid.Columns>
+     <DataGridTextColumn x:Name="CloudStatusColumn" Header="클라우드 상태" Binding="{Binding CloudStatus}" Width="150" IsReadOnly="True" ElementStyle="{StaticResource CenteredFileCell}" HeaderStyle="{StaticResource CenteredFileHeader}"/></DataGrid.Columns>
     </DataGrid>
 
-    <GridSplitter Grid.Column="3" x:Name="DetailsDivider" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{DynamicResource PanelBorder}"/>
-    <Border Grid.Column="4" x:Name="DetailsPanel" Background="{DynamicResource ThemeStatus}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1,0,0,0" Padding="16">
-     <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
-      <TextBlock Text="상세 정보" FontWeight="SemiBold" Margin="0,0,0,18"/>
-      <TextBlock x:Name="DetailsName" Text="파일을 선택하세요" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,18"/>
-      <TextBlock x:Name="DetailsMeta" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}"/>
-      <Separator Margin="0,16"/><TextBlock x:Name="DetailsSummary" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}"/>
-      <Button Content="연결 앱에서 원본 열기" Click="ContextOpen_Click" BorderBrush="{DynamicResource PanelBorder}" Margin="0,18,0,6"/>
-      <Button Content="우측 미리보기" Click="PreviewToggle_Click" BorderBrush="{DynamicResource PanelBorder}"/>
-     </StackPanel></ScrollViewer>
-    </Border>
+    <!-- Detail/preview/memo appear ONLY in the single MainWindow shared right dock. -->
    </Grid>
 
    <!-- File Explorer Status Bar -->
-   <Border Grid.Row="5" Background="{DynamicResource ThemeStatus}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0" Padding="10,5">
+   <Border x:Name="PaneFooter" Grid.Row="5" Background="{DynamicResource ThemeStatus}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,1,0,0" Padding="10,5">
     <Grid>
      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
      <TextBlock Grid.Column="0" x:Name="FooterText" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" Foreground="{DynamicResource TextMuted}" FontSize="11.5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-     <TextBlock Grid.Column="1" x:Name="DriveSpaceText" Foreground="{DynamicResource TextMuted}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center"/>
+     <StackPanel Grid.Column="1" Orientation="Horizontal">
+      <Button x:Name="PreviousPageButton" Content="이전" Click="PreviousPage_Click" Padding="5,1" MinHeight="28" Margin="4,0" ToolTip="이전 파일 목록 페이지" IsEnabled="False"/>
+      <Button x:Name="NextPageButton" Content="다음" Click="NextPage_Click" Padding="5,1" MinHeight="28" Margin="4,0" ToolTip="다음 파일 목록 페이지" IsEnabled="False"/>
+     <TextBlock x:Name="DriveSpaceText" Foreground="{DynamicResource TextMuted}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center"/>
+     </StackPanel>
     </Grid>
    </Border>
   </Grid>

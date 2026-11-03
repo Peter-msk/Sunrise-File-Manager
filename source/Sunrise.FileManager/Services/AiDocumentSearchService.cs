@@ -3,7 +3,7 @@ using System.IO;
 namespace Sunrise.FileManager.Services;
 
 /// <summary>Read-only, local keyword search for supported office documents.
-/// Search examines a bounded prefix only; unreadable documents are never counted as matches.</summary>
+/// Searches supported document bodies within the approved file/byte budget.</summary>
 public static class AiDocumentSearchService
 {
     public sealed record Result(IReadOnlyList<string> Matches, int Inspected, int Unsupported, int Unreadable);
@@ -20,24 +20,24 @@ public static class AiDocumentSearchService
         foreach (string path in candidates)
         {
             token.ThrowIfCancellationRequested();
-            if (!File.Exists(path) || Path.GetExtension(path).ToLowerInvariant() is not (".pdf" or ".hwpx" or ".docx"))
+            if (!File.Exists(path) || !DocumentContentSearch.Supports(path))
             { unsupported++; continue; }
             try
             {
                 string checkedPath = AiPlanService.OrdinaryPath(path);
                 var file = new FileInfo(checkedPath);
-                long max = file.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase)
-                    ? FilePreviewService.MaxPdfBytes : FilePreviewService.MaxOfficeBytes;
-                if (file.Length > max) { unreadable++; continue; }
                 bytes = checked(bytes + file.Length);
                 if (bytes > MaxTotalBytes) throw new IOException("본문 검색 총 256MB 상한을 초과했습니다. 범위를 좁혀주세요.");
                 inspected++;
-                string? body = FilePreviewService.ReadSearchableDocumentText(checkedPath, token);
-                if (body is null) { unreadable++; continue; }
-                if (body.Contains(word, StringComparison.OrdinalIgnoreCase)) matches.Add(checkedPath);
+                var result = DocumentContentSearch.Find(checkedPath, word, token);
+                if (result.Status == ContentSearchStatus.Match) matches.Add(checkedPath);
+                else if (result.Status == ContentSearchStatus.Unsupported) unsupported++;
+                else if (result.Status == ContentSearchStatus.SizeLimit)
+                    throw new IOException("일부 본문이 검색되지 않아 일괄 작업을 중단합니다: " + result.Detail);
             }
             catch (Exception ex) when (ex is InvalidDataException or UnauthorizedAccessException or
-                System.Security.SecurityException or NotSupportedException or System.Xml.XmlException)
+                System.Security.SecurityException or NotSupportedException or System.Xml.XmlException or
+                UglyToad.PdfPig.Core.PdfDocumentFormatException or UglyToad.PdfPig.Exceptions.PdfDocumentEncryptedException)
             { unreadable++; }
             // IO errors signal unstable file state; do not silently approve a partial bulk operation.
         }

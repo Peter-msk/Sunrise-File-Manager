@@ -18,9 +18,7 @@ internal static class MemoIntegrityBaseline
     internal sealed record Verdict(bool Changed, string? Warning);
     private sealed record Anchor(string MemoFileName, string Author, string Sha256, DateTime FirstSeenUtc, DateTime AcceptedUtc);
     private const int MaxMemoBytes = 1_100_000;
-    private static readonly string Root = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "memo-integrity");
+    private static readonly string Root = SunriseGroupPaths.Local("memo-integrity");
 
     internal static Verdict Inspect(string memoPath, string author)
     {

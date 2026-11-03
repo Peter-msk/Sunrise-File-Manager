@@ -22,9 +22,7 @@ public sealed partial class AiOllamaService
          uri.Host.Equals("::1", StringComparison.OrdinalIgnoreCase)) &&
         string.IsNullOrEmpty(uri.UserInfo) && string.IsNullOrEmpty(uri.Query) && string.IsNullOrEmpty(uri.Fragment);
 
-    public static string ConfigFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Sunrise", "FileManager", "ollama_config.json");
+    public static string ConfigFilePath => SunriseGroupPaths.Local("ollama_config.json");
 
     public static OllamaUserConfig LoadConfig() => LoadConfig(ConfigFilePath);
 
@@ -39,6 +37,7 @@ public sealed partial class AiOllamaService
             if (!Uri.TryCreate(cfg.Endpoint, UriKind.Absolute, out Uri? uri) || !IsAllowedLoopback(uri))
                 cfg.Endpoint = DefaultEndpoint;
             if (string.IsNullOrWhiteSpace(cfg.Model)) cfg.Model = DefaultModel;
+            if (cfg.PreferredSetupModel is null || cfg.PreferredSetupModel.Length > 200) cfg.PreferredSetupModel = "";
             return cfg;
         }
         catch

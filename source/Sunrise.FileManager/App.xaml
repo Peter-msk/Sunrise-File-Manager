@@ -24,6 +24,17 @@
  <SolidColorBrush x:Key="ThemeStatus" Color="#F8FAFC"/>
  <SolidColorBrush x:Key="ThemeTrack" Color="#D2DFEA"/>
  <SolidColorBrush x:Key="ThemeSplitter" Color="#A4B8CB"/>
+ <SolidColorBrush x:Key="ThemeNavigationRail" Color="#EFF4F8"/>
+ <SolidColorBrush x:Key="ThemeNavigationRailText" Color="#315B7A"/>
+ <SolidColorBrush x:Key="ThemeShellBrand" Color="#F5F9FC"/>
+ <SolidColorBrush x:Key="ThemeShellBrandText" Color="#173B56"/>
+ <SolidColorBrush x:Key="ThemeShellBrandMuted" Color="#526B83"/>
+ <SolidColorBrush x:Key="ThemeShellSun" Color="#F7BA3B"/>
+ <SolidColorBrush x:Key="ThemeShellModeSurface" Color="#EEF4F9"/>
+ <SolidColorBrush x:Key="ThemeShellCommands" Color="#FFFFFF"/>
+ <SolidColorBrush x:Key="ThemeUtilityRail" Color="#EFF4F8"/>
+ <SolidColorBrush x:Key="ThemeUtilityRailText" Color="#315B78"/>
+ <SolidColorBrush x:Key="ThemeUtilityRailHover" Color="#DCEBF4"/>
  <SolidColorBrush x:Key="ThemeSplitterHover" Color="#2679A5"/>
  <SolidColorBrush x:Key="ThemeGrip" Color="#3A769C"/>
  <SolidColorBrush x:Key="ThemeMenuBar" Color="#EBF3F9"/>
@@ -63,7 +74,7 @@
  <Style TargetType="Button">
   <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/><Setter Property="Background" Value="Transparent"/>
   <Setter Property="BorderBrush" Value="Transparent"/><Setter Property="BorderThickness" Value="1"/>
-  <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="Padding" Value="10,5"/><Setter Property="MinHeight" Value="30"/><Setter Property="Cursor" Value="Hand"/>
+  <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="Padding" Value="10,5"/><Setter Property="MinHeight" Value="30"/><Setter Property="FontSize" Value="13"/><Setter Property="Cursor" Value="Hand"/>
   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
    <Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Padding="{TemplateBinding Padding}">
     <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" RecognizesAccessKey="True"/>
@@ -80,8 +91,54 @@
   <Setter Property="Background" Value="{DynamicResource ThemeSoft}"/><Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
   <Setter Property="MinHeight" Value="32"/><Setter Property="Padding" Value="11,5"/><Setter Property="Margin" Value="2,0"/>
  </Style>
+ <!-- Shared selected/hover template for the two shell button groups. No pale hover
+      surface may hide the light-theme white text of an active button. -->
+ <ControlTemplate x:Key="ShellSelectableButtonTemplate" TargetType="Button">
+  <Border x:Name="ShellButtonSurface" Background="{TemplateBinding Background}"
+   BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+   CornerRadius="5" Padding="{TemplateBinding Padding}">
+   <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+    VerticalAlignment="Center" RecognizesAccessKey="True"/>
+  </Border>
+  <ControlTemplate.Triggers>
+   <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ShellButtonSurface" Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>
+   <MultiTrigger><MultiTrigger.Conditions>
+    <Condition Property="IsMouseOver" Value="True"/>
+    <Condition Property="Tag" Value="True"/>
+   </MultiTrigger.Conditions><Setter TargetName="ShellButtonSurface" Property="Background" Value="{DynamicResource ThemeSplitActive}"/></MultiTrigger>
+   <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ShellButtonSurface" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+   <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+  </ControlTemplate.Triggers>
+ </ControlTemplate>
+ <!-- Official A shell styles. Only shell entry points opt in; explorer pane content retains its own styles. -->
+ <Style x:Key="ShellModeButton" TargetType="Button" BasedOn="{StaticResource ExplorerCommand}">
+  <Setter Property="Background" Value="{DynamicResource ThemeShellModeSurface}"/>
+  <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+  <Setter Property="MinHeight" Value="34"/><Setter Property="Padding" Value="15,5"/><Setter Property="FontSize" Value="13"/>
+  <Setter Property="Margin" Value="0,0,8,0"/>
+  <Setter Property="FontWeight" Value="SemiBold"/>
+  <Setter Property="Template" Value="{StaticResource ShellSelectableButtonTemplate}"/>
+ </Style>
+ <Style x:Key="ShellCommandButton" TargetType="Button" BasedOn="{StaticResource ExplorerCommand}">
+  <Setter Property="MinHeight" Value="32"/><Setter Property="Padding" Value="13,5"/>
+  <Setter Property="Margin" Value="0,0,6,0"/><Setter Property="FontSize" Value="13"/>
+ </Style>
  <Style x:Key="ExplorerToggle" TargetType="Button" BasedOn="{StaticResource ExplorerCommand}">
   <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+  <Setter Property="MinHeight" Value="30"/><Setter Property="Padding" Value="10,4"/><Setter Property="FontSize" Value="13"/>
+ </Style>
+ <!-- Split layouts own their spacing; never globally inflate navigation buttons. -->
+ <Style x:Key="ShellSplitButton" TargetType="Button" BasedOn="{StaticResource ExplorerToggle}">
+  <Setter Property="MinHeight" Value="34"/><Setter Property="MinWidth" Value="70"/>
+  <Setter Property="Padding" Value="14,5"/><Setter Property="FontSize" Value="13"/>
+  <Setter Property="Margin" Value="0,0,7,0"/><Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+  <Setter Property="Template" Value="{StaticResource ShellSelectableButtonTemplate}"/>
+ </Style>
+ <!-- The scale/theme buttons share the top brand row geometry in light and dark. -->
+ <Style x:Key="ShellHeaderButton" TargetType="Button" BasedOn="{StaticResource ExplorerCommand}">
+  <Setter Property="MinHeight" Value="32"/><Setter Property="MinWidth" Value="64"/>
+  <Setter Property="Padding" Value="12,5"/><Setter Property="FontSize" Value="13"/>
+  <Setter Property="Margin" Value="0"/>
  </Style>
  <Style x:Key="ExplorerNavButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
   <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/><Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
@@ -134,6 +191,9 @@
    </ControlTemplate.Triggers>
   </ControlTemplate></Setter.Value></Setter>
  </Style>
+ <Style x:Key="ShellHeaderScale" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+  <Setter Property="MinHeight" Value="32"/><Setter Property="FontSize" Value="13"/>
+ </Style>
  <Style TargetType="ComboBoxItem">
   <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
   <Setter Property="Background" Value="{DynamicResource ThemeComboPopup}"/>
@@ -171,21 +231,24 @@
   <Setter Property="FontWeight" Value="SemiBold"/>
   <Setter Property="VerticalContentAlignment" Value="Center"/>
  </Style>
+ <Style x:Key="SunriseMenuSeparator" TargetType="Separator">
+  <Setter Property="Height" Value="12"/><Setter Property="Margin" Value="0"/>
+  <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Separator">
+   <Grid Background="Transparent" SnapsToDevicePixels="True" HorizontalAlignment="Stretch" MinHeight="12">
+    <Border Height="2" Margin="7,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+            Background="{DynamicResource ThemeMenuSeparator}" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+   </Grid>
+  </ControlTemplate></Setter.Value></Setter>
+ </Style>
+ <Style TargetType="Separator" BasedOn="{StaticResource SunriseMenuSeparator}"/>
  <Style x:Key="SunrisePaneMenuItem" TargetType="MenuItem">
-  <Style.Resources>
-  <Style TargetType="Separator">
-   <Setter Property="Margin" Value="8,4"/>
-   <Setter Property="Height" Value="1"/>
-   <Setter Property="Background" Value="{DynamicResource ThemeMenuSeparator}"/>
-   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Separator">
-    <Border Background="{TemplateBinding Background}" Height="1" Margin="0,2"/>
-   </ControlTemplate></Setter.Value></Setter>
-  </Style>
-  </Style.Resources>
+  <Style.Resources><Style TargetType="Separator" BasedOn="{StaticResource SunriseMenuSeparator}"/></Style.Resources>
   <Setter Property="Foreground" Value="{DynamicResource ThemeMenuText}"/>
   <Setter Property="Background" Value="{DynamicResource ThemeMenuPopup}"/>
   <Setter Property="BorderBrush" Value="Transparent"/>
   <Setter Property="Padding" Value="12,6"/>
+  <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
   <Setter Property="MinHeight" Value="32"/>
   <Setter Property="FontSize" Value="13"/>
   <Setter Property="FontWeight" Value="Normal"/>
@@ -256,10 +319,7 @@
   <Setter Property="Padding" Value="9,3"/>
   <Setter Property="FontSize" Value="12"/>
  </Style>
- <Style x:Key="CompactContextSeparator" TargetType="Separator">
-  <Setter Property="Margin" Value="4,1"/><Setter Property="Height" Value="1"/>
-  <Setter Property="Background" Value="{DynamicResource ThemeMenuSeparator}"/>
- </Style>
+ <Style x:Key="CompactContextSeparator" TargetType="Separator" BasedOn="{StaticResource SunriseMenuSeparator}"/>
  <!-- Compact theme-colored scrollbar. Track retains native drag/page/keyboard semantics. -->
  <Style x:Key="SunrisePageRepeat" TargetType="RepeatButton">
   <Setter Property="IsTabStop" Value="False"/><Setter Property="Focusable" Value="False"/>
@@ -359,37 +419,40 @@
    <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>
   </Style.Triggers>
  </Style>
- <Style x:Key="CenteredFileHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}"><Setter Property="HorizontalContentAlignment" Value="Center"/></Style>
- <Style TargetType="TreeViewItem">
+ <!-- R34 stage 3: explicitly opt-in styles for search, cloud and modal task windows.
+      All brushes bind to the shared 59-color resource contract; dark mode stays independent. -->
+ <Style x:Key="PopupCenteredColumnHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+  <Setter Property="HorizontalContentAlignment" Value="Center"/>
+  <Setter Property="VerticalContentAlignment" Value="Center"/>
+  <Setter Property="Background" Value="{DynamicResource ThemeSoftAlt}"/>
   <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
-  <Setter Property="Background" Value="Transparent"/>
-  <Setter Property="Padding" Value="3,2"/>
-  <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TreeViewItem">
-   <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <Grid Grid.Row="0"><Grid.ColumnDefinitions><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-     <Border x:Name="TreeRow" Grid.ColumnSpan="2" Background="{TemplateBinding Background}" CornerRadius="3"/>
-     <ToggleButton x:Name="ExpandToggle" Grid.Column="0" Width="15" Height="22" Background="Transparent"
-       BorderThickness="0" Focusable="False" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
-      <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
-       <TextBlock x:Name="Glyph" Text="▸" Foreground="{DynamicResource TextMuted}" FontSize="12" VerticalAlignment="Center"/>
-       <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Glyph" Property="Text" Value="▾"/></Trigger></ControlTemplate.Triggers>
-      </ControlTemplate></ToggleButton.Template>
-     </ToggleButton>
-     <ContentPresenter Grid.Column="1" ContentSource="Header" Margin="3,1" VerticalAlignment="Center"/>
-    </Grid>
-    <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Margin="16,0,0,0"/>
-   </Grid>
-   <ControlTemplate.Triggers>
-    <Trigger Property="IsExpanded" Value="False"><Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/></Trigger>
-    <Trigger Property="HasItems" Value="False"><Setter TargetName="ExpandToggle" Property="Visibility" Value="Hidden"/></Trigger>
-    <Trigger Property="IsSelected" Value="True"><Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource Selected}"/></Trigger>
-    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>
-    <MultiTrigger><MultiTrigger.Conditions><Condition Property="IsMouseOver" Value="True"/><Condition Property="IsSelected" Value="True"/></MultiTrigger.Conditions>
-       <Setter TargetName="TreeRow" Property="Background" Value="{DynamicResource Selected}"/></MultiTrigger>
-   </ControlTemplate.Triggers>
-  </ControlTemplate></Setter.Value></Setter>
+  <Setter Property="BorderBrush" Value="{DynamicResource ThemeColumnDivider}"/>
+  <Setter Property="SeparatorBrush" Value="{DynamicResource ThemeColumnDivider}"/>
+  <Setter Property="Padding" Value="8,7"/>
  </Style>
+ <Style x:Key="PopupCenteredCellText" TargetType="TextBlock">
+  <Setter Property="TextAlignment" Value="Center"/>
+  <Setter Property="HorizontalAlignment" Value="Stretch"/>
+  <Setter Property="VerticalAlignment" Value="Center"/>
+  <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+  <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+  <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+ </Style>
+ <Style x:Key="PopupResultDataGrid" TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+  <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+  <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+  <Setter Property="RowBackground" Value="{DynamicResource ThemeSurface}"/>
+  <Setter Property="AlternatingRowBackground" Value="{DynamicResource ThemeAltRow}"/>
+  <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+  <Setter Property="ColumnHeaderStyle" Value="{StaticResource PopupCenteredColumnHeader}"/>
+ </Style>
+ <Style x:Key="PopupResultList" TargetType="ListBox">
+  <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+  <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+  <Setter Property="BorderBrush" Value="{DynamicResource PanelBorder}"/>
+  <Setter Property="BorderThickness" Value="1"/>
+ </Style>
+ <Style x:Key="CenteredFileHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}"><Setter Property="HorizontalContentAlignment" Value="Center"/></Style>
  <DataTemplate x:Key="FileIconTemplate">
   <Grid Width="32" Height="31" ToolTip="{Binding TypeName}"><Grid.LayoutTransform><ScaleTransform ScaleX="0.78" ScaleY="0.78"/></Grid.LayoutTransform>
    <Path x:Name="Folder" Visibility="Collapsed" Fill="{DynamicResource ThemeFolderIcon}" Stroke="{DynamicResource ThemeFolderStroke}" StrokeThickness="0.8" Data="M2,6 L11,6 14,9 29,9 29,26 2,26 Z"/>

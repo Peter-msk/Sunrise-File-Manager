@@ -1,0 +1,33 @@
+<UserControl x:Class="Sunrise.FileManager.Controls.FileDetailsPanel" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" MinWidth="280" Background="{DynamicResource ThemeSurface}">
+ <Border BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" Background="{DynamicResource ThemeSurface}">
+  <Grid>
+   <Grid.RowDefinitions><RowDefinition Height="66"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+   <Border Grid.Row="0" Background="{DynamicResource ThemeSoftAlt}" Padding="12,3">
+    <Grid>
+     <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="30"/></Grid.RowDefinitions>
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+     <TextBlock Grid.ColumnSpan="2" Text="파일 상세정보" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+     <Button Grid.Column="2" Content="×" ToolTip="상세정보 닫기" Click="CloseDetails_Click" Padding="5,0" MinHeight="28"/>
+     <Button Grid.Row="1" Grid.Column="1" x:Name="FolderSizeButton" Content="용량계산" Click="FolderSizeButton_Click" Padding="7,2" MinHeight="30" FontSize="12" Margin="0,0,4,0" ToolTip="선택한 폴더의 전체 용량·파일 수·하위 폴더 수를 계산합니다."/>
+     <Button Grid.Row="1" Grid.Column="2" x:Name="HashButton" Content="SHA-256" Click="HashButton_Click" Padding="7,2" MinHeight="30" FontSize="12" ToolTip="선택한 파일의 SHA-256 해시를 계산합니다."/>
+    </Grid>
+   </Border>
+   <Grid Grid.Row="1" Margin="12,12,12,10"><Grid.RowDefinitions><RowDefinition Height="26"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <TextBlock Text="속성 및 상세 정보" FontSize="13" FontWeight="SemiBold"/>
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><StackPanel>
+     <TextBlock x:Name="DetailName" Text="파일을 선택하세요" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,1,0,8"/>
+     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+      <CheckBox x:Name="ReadOnlyCheck" Content="읽기 전용" Click="AttributeCheck_Click" FontSize="11.5" Margin="0,0,12,0" IsEnabled="False"/>
+      <CheckBox x:Name="HiddenCheck" Content="숨김 속성" Click="AttributeCheck_Click" FontSize="11.5" IsEnabled="False"/>
+     </StackPanel>
+     <TextBlock Text="유형 및 특성" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailType" Margin="0,2,0,7" Text="—"/>
+     <TextBlock Text="크기" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailSize" Margin="0,2,0,7" Text="—" TextWrapping="Wrap"/>
+     <TextBlock Text="수정한 날짜" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailModified" Margin="0,2,0,7" Text="—"/>
+     <TextBlock Text="만든 날짜" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailCreated" Margin="0,2,0,7" Text="—"/>
+     <TextBlock Text="파일 위치" Foreground="{DynamicResource TextMuted}" FontSize="11"/><TextBlock x:Name="DetailLocation" TextWrapping="Wrap" Margin="0,2,0,7" Text="—"/>
+     <TextBlock x:Name="DetailHash" TextWrapping="Wrap" FontSize="10.5" FontFamily="Consolas" Foreground="{DynamicResource TextMuted}" Margin="0,2,0,4"/>
+    </StackPanel></ScrollViewer>
+   </Grid>
+  </Grid>
+ </Border>
+</UserControl>

@@ -1,88 +1,12 @@
 using System.IO;
 using System.Windows;
-using Sunrise.FileManager.Models;
 using Sunrise.FileManager.Services;
 
 namespace Sunrise.FileManager.Controls;
 
-/// <summary>
-/// Feature module for FileInspector: ReadOnly/Hidden attribute toggling,
-/// asynchronous recursive folder size calculation, SHA-256 hash calculation,
-/// and Onboard AI (Ollama) 3-line document summary generation into #memo.
-/// </summary>
-public partial class FileInspector
+/// <summary>Memo-only local AI summarization and append operations.</summary>
+public partial class FileMemoPanel
 {
-    private void ApplySelectedFileAttributes()
-    {
-        if (_updatingAttributes || _selected is null) return;
-        try
-        {
-            bool readOnly = ReadOnlyCheck.IsChecked == true;
-            bool hidden = HiddenCheck.IsChecked == true;
-            FileActionsService.SetFileAttributes(_selected.FullPath, readOnly, hidden);
-            MemoSaved?.Invoke();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(Window.GetWindow(this), "파일 속성을 변경하지 못했습니다.\n" + ex.Message,
-                "속성 변경 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-    }
-
-    private async Task RunFolderSizeCalculationAsync()
-    {
-        if (_selected is not { IsDirectory: true } entry || !Directory.Exists(entry.FullPath)) return;
-        _inspectorCts?.Cancel();
-        using var cts = new CancellationTokenSource();
-        _inspectorCts = cts;
-        try
-        {
-            FolderSizeButton.IsEnabled = false;
-            DetailSize.Text = "하위 폴더 용량 계산 중...";
-            string path = entry.FullPath;
-            FolderSizeSummary summary = await Task.Run(() => FileActionsService.CalculateFolderSize(path, cts.Token), cts.Token);
-            if (string.Equals(_selected?.FullPath, path, StringComparison.OrdinalIgnoreCase))
-            {
-                DetailSize.Text = $"{FileEntry.HumanSize(summary.TotalBytes)} ({summary.TotalBytes:N0} B) · 파일 {summary.FileCount:N0}개 · 폴더 {summary.FolderCount:N0}개"
-                    + (summary.Truncated ? " (상한 도달)" : "");
-            }
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
-        {
-            DetailSize.Text = "용량 계산 실패: " + ex.Message;
-        }
-        finally
-        {
-            if (ReferenceEquals(_inspectorCts, cts)) _inspectorCts = null;
-            FolderSizeButton.IsEnabled = _selected is { IsDirectory: true };
-        }
-    }
-
-    private async Task RunFileHashCalculationAsync()
-    {
-        if (_selected is not { IsDirectory: false } entry || !File.Exists(entry.FullPath)) return;
-        try
-        {
-            HashButton.IsEnabled = false;
-            DetailHash.Text = "SHA-256 계산 중...";
-            string path = entry.FullPath;
-            string hex = await Task.Run(() => FileActionsService.ComputeSha256Hex(path));
-            if (string.Equals(_selected?.FullPath, path, StringComparison.OrdinalIgnoreCase))
-            {
-                DetailHash.Text = $"SHA-256: {hex}";
-            }
-        }
-        catch (Exception ex)
-        {
-            DetailHash.Text = "해시 계산 실패: " + ex.Message;
-        }
-        finally
-        {
-            HashButton.IsEnabled = _selected is { IsDirectory: false };
-        }
-    }
-
     private async Task RunAiMemoSummaryAsync()
     {
         if (_selected is not { IsDirectory: false } entry || !File.Exists(entry.FullPath)) return;
@@ -106,9 +30,9 @@ public partial class FileInspector
             }
         }
 
-        _inspectorCts?.Cancel();
+        _memoCts?.Cancel();
         using var cts = new CancellationTokenSource();
-        _inspectorCts = cts;
+        _memoCts = cts;
         try
         {
             AiMemoButton.IsEnabled = false;
@@ -140,7 +64,7 @@ public partial class FileInspector
         }
         finally
         {
-            if (ReferenceEquals(_inspectorCts, cts)) _inspectorCts = null;
+            if (ReferenceEquals(_memoCts, cts)) _memoCts = null;
             AiMemoButton.IsEnabled = _selected is { IsDirectory: false };
         }
     }

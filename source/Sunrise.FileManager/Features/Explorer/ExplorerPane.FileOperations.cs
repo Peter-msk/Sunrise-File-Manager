@@ -145,32 +145,47 @@ public partial class ExplorerPane
         }
     }
 
-    private async Task ExecuteZipExtractAsync()
+    private async Task ExecuteZipExtractAsync(bool askForPassword = false)
     {
         if (!_actionsEnabled || ActiveFolder is not string folder) return;
         if (FilesGrid.SelectedItem is not FileEntry entry || entry.IsDirectory ||
-            !entry.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            !ArchiveService.CanExtract(entry.FullPath))
         {
-            MessageBox.Show(Window.GetWindow(this), "압축을 풀 ZIP(.zip) 파일을 하나 선택하세요.", "ZIP 압축 풀기", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(Window.GetWindow(this), "압축을 풀 ZIP·7z·RAR·TAR 파일을 하나 선택하세요.", "압축 풀기", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
         string defaultFolder = Path.GetFileNameWithoutExtension(entry.Name);
-        var dialog = new NameInputDialog("ZIP 압축 풀기", "압축을 풀 하위 폴더 이름", defaultFolder) { Owner = Window.GetWindow(this) };
+        var dialog = new NameInputDialog("압축 풀기", "압축을 풀 하위 폴더 이름", defaultFolder) { Owner = Window.GetWindow(this) };
         if (dialog.ShowDialog() != true) return;
-        try
+        string? password = null;
+        bool askPassword = askForPassword;
+        for (int attempt = 0; attempt < 5; attempt++)
         {
-            string destFolder = Path.Combine(folder, FileActionsService.ValidateName(dialog.ResultName));
-            string sourceZip = entry.FullPath;
-            string extracted = await RunLocalFileJobAsync(token => FileActionsService.ExtractZip(sourceZip, destFolder, token), "ZIP 압축 해제 중…");
-            _restoreSelectionPath = extracted;
-            if (FileActionCompleted is null) RefreshCurrent();
-            else FileActionCompleted.Invoke();
+            if (askPassword)
+            {
+                var prompt = new ArchivePasswordWindow { Owner = Window.GetWindow(this) };
+                if (prompt.ShowDialog() != true) return;
+                password = prompt.Password;
+            }
+            try
+            {
+                string destFolder = Path.Combine(folder, FileActionsService.ValidateName(dialog.ResultName));
+                string sourceZip = entry.FullPath;
+                string extracted = await RunLocalFileJobAsync(token => ArchiveService.Extract(sourceZip, destFolder, token, password), "압축 해제 중…");
+                _undoService.RecordCreated(extracted, "압축 풀기"); UpdateUndoButtonState();
+                _restoreSelectionPath = extracted;
+                if (FileActionCompleted is null) RefreshCurrent(); else FileActionCompleted.Invoke();
+                return;
+            }
+            catch (ArchiveService.PasswordRequiredException) { askPassword = true; }
+            catch (OperationCanceledException) { PaneStatus.Text = "파일 작업을 취소했습니다."; RefreshCurrent(); return; }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                MessageBox.Show(Window.GetWindow(this), "압축 해제에 실패했습니다. 암호·파일 손상·권한을 확인하세요.\n" + ex.GetType().Name, "압축 풀기 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+                if (!askPassword) return;
+            }
         }
-        catch (OperationCanceledException) { PaneStatus.Text = "파일 작업을 취소했습니다."; RefreshCurrent(); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException or NotSupportedException)
-        {
-            MessageBox.Show(Window.GetWindow(this), ex.Message, "ZIP 압축 풀기 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
+        PaneStatus.Text = "암호 재시도 횟수를 초과했습니다. 원본 압축 파일은 유지됩니다.";
     }
 
     private void ExecutePermanentDelete()

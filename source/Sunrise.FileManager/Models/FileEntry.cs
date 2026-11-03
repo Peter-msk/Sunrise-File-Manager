@@ -6,11 +6,49 @@ namespace Sunrise.FileManager.Models;
 
 public sealed class FileEntry : INotifyPropertyChanged
 {
+    public static string DescribeCloudState(FileAttributes attrs)
+    {
+        uint flags = (uint)attrs;
+        if ((flags & 0x400000) != 0 || (flags & 0x1000) != 0) return "온라인 전용";
+        if ((flags & 0x80000) != 0) return "항상 이 장치에 유지";
+        if ((flags & 0x100000) != 0) return "공간 확보 대상";
+        if ((flags & 0x40000) != 0) return "클라우드 파일";
+        return "";
+    }
+    public string CloudStatus { get; init; } = "";
+    public string ParentFolder => Path.GetDirectoryName(FullPath) ?? "";
+    public string ModifiedGroup => ModifiedAt == DateTime.MinValue ? "날짜 없음" : ModifiedAt.ToString("yyyy-MM-dd");
+    public string SizeGroup => IsDirectory ? "폴더" : SizeBytes < 1024 * 1024 ? "1MB 미만" : SizeBytes < 100L * 1024 * 1024 ? "1~100MB" : SizeBytes < 1024L * 1024 * 1024 ? "100MB~1GB" : "1GB 이상";
     private object? _thumbnailSource;
     private bool _showExtension = true;
     private bool _colorCoding = true;
     private bool _isChecked;
     private bool _isCutPending;
+    private bool _isRenaming;
+    private string _renameDraft = string.Empty;
+
+    // Ephemeral row editor state; never serialized and never used as a path identity.
+    public bool IsRenaming
+    {
+        get => _isRenaming;
+        set
+        {
+            if (_isRenaming == value) return;
+            _isRenaming = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRenaming)));
+        }
+    }
+
+    public string RenameDraft
+    {
+        get => _renameDraft;
+        set
+        {
+            if (_renameDraft == value) return;
+            _renameDraft = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RenameDraft)));
+        }
+    }
 
     public bool ThumbnailLoading { get; set; }
     public object? ThumbnailSource
@@ -73,6 +111,8 @@ public sealed class FileEntry : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public bool IsNavigationLocation { get; init; }
+    public string? LocationSummary { get; init; }
     public bool IsVirtual { get; init; }
     public string OriginalLocation { get; init; } = "";
     public DateTime DeletedAt { get; init; }
@@ -145,6 +185,19 @@ public sealed class FileEntry : INotifyPropertyChanged
     /// <summary>
     /// Q-Dir style extension color filter for instant visual scanning.
     /// </summary>
+    // Theme-aware defaults are plain HEX strings, keeping the file model free of
+    // WPF references (and compatible with the independent LogicTests project).
+    private static string _lightPrimary = "#172B43";
+    private static string _lightMuted = "#52657A";
+    private static string _lightFolder = "#163A55";
+
+    public static void ConfigureLightNameColors(string primary, string muted, string folder)
+    {
+        _lightPrimary = primary;
+        _lightMuted = muted;
+        _lightFolder = folder;
+    }
+
     public string NameForeground
     {
         get
@@ -165,9 +218,9 @@ public sealed class FileEntry : INotifyPropertyChanged
                     _ => "#EDF4FF"
                 };
             }
-            if (!_colorCoding) return "#172B43";
-            if (IsHidden) return "#52657A";
-            if (IsDirectory) return "#163A55";
+            if (!_colorCoding) return _lightPrimary;
+            if (IsHidden) return _lightMuted;
+            if (IsDirectory) return _lightFolder;
             return Icon switch
             {
                 "APP" => "#5B21B6",
@@ -175,7 +228,7 @@ public sealed class FileEntry : INotifyPropertyChanged
                 "HWP" or "DOC" or "PDF" or "XLS" or "PPT" => "#0B4F82",
                 "IMG" or "VID" or "AUD" => "#0D685B",
                 "DEV" => "#1E5E75",
-                _ => "#172B43"
+                _ => _lightPrimary
             };
         }
     }
@@ -183,6 +236,9 @@ public sealed class FileEntry : INotifyPropertyChanged
     private bool _darkTheme;
     public void RefreshThemeColors(bool isDark = false)
     {
+        // A light-to-light accent change also needs a property notification:
+        // the dark/light flag alone cannot detect new custom accent values.
+        if (_darkTheme == isDark && isDark) return;
         _darkTheme = isDark;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NameForeground)));
     }
@@ -191,7 +247,7 @@ public sealed class FileEntry : INotifyPropertyChanged
 
     public string ModifiedDisplay => ModifiedAt == DateTime.MinValue ? "—" : ModifiedAt.ToString("yyyy-MM-dd HH:mm");
     public string CreatedDisplay => CreatedAt == DateTime.MinValue ? "—" : CreatedAt.ToString("yyyy-MM-dd HH:mm");
-    public string SizeDisplay => IsDirectory ? "—" : HumanSize(SizeBytes);
+    public string SizeDisplay => LocationSummary ?? (IsDirectory ? "—" : HumanSize(SizeBytes));
 
     public static FileEntry From(FileSystemInfo item, bool hasMemo = false)
     {
@@ -209,6 +265,7 @@ public sealed class FileEntry : INotifyPropertyChanged
             CreatedAt = SafeCreationTime(item),
             IsHidden = (attrs & FileAttributes.Hidden) != 0,
             IsReadOnly = (attrs & FileAttributes.ReadOnly) != 0,
+            CloudStatus = DescribeCloudState(attrs),
             HasMemo = hasMemo
         };
     }

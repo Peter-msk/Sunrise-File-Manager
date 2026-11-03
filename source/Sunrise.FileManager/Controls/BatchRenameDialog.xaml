@@ -48,7 +48,7 @@
    </Grid>
   </Border>
 
-  <DataGrid Grid.Row="2" x:Name="PreviewGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+  <DataGrid Grid.Row="2" Style="{StaticResource PopupResultDataGrid}" x:Name="PreviewGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
    <DataGrid.Columns>
     <DataGridTextColumn Header="현재 이름" Binding="{Binding OldName}" Width="*"/>
     <DataGridTextColumn Header="변경 후 이름 미리보기" Binding="{Binding NewName}" Width="*"/>

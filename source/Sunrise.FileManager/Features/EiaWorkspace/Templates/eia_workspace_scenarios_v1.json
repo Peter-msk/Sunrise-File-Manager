@@ -1,0 +1,804 @@
+{
+  "schema_version": "sunrise.eia.workspace.scenarios.v1",
+  "catalog_version": "0.3.0-DRAFT",
+  "company_policy_version": "UNAPPROVED",
+  "effective_law_reference": "PER_PROJECT_CONFIRMATION_REQUIRED",
+  "base_template": "sunrise.eia.workspace.draft.v1",
+  "source_document": "환경영향평가 신규용역 표준작업공간 상세개발계획 v2.0 / S01-S48",
+  "warning": "모든 폴더명·시나리오는 회사 승인 전 내부 설계안. 법정 적용·생략·제출·협의 완료를 자동 확정하지 않음. 실제 파일/폴더 쓰기 없음.",
+  "scenarios": [
+    {
+      "id": "S01",
+      "title": "낙찰 후 본계약 지연/미체결",
+      "expected": "수주·협상·계약초안·이행보증",
+      "risk_guard": "본계약 확정 전 `수주준비` 상태 유지, 자동 법정 절차 확정 금지",
+      "scope": "contract",
+      "mode": "folders",
+      "folder_segments": [
+        "01_입찰_협상기록",
+        "02_계약초안_이행보증",
+        "03_계약확정_대기"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S02",
+      "title": "발주처와 실제 사업시행자 다름",
+      "expected": "발주처·사업시행자·승인기관·협의기관 분리",
+      "risk_guard": "명칭만으로 권한·수신처 자동 추정 금지",
+      "scope": "project",
+      "mode": "folders",
+      "folder_segments": [
+        "01_발주처_사업시행자_확인",
+        "02_승인기관_협의기관_담당연락"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S03",
+      "title": "공동도급/분담이행",
+      "expected": "공동협약·지분·역할·분담성과품",
+      "risk_guard": "상대 회사 자료는 별도 인수·접근 통제",
+      "scope": "contract",
+      "mode": "folders",
+      "folder_segments": [
+        "01_공동도급_분담협약",
+        "02_역할_분담범위_성과품",
+        "03_협력사_인수기록"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S04",
+      "title": "하도급/전문조사 외주",
+      "expected": "외주발주·승인·측정 원본·검수",
+      "risk_guard": "법 제56조의 재대행 제한 및 허용요건 확인",
+      "scope": "contract",
+      "mode": "folders",
+      "folder_segments": [
+        "01_외주발주_승인검토",
+        "02_조사원자료_인수",
+        "03_검수_성적서"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S05",
+      "title": "계약 금액·기간·범위 변경",
+      "expected": "변경계약/변경전후 대비/공문/기성",
+      "risk_guard": "과거 계약 삭제·덮어쓰기 금지",
+      "scope": "contract",
+      "mode": "folders",
+      "folder_segments": [
+        "01_원계약_근거",
+        "02_변경계약_전후대비",
+        "03_기성_정산_공문"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S06",
+      "title": "동일 지역 다수 공구·차수·단계",
+      "expected": "사업 루트 + 공구/차수 식별 모듈",
+      "risk_guard": "동일 자료 중복 복사 대신 출처 참조",
+      "scope": "project",
+      "mode": "folders",
+      "folder_segments": [
+        "01_공구_차수_단계식별",
+        "02_자료출처_참조목록"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S07",
+      "title": "전략→본평가 후속 계약",
+      "expected": "별도 계약 작업공간 + 원사업 링크",
+      "risk_guard": "원평가 협의서 복사와 원본 혼동 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_선행평가_협의서_참조",
+        "02_후속계약_범위_연계"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S08",
+      "title": "평가 유형 겹침/특례 적용",
+      "expected": "주평가+선택 모듈, 적용 근거",
+      "risk_guard": "동일 단계 중복 생성 방지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_절차특례_선택근거",
+        "02_평가업무_중복검토"
+      ],
+      "allowed_workstreams": [
+        "strategy",
+        "environmental"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S09",
+      "title": "설계사 제공 자료가 여러 번 갱신",
+      "expected": "`수령차수_01` 등/인수대장/변경대비",
+      "risk_guard": "최초 원본 불변, 접수일·출처·버전 보존",
+      "scope": "case",
+      "mode": "existing_design_intake",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S10",
+      "title": "CAD/GIS 좌표계·버전 불일치",
+      "expected": "수령 원본/변환 작업/검증 결과",
+      "risk_guard": "원본 DWG/DXF/SHP 등 수정 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_CAD_GIS_수령원본_참조",
+        "02_좌표계_형식_변환작업",
+        "03_정합성_검수결과"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S11",
+      "title": "설계 변경 후 평가 범위 확대",
+      "expected": "변경검토·관련 평가항목·조사 재설계",
+      "risk_guard": "재수렴·재협의·변경협의 자동 확정 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_설계변경_전후대비",
+        "02_평가범위_재검토",
+        "03_추가조사_계획"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S12",
+      "title": "평가준비서 심의 지연",
+      "expected": "요청·보완·심의결과·대기 관리",
+      "risk_guard": "미확정 상태에 후속 의무 판정 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_평가준비서_제출근거",
+        "02_심의지연_보완요청",
+        "03_심의결과_확인"
+      ],
+      "allowed_workstreams": [
+        "strategy",
+        "environmental"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S13",
+      "title": "주민 의견 분쟁/설명회 추가",
+      "expected": "공고·공람/설명회/공청회/민원/의견표",
+      "risk_guard": "개인정보·민원인 연락처 최소 저장",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_공고_공람_의견접수",
+        "02_설명회_공청회_자료",
+        "03_민원_의견_대응표"
+      ],
+      "allowed_workstreams": [
+        "strategy",
+        "environmental"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S14",
+      "title": "초안 의견수렴 면제/특례",
+      "expected": "면제 근거/승인기록",
+      "risk_guard": "생략 폴더를 필수로 만들지 않고 근거 남김",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_생략_특례_검토근거",
+        "02_담당자_확인기록"
+      ],
+      "allowed_workstreams": [
+        "strategy",
+        "environmental"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S15",
+      "title": "검토기관 1차·2차 보완 반복",
+      "expected": "차수별 요구/대비/제출/회신",
+      "risk_guard": "'최종' 파일 덮어쓰기 금지, 제출증빙 별도",
+      "scope": "case",
+      "mode": "existing_correction_round",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S16",
+      "title": "협의 결과와 사업계획 불일치",
+      "expected": "협의결과/반영대비표/미해결 쟁점",
+      "risk_guard": "자동 반영 완료 표시 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_협의결과_수령본",
+        "02_사업계획_반영대비표",
+        "03_미해결쟁점"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S17",
+      "title": "환경보전방안 별도 수주",
+      "expected": "변경대상 원협의+업무 계약",
+      "risk_guard": "원평가/법적 경로 연결 필수",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_원평가_원협의_참조",
+        "02_변경대상_범위_계약",
+        "03_변경협의_작성검토"
+      ],
+      "allowed_workstreams": [
+        "change"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S18",
+      "title": "전략/본평가 재협의",
+      "expected": "기존 협의·변경내역·재협의",
+      "risk_guard": "재협의 근거/차수와 기존 협의 불변",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_기존협의_원본참조",
+        "02_변경전후_영향검토",
+        "03_재협의_보완_회신"
+      ],
+      "allowed_workstreams": [
+        "strategy",
+        "environmental",
+        "change"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S19",
+      "title": "장기 휴지/착공 지연/승인 실효",
+      "expected": "인허가 상태·기간·재개검토",
+      "risk_guard": "법정 재협의 필요 여부는 담당자 확정",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_사업휴지_착공지연_근거",
+        "02_기간_유효성_재검토",
+        "03_재개판단_기록"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S20",
+      "title": "공사 중지·재개",
+      "expected": "공사중지공문·현장·재개 통보",
+      "risk_guard": "계약 중단과 별개, 제37조 분기",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_공사중지_통보원본",
+        "02_현장_보존관리",
+        "03_공사재개_통보원본"
+      ],
+      "allowed_workstreams": [
+        "environmental",
+        "followup"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S21",
+      "title": "원평가 후 사업자가 변경",
+      "expected": "사업자 승계·협의내용 인수",
+      "risk_guard": "권한·통보·원본 관리 별도",
+      "scope": "project",
+      "mode": "folders",
+      "folder_segments": [
+        "01_사업시행자_승계근거",
+        "02_협의내용_인계기록"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S22",
+      "title": "조사 시기 제한·계절성",
+      "expected": "조사일정/미조사 사유/대체·재조사",
+      "risk_guard": "한 번 누락을 '측정 완료'로 표시 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_계절_조사계획",
+        "02_미조사_사유",
+        "03_재조사_대체검토"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S23",
+      "title": "조사 기상악화·현장 접근 불가",
+      "expected": "기상·재방문·결측 기록",
+      "risk_guard": "임의 대체값 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_기상_현장접근_기록",
+        "02_결측_재방문_계획"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S24",
+      "title": "시료/장비 문제·재측정",
+      "expected": "시료 인수인계/시험성적/장비 이력",
+      "risk_guard": "원자료·검수본 구분, 불량 자료 삭제 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_시료_인수인계",
+        "02_장비_검교정_이력",
+        "03_시험성적서_원본",
+        "04_재측정_검수"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S25",
+      "title": "보전 대상 생물·민감지역",
+      "expected": "조사원본·보호 정보·열람권한",
+      "risk_guard": "접근권한 상속·외부 공유 주의",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_보호종_조사원자료",
+        "02_열람권한_검토",
+        "03_민감위치정보_분리"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S26",
+      "title": "주민 건강·생활환경 영향",
+      "expected": "민원/측정/영향분석/조치",
+      "risk_guard": "민감 개인정보 및 위치정보 최소화",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_주민민원_접수",
+        "02_건강_생활환경_측정",
+        "03_조치_기록"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S27",
+      "title": "환경영향 예측 모델 재계산",
+      "expected": "모델 입력 버전·설정·출력·검증",
+      "risk_guard": "선행 입력과 결과 계보 보존",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_예측모델_입력버전",
+        "02_모델설정_실행이력",
+        "03_출력결과_검증"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S28",
+      "title": "협의기관별 의견 상충",
+      "expected": "기관별 접수/쟁점/의사결정 이력",
+      "risk_guard": "합의되지 않은 처리내용 자동 확정 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_기관별_검토의견",
+        "02_상충쟁점_검토",
+        "03_의사결정_근거"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S29",
+      "title": "다수 보고서/요약서/도면 동시 납품",
+      "expected": "납품처별 제출 묶음/인수증",
+      "risk_guard": "승인 제출본만 배포 대상",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_납품처별_성과품",
+        "02_발송_접수증빙",
+        "03_검수_인수증"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S30",
+      "title": "납품 후 수정 요구",
+      "expected": "원납품본/수정요구/재납품본",
+      "risk_guard": "기존 납품본 교체 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_당초_납품확정본_참조",
+        "02_납품후_수정요구",
+        "03_수정본_검토_재납품"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S31",
+      "title": "용역 준공 뒤 사업 공사가 계속",
+      "expected": "계약 준공과 공사·사후관리 상태 분리",
+      "risk_guard": "모든 폴더 종료 처리 금지",
+      "scope": "project",
+      "mode": "folders",
+      "folder_segments": [
+        "01_계약준공_확인",
+        "02_잔여공사_관리연계",
+        "03_후속업무_인수"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S32",
+      "title": "사후환경영향조사 2~5년 등 장기",
+      "expected": "`연도_YYYY/차수_XX` 동적 모듈",
+      "risk_guard": "실제 기간은 시행규칙 별표·협의서 확인",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_연차_조사계획",
+        "02_연도별_차수별_조사",
+        "03_연차보고_결과원본"
+      ],
+      "allowed_workstreams": [
+        "followup"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S33",
+      "title": "사후조사 영향 발생·긴급 조치",
+      "expected": "이상/기관통보/조치/추적조사",
+      "risk_guard": "실제 통보를 프로그램이 대행했다고 표시 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_이상영향_원시자료",
+        "02_기관통보_요청_증빙",
+        "03_긴급조치_추적조사"
+      ],
+      "allowed_workstreams": [
+        "followup"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S34",
+      "title": "용역 담당자 퇴직/교체",
+      "expected": "업무현황/미완료/원본·제출본 인계",
+      "risk_guard": "로그인 개인 계정·암호/토큰 인계 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_미결업무_목록",
+        "02_원본_제출본_인계대장",
+        "03_인계서_승인기록"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S35",
+      "title": "용역 일시중단·계약해지·발주 취소",
+      "expected": "중단 사유/기성·정산/보존",
+      "risk_guard": "원본/기준본 자동삭제·전부 초기화 금지",
+      "scope": "contract",
+      "mode": "folders",
+      "folder_segments": [
+        "01_중단_해지_근거공문",
+        "02_정산_기성_내역",
+        "03_원본_보존목록"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S36",
+      "title": "회사 NAS 끊김/읽기 전용/용량부족",
+      "expected": "오류 및 부분생성 내역",
+      "risk_guard": "성공 개수와 실제 경로 재검증, 자동 파일 제거 금지",
+      "scope": "case",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    },
+    {
+      "id": "S37",
+      "title": "기존 사업 폴더에 재적용",
+      "expected": "현재 구조/추가 후보/충돌 목록",
+      "risk_guard": "기본 `누락 폴더만 생성`; 재배열·덮어쓰기 없음",
+      "scope": "case",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    },
+    {
+      "id": "S38",
+      "title": "프로젝트명이 변경됨",
+      "expected": "별칭·이력·표시명",
+      "risk_guard": "기존 폴더 자동 Rename 금지",
+      "scope": "project",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    },
+    {
+      "id": "S39",
+      "title": "외부와 공유 가능한 성과품 필요",
+      "expected": "내부기밀/검토본/공유승인본 분리",
+      "risk_guard": "클라우드/이메일 자동 전송 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_내부_검토본",
+        "02_공유승인_확정본",
+        "03_공유이력_전달증빙"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S40",
+      "title": "법령·과업지시서 변경",
+      "expected": "템플릿 버전/적용 근거/신규 차이",
+      "risk_guard": "이미 생성한 기존 구조 일괄 재배치 금지",
+      "scope": "project",
+      "mode": "folders",
+      "folder_segments": [
+        "01_법령_과업지시서_변경근거",
+        "02_기존표준_차이검토"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S41",
+      "title": "파일경로 충돌·중복/대소문자",
+      "expected": "사전 경로 충돌표",
+      "risk_guard": "경로 확인 후 실패 차단 또는 건너뜀",
+      "scope": "case",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    },
+    {
+      "id": "S42",
+      "title": "직원 동시 생성/재시도",
+      "expected": "실행 ID, 생성 내역, 재개 목록",
+      "risk_guard": "생성 중 중복 쓰기·부분 실패 범위 명확히 관리",
+      "scope": "case",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    },
+    {
+      "id": "S43",
+      "title": "정션·심볼릭 링크·리파스 포인트",
+      "expected": "경로 검사 결과",
+      "risk_guard": "지정된 루트 밖으로 생성 우회 금지",
+      "scope": "case",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    },
+    {
+      "id": "S44",
+      "title": "오래된 프로젝트를 신규 표준에 연결",
+      "expected": "기존 업무와 표준 차이 비교",
+      "risk_guard": "이관/폴더 이동은 별도 승인된 기능으로 분리",
+      "scope": "project",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    },
+    {
+      "id": "S45",
+      "title": "계약 자료·재무정보 접근 제한",
+      "expected": "민감 업무 폴더 분리 안내",
+      "risk_guard": "앱의 폴더명 생성만으로 ACL 분리 보장하지 않음",
+      "scope": "project",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    },
+    {
+      "id": "S46",
+      "title": "실제 제출 증빙 미확보",
+      "expected": "수신확인·접수번호·제출 파일 SHA",
+      "risk_guard": "생성된 폴더만으로 법정 제출 완료 표시 금지",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_제출_요청_대상",
+        "02_접수번호_수신확인",
+        "03_제출파일_SHA_확인"
+      ],
+      "allowed_workstreams": [],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S47",
+      "title": "통합평가/약식/심층 또는 조례 적용",
+      "expected": "법정 특례 선택 근거/모듈",
+      "risk_guard": "해당 확인 전 일반경로를 확정하지 않음",
+      "scope": "case",
+      "mode": "folders",
+      "folder_segments": [
+        "01_통합_약식_심층_적용근거",
+        "02_절차특례_담당자검토",
+        "03_특례별_제출보완"
+      ],
+      "allowed_workstreams": [
+        "strategy",
+        "environmental"
+      ],
+      "human_legal_review_required": true,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "INTERNAL_FOLDER_PROPOSAL"
+    },
+    {
+      "id": "S48",
+      "title": "회사별 표준·발주처 과업 폴더 요구",
+      "expected": "회사 템플릿/발주처 오버레이",
+      "risk_guard": "회사 공통 필수 안전폴더와 충돌 시 승인 필요",
+      "scope": "project",
+      "mode": "safety_gate",
+      "folder_segments": [],
+      "allowed_workstreams": [],
+      "human_legal_review_required": false,
+      "statutory_claim": "PER_PROJECT_CONFIRMATION_REQUIRED",
+      "classification": "ENGINE_SAFETY"
+    }
+  ]
+}

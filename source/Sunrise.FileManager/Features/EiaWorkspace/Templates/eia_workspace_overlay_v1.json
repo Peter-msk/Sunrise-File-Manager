@@ -1,0 +1,12 @@
+{
+  "schema_version": "sunrise.eia.workspace.overlay.v1",
+  "policy_version": "0.4.0-DRAFT",
+  "company_policy_version": "UNAPPROVED",
+  "warning": "회사 표준·발주처 과업지시서 경로는 승인 전 제안입니다. 법정 절차 판단·실제 폴더 생성·기존 자료 변경을 수행하지 않습니다.",
+  "extension_segment": "80_업무표준_확장",
+  "allowed_roots": [
+    "00_사업기본정보", "10_계약_용역관리", "20_사업_설계_기초자료",
+    "30_환경조사_기술분석", "40_평가업무_법정절차",
+    "50_대외협의_공문_제출", "60_성과품_납품_인수", "70_종료_후속_인계"
+  ]
+}

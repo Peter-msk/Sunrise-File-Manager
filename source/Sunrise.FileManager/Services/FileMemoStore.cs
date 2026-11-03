@@ -167,11 +167,13 @@ public static class FileMemoStore
         if (unreadable > 0)
             throw new IOException($"원본 메모 {unreadable}개가 손상되거나 읽을 수 없어 파일 이동을 중단했습니다.");
         if (records.Count == 0) { File.Move(source, destination); return; }
+        var transferSnapshot = MemoTransferSnapshot.Capture(source, records);
 
         string newDir = MemoDirectory(destination);
-        if (Directory.Exists(newDir) && (File.GetAttributes(newDir) & FileAttributes.ReparsePoint) != 0)
+        if (Directory.Exists(newDir) && ReparsePointPolicy.IsBlocked(newDir))
             throw new IOException("메모 대상 폴더가 링크로 연결되어 있어 안전하게 이동할 수 없습니다.");
         var pending = new List<(string Original, string Staged, string Destination)>();
+        var publishedMemos = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
         bool createdDirectory = !Directory.Exists(newDir);
         bool movedFile = false;
         try
@@ -195,10 +197,17 @@ public static class FileMemoStore
                 using (var gzip = new GZipStream(stream, CompressionLevel.Optimal, leaveOpen: true)) gzip.Write(raw);
                 stream.Flush(flushToDisk: true);
             }
+            transferSnapshot.VerifySource();
             File.Move(source, destination);
             movedFile = true;
             foreach (var memo in pending)
+            {
+                byte[] fingerprint = SHA256.HashData(File.ReadAllBytes(memo.Staged));
                 File.Move(memo.Staged, memo.Destination); // never overwrite existing memos
+                publishedMemos.Add(memo.Destination, fingerprint);
+            }
+            transferSnapshot.VerifySource();
+            transferSnapshot.VerifyDestination(destination);
         }
         catch (Exception original) when (original is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -216,7 +225,12 @@ public static class FileMemoStore
             foreach (var memo in pending)
             {
                 // At this point the file is at its original path; destination records are disposable.
-                try { if (File.Exists(memo.Destination)) File.Delete(memo.Destination); }
+                try
+                {
+                    if (publishedMemos.TryGetValue(memo.Destination, out var fingerprint) &&
+                        !MemoTransferSnapshot.DiscardOwnedCopy(memo.Destination, fingerprint))
+                        System.Diagnostics.Debug.WriteLine("Changed target memo retained: " + memo.Destination);
+                }
                 catch (IOException ex) { System.Diagnostics.Debug.WriteLine("Memo rollback cleanup: " + ex.Message); }
                 catch (UnauthorizedAccessException ex) { System.Diagnostics.Debug.WriteLine("Memo rollback cleanup: " + ex.Message); }
             }
@@ -238,7 +252,9 @@ public static class FileMemoStore
             }
         }
         // Commit point: the file and all rewritten memos are present in the new location.
-        // Cleanup is best-effort: never revert a completed move because cleanup was denied.
+        // From this point retain the published file/memos if source cleanup is denied.
+        try { transferSnapshot.DeleteSource(destination, () => { }, CancellationToken.None, sourceAlreadyMoved: true); }
+        catch (IOException ex) { throw new IOException($"파일과 메모는 새 위치에 보존했지만 원본 메모 정리를 완료하지 못했습니다. 원본: {source} / 대상: {destination}. {ex.Message}", ex); }
         foreach (var memo in pending)
         {
             // Rename reserializes embedded source filenames. Establish a new PC-local baseline.
@@ -250,9 +266,6 @@ public static class FileMemoStore
                 string? snapshotIssue = MemoLocalSnapshots.TrySave(memo.Destination, record.UserName);
                 if (snapshotIssue is not null) System.Diagnostics.Debug.WriteLine("Memo rename history: " + snapshotIssue);
             }
-            try { File.Delete(memo.Original); }
-            catch (IOException ex) { System.Diagnostics.Debug.WriteLine("Old memo retained: " + ex.Message); }
-            catch (UnauthorizedAccessException ex) { System.Diagnostics.Debug.WriteLine("Old memo retained: " + ex.Message); }
         }
     }
 

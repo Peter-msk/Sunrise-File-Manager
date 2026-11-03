@@ -9,9 +9,9 @@
     <AssemblyName>Sunrise.FileManager</AssemblyName>
     <RootNamespace>Sunrise.FileManager</RootNamespace>
     <Product>Sunrise File Manager</Product>
-    <Version>1.3.0</Version>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
-    <FileVersion>1.3.0.0</FileVersion>
+    <Version>1.8.0</Version>
+    <AssemblyVersion>1.8.0.0</AssemblyVersion>
+    <FileVersion>1.8.0.0</FileVersion>
     <Company>Sunrise Group</Company>
     <Authors>Sunrise Group</Authors>
     <Description>Sunrise File Manager Windows Desktop Application</Description>
@@ -23,9 +23,36 @@
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Prefer32Bit>false</Prefer32Bit>
+    <!-- Release payload: preserve WPF reflection and all language resources, skip diagnostic-only PDBs. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishDocumentationFiles>false</PublishDocumentationFiles>
+    <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
+    <PublishReferencesSymbols>false</PublishReferencesSymbols>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceCasePlanner.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceScenarioPlanner.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceOverlayPlanner.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceProfilePlanner.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceDraftStore.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceReadinessPlanner.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceRepresentativeAudit.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceFootprintAudit.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceCreationEngine.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceDestinationInspector.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceProfileDestinationInspector.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceUiComposer.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceProfileUiInspector.cs" />
+    <Compile Update="Features/EiaWorkspace/EiaWorkspaceProfilePlanComparator.cs" />
+    <Compile Update="Features/Workspace/MainWindow.EiaWorkspace.cs" />
+    <EmbeddedResource Include="Features/EiaWorkspace/Templates/eia_workspace_overlay_v1.json" LogicalName="Sunrise.FileManager.EiaWorkspace.OverlayDraftPolicy" />
+    <EmbeddedResource Include="Features/EiaWorkspace/Templates/eia_workspace_scenarios_v1.json" LogicalName="Sunrise.FileManager.EiaWorkspace.ScenarioCatalog" />
+    <EmbeddedResource Include="Features/EiaWorkspace/Templates/eia_workspace_draft_v1.json" LogicalName="Sunrise.FileManager.EiaWorkspace.DraftCatalog" />
+  </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets/SunriseFileManager.ico" />
     <PackageReference Include="PdfPig" Version="0.1.15" />
+    <PackageReference Include="SharpCompress" Version="0.50.6" />
   </ItemGroup>
 </Project>

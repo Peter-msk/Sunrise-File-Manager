@@ -16,6 +16,11 @@ namespace Sunrise.FileManager.Controls;
 public partial class ExplorerPane
 {
     public sealed record ClipboardPasteRequest(ExplorerPane Pane, IReadOnlyList<string> Paths, string TargetFolder, TransferKind Kind);
+    public sealed record CloudClipboardPasteRequest(ExplorerPane Pane, string TargetFolder);
+    public event Action<CloudClipboardPasteRequest>? CloudPasteRequested;
+    public sealed record CloudDragDropRequest(ExplorerPane Pane, string TargetFolder,
+        IReadOnlyList<Sunrise.FileManager.Services.CloudDrive.CrossPaneCopySource> Sources);
+    public event Action<CloudDragDropRequest>? CloudDragDropRequested;
     private sealed record InternalDragPayload(ExplorerPane Source, string[] Paths);
     public sealed record ExplorerDropRequest(ExplorerPane Source, ExplorerPane Destination,
         IReadOnlyList<string> Paths, string TargetFolder, TransferKind Kind);
@@ -37,7 +42,8 @@ public partial class ExplorerPane
             var files = new System.Collections.Specialized.StringCollection();
             files.AddRange(paths);
             data.SetFileDropList(files);
-            data.SetData("Preferred DropEffect", new MemoryStream(BitConverter.GetBytes(cut ? 2 : 5)));
+            // DWORD: DROPEFFECT_MOVE=2, DROPEFFECT_COPY=1. 5 accidentally included LINK.
+            data.SetData("Preferred DropEffect", new MemoryStream(BitConverter.GetBytes(cut ? 2 : 1)));
             Clipboard.SetDataObject(data, true);
             var selectedSet = paths.ToHashSet(StringComparer.OrdinalIgnoreCase);
             foreach (FileEntry entry in _allEntries)
@@ -48,21 +54,34 @@ public partial class ExplorerPane
         { MessageBox.Show(ex.Message, "클립보드 사용 실패", MessageBoxButton.OK, MessageBoxImage.Warning); }
     }
 
-    private async Task ExecuteClipboardPasteAsync()
+    private async Task ExecuteClipboardPasteAsync(string? targetFolder = null)
     {
-        if (!_actionsEnabled || ActiveFolder is not string folder) return;
+        string? folder = targetFolder ?? ActiveFolder;
+        if (!_actionsEnabled || folder is null || !Directory.Exists(folder) || IsRecycleBin || IsThisPc) return;
         try
         {
+            // Cloud identities are never fake local paths or shell file-drop data.
+            // The owner window resolves the opaque session marker via the cloud copy engine.
+            if (Clipboard.ContainsData(Sunrise.FileManager.Services.CloudDrive.WorkspaceCloudClipboard.Format))
+            {
+                CloudPasteRequested?.Invoke(new(this, folder));
+                return;
+            }
             if (!Clipboard.ContainsFileDropList()) { FooterText.Text = "붙여넣을 파일이 없습니다."; return; }
             string[] paths = Clipboard.GetFileDropList().Cast<string>().ToArray();
             if (paths.Length == 0) return;
             TransferKind kind = TransferKind.Copy;
-            if (Clipboard.GetData("Preferred DropEffect") is MemoryStream effect && effect.Length >= 4)
+            // Windows Explorer writes a DWORD preferred effect; clipboard providers may
+            // expose it as a stream or as a byte array. Never rely on stream Position.
+            object? rawEffect = Clipboard.GetData("Preferred DropEffect");
+            byte[]? effectBytes = rawEffect switch
             {
-                byte[] bytes = new byte[4];
-                if (effect.Read(bytes, 0, 4) == 4 && (BitConverter.ToInt32(bytes, 0) & 2) != 0)
-                    kind = TransferKind.Move;
-            }
+                MemoryStream stream when stream.Length >= 4 => stream.ToArray(),
+                byte[] bytes when bytes.Length >= 4 => bytes,
+                _ => null
+            };
+            if (effectBytes is not null && (BitConverter.ToInt32(effectBytes, 0) & 2) != 0)
+                kind = TransferKind.Move;
             string normalizedTarget = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder));
             if (kind == TransferKind.Copy)
             {
@@ -99,6 +118,12 @@ public partial class ExplorerPane
         }
         catch (ExternalException ex)
         { MessageBox.Show(ex.Message, "클립보드 사용 실패", MessageBoxButton.OK, MessageBoxImage.Warning); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            string diagnosis = NetworkTransferDiagnostics.Explain(ex, folder, folder);
+            MessageBox.Show(string.IsNullOrWhiteSpace(diagnosis) ? "붙여넣기 경로를 읽지 못했습니다. 원본/대상 연결 및 권한을 확인하세요." : diagnosis,
+                "붙여넣기 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private bool DispatchPaneShortcut(KeyEventArgs e)
@@ -131,7 +156,15 @@ public partial class ExplorerPane
 
     private bool ExecuteShortcutAction(ExplorerShortcutAction action, RoutedEventArgs e)
     {
-        if (IsRecycleBin && action is ExplorerShortcutAction.Undo or ExplorerShortcutAction.Redo or
+        if (IsRecycleBin && action is ExplorerShortcutAction.RecycleDelete or ExplorerShortcutAction.PermanentDelete)
+        {
+            // Recycle items are virtual identities: route through the existing Shell
+            // delete confirmation, never through ordinary path-based deletion.
+            PermanentDeleteRecycle_Click(this, e);
+            e.Handled = true;
+            return true;
+        }
+        if ((IsRecycleBin || IsThisPc) && action is ExplorerShortcutAction.Undo or ExplorerShortcutAction.Redo or
             ExplorerShortcutAction.Copy or ExplorerShortcutAction.Cut or ExplorerShortcutAction.Paste or
             ExplorerShortcutAction.CopyPath or ExplorerShortcutAction.Duplicate or ExplorerShortcutAction.Rename or
             ExplorerShortcutAction.RecycleDelete or ExplorerShortcutAction.PermanentDelete or

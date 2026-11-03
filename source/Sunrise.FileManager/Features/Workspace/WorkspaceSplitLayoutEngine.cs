@@ -24,6 +24,33 @@ public sealed record SplitPresetOption(
     string ShortLabel,
     string Description);
 
+/// <summary>
+/// The minimum scrollable workspace footprint for a candidate split layout.
+/// Null scroll indicators mean the WPF viewport has not been measured yet;
+/// do not tell the user that an unmeasured layout fits.
+/// </summary>
+public sealed record SplitLayoutFitAssessment(
+    double MinimumWidth,
+    double MinimumHeight,
+    bool? NeedsHorizontalScroll,
+    bool? NeedsVerticalScroll)
+{
+    public string DisplayText
+    {
+        get
+        {
+            string dimensions = $"최소 {MinimumWidth:0} × {MinimumHeight:0} DIP";
+            if (NeedsHorizontalScroll is null || NeedsVerticalScroll is null)
+                return $"창 크기 확인 전 · {dimensions}";
+            if (NeedsHorizontalScroll.Value && NeedsVerticalScroll.Value)
+                return $"가로·세로 스크롤 필요 · {dimensions}";
+            if (NeedsHorizontalScroll.Value) return $"가로 스크롤 필요 · {dimensions}";
+            if (NeedsVerticalScroll.Value) return $"세로 스크롤 필요 · {dimensions}";
+            return "현재 파일 작업영역에 배치 가능";
+        }
+    }
+}
+
 public sealed record PaneGridPlacement(
     int PaneIndex,
     int Row,
@@ -52,6 +79,35 @@ public sealed record SplitGridBlueprint(
 /// </summary>
 public static class WorkspaceSplitLayoutEngine
 {
+    // The workspace extent and track limits must agree with one another and
+    // leave room for each pane's fixed header rows plus an actual file viewport.
+    public const double MinimumPaneWidth = 350;
+    public const double MinimumPaneHeight = 340;
+    public const double SplitterThickness = 11;
+
+    public static (double Width, double Height) GetMinimumWorkspaceSize(SplitLayoutPreset preset)
+    {
+        var blueprint = BuildBlueprint(preset);
+        return (blueprint.StarColumns * MinimumPaneWidth + (blueprint.StarColumns - 1) * SplitterThickness,
+            blueprint.StarRows * MinimumPaneHeight + (blueprint.StarRows - 1) * SplitterThickness);
+    }
+
+    /// <summary>
+    /// A layout larger than the measured viewport remains selectable: the existing
+    /// workspace ScrollViewer supplies the extra scroll range. This is advisory,
+    /// not a destructive layout clamp or a change to the persisted splitter ratios.
+    /// </summary>
+    public static SplitLayoutFitAssessment AssessViewportFit(
+        SplitLayoutPreset preset, double availableWidth, double availableHeight)
+    {
+        var minimum = GetMinimumWorkspaceSize(preset);
+        bool? horizontal = double.IsFinite(availableWidth) && availableWidth > 0
+            ? minimum.Width > availableWidth + 1 : null;
+        bool? vertical = double.IsFinite(availableHeight) && availableHeight > 0
+            ? minimum.Height > availableHeight + 1 : null;
+        return new(minimum.Width, minimum.Height, horizontal, vertical);
+    }
+
     private static readonly SplitPresetOption[] AllPresetOptions =
     [
         new(SplitLayoutPreset.Single, 1, "단일 전체 화면", "Windows 기본 탐색기와 동일한 단일 폴더 화면"),
@@ -100,14 +156,14 @@ public static class WorkspaceSplitLayoutEngine
     public static SplitLayoutPreset NormalizePresetForCount(int panelCount, SplitLayoutPreset? candidate)
     {
         int clamped = ClampVisiblePanels(panelCount);
-        if (candidate is SplitLayoutPreset p && GetPanelCountForPreset(p) == clamped)
+        if (candidate is SplitLayoutPreset p && Enum.IsDefined(p) && GetPanelCountForPreset(p) == clamped)
             return p;
         return GetDefaultPreset(clamped);
     }
 
     public static SplitLayoutPreset ParsePresetName(string? name, int fallbackPanelCount)
     {
-        if (!string.IsNullOrWhiteSpace(name) && Enum.TryParse<SplitLayoutPreset>(name, ignoreCase: true, out var parsed) &&
+        if (!string.IsNullOrWhiteSpace(name) && Enum.TryParse<SplitLayoutPreset>(name, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed) &&
             GetPanelCountForPreset(parsed) == ClampVisiblePanels(fallbackPanelCount))
         {
             return parsed;

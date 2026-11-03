@@ -35,6 +35,17 @@ public partial class App : Application
             return;
         }
 
+        // Import only legacy File Manager data into Sunrise Group scope before loading settings.
+        // Never delete or overwrite legacy originals. Block startup on uncertain migration.
+        try { SunriseGroupLegacyMigration.ImportOnFirstRun(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)
+        {
+            MessageBox.Show("기존 사용자 데이터의 안전한 이전을 완료하지 못했습니다. 원본은 그대로 보존됩니다.\n" +
+                ex.Message, "Sunrise Group 데이터 이전", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Shutdown(1);
+            return;
+        }
+
         EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
             new RoutedEventHandler(FitWindowToWorkArea));
         UiScaleService.Set(SessionStore.Load(out _).UiScalePercent);
@@ -75,9 +86,37 @@ public partial class App : Application
         }
         MainWindow main = new();
         MainWindow = main;
-        main.Closed += (_, _) => Shutdown();
+        RegisterWorkspace(main);
         main.Show();
         main.ApplyControlPolicy(policy);
+    }
+
+    // Multiple top-level windows share the original process gate; each owns isolated panel/selection state.
+    // A single current owner persists session.json; ownership transfers when that window closes.
+    private void RegisterWorkspace(MainWindow workspace)
+    {
+        workspace.Closed += (_, _) =>
+        {
+            var remaining = Windows.OfType<MainWindow>().Where(w => !ReferenceEquals(w, workspace)).ToArray();
+            if (remaining.Length == 0) Shutdown();
+            else if (ReferenceEquals(MainWindow, workspace))
+            {
+                MainWindow = remaining[0];
+                remaining[0].AssumeSessionPersistence();
+            }
+        };
+    }
+    internal void OpenAdditionalWindow(AppSession session, SunriseControlService.Policy policy)
+    {
+        if (Windows.OfType<MainWindow>().Count() >= 4)
+        {
+            MessageBox.Show("독립 창은 최대 4개까지 열 수 있습니다.", "새 창");
+            return;
+        }
+        var secondary = new MainWindow(session);
+        RegisterWorkspace(secondary);
+        secondary.Show();
+        secondary.ApplyControlPolicy(policy);
     }
 
     private static async Task<SunriseReleaseService.Release?> TryReleaseAsync()
@@ -97,6 +136,11 @@ public partial class App : Application
     internal bool RequestInstallerUpdate(InstallerUpdateHandoff prepared)
     {
         if (_pendingInstaller is not null) return false;
+        if (Windows.OfType<MainWindow>().Count() > 1)
+        {
+            MessageBox.Show("업데이트 전에 다른 Sunrise File Manager 창을 모두 닫아 주세요.", "업데이트");
+            return false;
+        }
         if (MainWindow is MainWindow main && !main.ConfirmUpdateExit()) return false;
         _pendingInstaller = prepared;
         if (MainWindow is MainWindow workspace)

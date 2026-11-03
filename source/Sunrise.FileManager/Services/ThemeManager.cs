@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using Microsoft.Win32;
 using System.Windows.Media;
+using Sunrise.FileManager.Models;
 
 namespace Sunrise.FileManager.Services;
 
@@ -30,6 +31,17 @@ public static class ThemeManager
         ["ThemeStatus"] = ("#F8FAFC", "#1C2534"),
         ["ThemeTrack"] = ("#D2DFEA", "#36465A"),
         ["ThemeSplitter"] = ("#A4B8CB", "#506984"),
+        ["ThemeNavigationRail"] = ("#EFF4F8", "#506984"),
+        ["ThemeShellBrand"] = ("#F5F9FC", "#101D30"),
+        ["ThemeShellBrandText"] = ("#173B56", "#F7FBFF"),
+        ["ThemeShellBrandMuted"] = ("#526B83", "#B6CDE2"),
+        ["ThemeShellSun"] = ("#F7BA3B", "#F7BA3B"),
+        ["ThemeShellModeSurface"] = ("#EEF4F9", "#1C2A3A"),
+        ["ThemeShellCommands"] = ("#FFFFFF", "#1B2636"),
+        ["ThemeUtilityRail"] = ("#EFF4F8", "#15344C"),
+        ["ThemeNavigationRailText"] = ("#315B7A", "#EFF7FF"),
+        ["ThemeUtilityRailText"] = ("#315B78", "#F3FBFF"),
+        ["ThemeUtilityRailHover"] = ("#DCEBF4", "#295976"),
         ["ThemeSplitterHover"] = ("#2679A5", "#6FD6F5"),
         ["ThemeGrip"] = ("#3A769C", "#B0E8FF"),
         ["ThemeMenuBar"] = ("#EBF3F9", "#233043"),
@@ -61,6 +73,38 @@ public static class ThemeManager
         ["ThemeComboSelected"] = ("#D7EAF7", "#3B5874"),
     };
 
+    // R33 (phase 2): shared light-only accent for the main shell, all Explorer panes,
+    // and the right tool rail.  This is deliberately IN-MEMORY until the settings
+    // editor / durable preferences are implemented in phase 4.
+    // No account, document, registry or network data is touched.
+    private static string? _lightAccentHex;
+    public static string? LightAccentHex => _lightAccentHex;
+
+    /// <summary>Read-only preview of a candidate palette; does not update WPF resources.</summary>
+    public static IReadOnlyDictionary<string, string> PreviewLightAccentPalette(string mainHex) =>
+        LightAccentPaletteEngine.Generate(mainHex);
+
+    /// <summary>
+    /// Configure an optional custom light accent. Null/empty restores the official
+    /// light palette. In dark mode this value is retained but NEVER applied.
+    /// Rejected HEX input leaves the previous selection intact.
+    /// Caller should subsequently call Apply(requestedTheme) on the UI dispatcher.
+    /// </summary>
+    public static void ConfigureLightAccent(string? mainHex)
+    {
+        string? normalized = string.IsNullOrWhiteSpace(mainHex)
+            ? null : LightAccentPaletteEngine.NormalizeHex(mainHex);
+        // Validate the entire candidate before replacing an active accent.
+        if (normalized is not null) ValidateCustomPalette(LightAccentPaletteEngine.Generate(normalized));
+        _lightAccentHex = normalized;
+    }
+
+    private static void ValidateCustomPalette(IReadOnlyDictionary<string, string> colors)
+    {
+        if (colors.Count != Palette.Count || Palette.Keys.Any(key => !colors.ContainsKey(key)))
+            throw new InvalidOperationException("맞춤 테마 색상 항목이 기존 리소스 계약과 일치하지 않습니다.");
+    }
+
     public static bool IsDark { get; private set; }
 
     // Session value represents the user's preference, not the currently resolved palette.
@@ -88,19 +132,50 @@ public static class ThemeManager
     {
         string choice = Normalize(requested);
         bool dark = choice == "Dark" || (choice == "System" && SystemUsesDark());
-        IsDark = dark;
-        var resources = Application.Current.Resources;
+        // A single resolved palette is applied to Application.Resources, which is
+        // shared by all four panes and by the main window's right-side tool rail.
+        IReadOnlyDictionary<string, string>? custom = null;
+        if (!dark && _lightAccentHex is not null)
+        {
+            custom = LightAccentPaletteEngine.Generate(_lightAccentHex);
+            ValidateCustomPalette(custom);
+        }
+        var resources = Application.Current?.Resources
+            ?? throw new InvalidOperationException("WPF Application 리소스가 아직 초기화되지 않았습니다.");
         foreach (var (key, pair) in Palette)
         {
-            var color = (Color)ColorConverter.ConvertFromString(dark ? pair.Dark : pair.Light)!;
+            var color = (Color)ColorConverter.ConvertFromString(
+                dark ? pair.Dark : custom is null ? pair.Light : custom[key])!;
+            // Mutating existing shared brushes updates both StaticResource users and
+            // DynamicResource bindings; a frozen brush must be replaced instead.
             if (resources[key] is SolidColorBrush brush && !brush.IsFrozen)
                 brush.Color = color;
             else
                 resources[key] = new SolidColorBrush(color);
         }
+        // Ordinary file names are bound to FileEntry.NameForeground, not a
+        // DynamicResource: update its plain-string light colors before panes
+        // publish their NameForeground change notifications. Category-coded
+        // icons retain semantic file-type colors.
+        if (!dark)
+            FileEntry.ConfigureLightNameColors(
+                custom is null ? Palette["TextPrimary"].Light : custom["TextPrimary"],
+                custom is null ? Palette["TextMuted"].Light : custom["TextMuted"],
+                custom is null ? Palette["ThemeShellBrandText"].Light : custom["ThemeShellBrandText"]);
+
+        // WPF selection colors also follow the customized *light* palette.
+        var highlightColor = (Color)ColorConverter.ConvertFromString(
+            dark ? "#28475D" : custom is null ? "#DCEEF8" : custom["Selected"])!;
+        var highlightTextColor = (Color)ColorConverter.ConvertFromString(
+            dark ? "#EFF7FF" : custom is null ? "#172B43" : custom["TextPrimary"])!;
         if (resources[SystemColors.HighlightBrushKey] is SolidColorBrush selection && !selection.IsFrozen)
-            selection.Color = (Color)ColorConverter.ConvertFromString(dark ? "#28475D" : "#DCEEF8")!;
+            selection.Color = highlightColor;
+        else
+            resources[SystemColors.HighlightBrushKey] = new SolidColorBrush(highlightColor);
         if (resources[SystemColors.HighlightTextBrushKey] is SolidColorBrush selectedText && !selectedText.IsFrozen)
-            selectedText.Color = (Color)ColorConverter.ConvertFromString(dark ? "#EFF7FF" : "#172B43")!;
+            selectedText.Color = highlightTextColor;
+        else
+            resources[SystemColors.HighlightTextBrushKey] = new SolidColorBrush(highlightTextColor);
+        IsDark = dark;
     }
 }

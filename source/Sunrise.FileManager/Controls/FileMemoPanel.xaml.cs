@@ -7,24 +7,25 @@ using Sunrise.FileManager.Services;
 namespace Sunrise.FileManager.Controls;
 
 /// <summary>
-/// Shared file inspector for the currently active explorer pane (#memo history & editor).
-/// File attribute toggles, folder size, SHA-256 hash, and Onboard AI summary generation are modularized in
-/// Features/Inspector/FileInspector.AttributesAndAiSummary.cs.
+/// Independent #memo editor for the currently active explorer pane.
+/// Onboard AI summary is modularized in Features/Inspector/FileMemoPanel.AiSummary.cs.
 /// </summary>
-public partial class FileInspector : UserControl
+public partial class FileMemoPanel : UserControl
 {
+    public string PreferredAuthor { get => MemoAuthorInput.Text; set => MemoAuthorInput.Text = value; }
     public event Action? CloseRequested;
-    private void CloseInspector_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke();
+    private void CloseMemo_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke();
     private FileEntry? _selected;
     private bool _updatingMemo;
-    private bool _updatingAttributes;
     private bool _memoDirty;
+    // The selected history row must always represent the text currently displayed.
+    private FileMemoStore.MemoRecord? _displayedMemoRecord;
     private readonly HashSet<string> _displayedMemoWarnings = new(StringComparer.OrdinalIgnoreCase);
-    private CancellationTokenSource? _inspectorCts;
+    private CancellationTokenSource? _memoCts;
     public event Action? MemoSaved;
     public Func<Task<bool>>? RequestOllamaSetup { get; set; }
 
-    public FileInspector()
+    public FileMemoPanel()
     {
         InitializeComponent();
         MemoBackupsEnabled.IsChecked = MemoLocalSnapshots.Enabled;
@@ -34,54 +35,23 @@ public partial class FileInspector : UserControl
     public bool HasUnsavedMemo => _memoDirty;
     public string? CurrentFilePath => _selected?.FullPath;
 
+    // F6 focus navigation never changes the selected file, draft, or history.
+    public bool FocusMemoEditor() => MemoEditor.IsEnabled && MemoEditor.Focus() || MemoHistory.IsEnabled && MemoHistory.Focus();
+
     public bool SelectFile(FileEntry? entry)
     {
         if (string.Equals(_selected?.FullPath, entry?.FullPath, StringComparison.OrdinalIgnoreCase))
         {
             _selected = entry;
-            UpdateDetails(entry);
             return true;
         }
         if (!ConfirmLeavingMemo()) return false;
-        _inspectorCts?.Cancel();
+        _memoCts?.Cancel();
         _selected = entry;
-        UpdateDetails(entry);
         LoadMemoHistory();
         return true;
     }
 
-    private void UpdateDetails(FileEntry? entry)
-    {
-        DetailName.Text = entry?.Name ?? "파일을 선택하세요";
-        DetailType.Text = entry is null ? "—" : $"{entry.TypeName} ({entry.AttributesDisplay})";
-        DetailSize.Text = entry is null ? "—" : (entry.IsDirectory ? "폴더 ([용량계산] 클릭)" : $"{entry.SizeDisplay} ({entry.SizeBytes:N0} 바이트)");
-        DetailModified.Text = entry?.ModifiedDisplay ?? "—";
-        if (DetailCreated is not null) DetailCreated.Text = entry?.CreatedDisplay ?? "—";
-        DetailLocation.Text = entry is null ? "—" : Path.GetDirectoryName(entry.FullPath) ?? entry.FullPath;
-        if (DetailHash is not null) DetailHash.Text = string.Empty;
-        if (HashButton is not null) HashButton.IsEnabled = entry is { IsDirectory: false };
-        if (FolderSizeButton is not null) FolderSizeButton.IsEnabled = entry is { IsDirectory: true };
-
-        _updatingAttributes = true;
-        try
-        {
-            if (ReadOnlyCheck is not null)
-            {
-                ReadOnlyCheck.IsEnabled = entry is not null;
-                ReadOnlyCheck.IsChecked = entry?.IsReadOnly == true;
-            }
-            if (HiddenCheck is not null)
-            {
-                HiddenCheck.IsEnabled = entry is not null;
-                HiddenCheck.IsChecked = entry?.IsHidden == true;
-            }
-        }
-        finally { _updatingAttributes = false; }
-    }
-
-    private void AttributeCheck_Click(object sender, RoutedEventArgs e) => ApplySelectedFileAttributes();
-    private async void FolderSizeButton_Click(object sender, RoutedEventArgs e) => await RunFolderSizeCalculationAsync();
-    private async void HashButton_Click(object sender, RoutedEventArgs e) => await RunFileHashCalculationAsync();
     private async void AiMemoButton_Click(object sender, RoutedEventArgs e) => await RunAiMemoSummaryAsync();
 
     public bool ConfirmLeavingMemo()
@@ -102,6 +72,7 @@ public partial class FileInspector : UserControl
         try
         {
             MemoHistory.ItemsSource = null;
+            _displayedMemoRecord = null;
             MemoEditor.Text = string.Empty;
             _memoDirty = false;
             FileEntry? entry = _selected;
@@ -113,7 +84,7 @@ public partial class FileInspector : UserControl
             if (!canEdit)
             {
                 MemoStatus.Text = entry?.IsDirectory == true
-                    ? "폴더에는 메모를 저장하지 않습니다. 상단 [용량계산]으로 하위 크기를 확인할 수 있습니다."
+                    ? "폴더에는 메모를 저장하지 않습니다. 파일을 선택하세요."
                     : "파일을 선택하면 #memo 폴더의 기록을 확인하거나 새 메모를 남길 수 있습니다.";
                 return;
             }
@@ -130,6 +101,7 @@ public partial class FileInspector : UserControl
             {
                 MemoHistory.SelectedItem = target;
                 MemoEditor.Text = target.Text;
+                _displayedMemoRecord = target;
                 MemoStatus.Text = $"저장된 메모 {records.Count}개 · 최근: {target.Label}{warning}";
                 RestoreMemoButton.IsEnabled = MemoLocalSnapshots.Enabled && MemoLocalSnapshots.List(target.Path).Count > 0;
                 WarnIfChanged(target);
@@ -184,11 +156,20 @@ public partial class FileInspector : UserControl
         if (_memoDirty && MessageBox.Show(Window.GetWindow(this),
                 "작성 중인 메모를 버리고 선택한 이전 기록을 불러올까요?",
                 "메모 기록 보기", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+        {
+            // WPF ComboBox already moved its selection before the event arrived.
+            // Roll the visual selection back without re-entering the confirmation,
+            // preserving the draft and the previously displayed record.
+            _updatingMemo = true;
+            try { MemoHistory.SelectedItem = _displayedMemoRecord; }
+            finally { _updatingMemo = false; }
             return;
+        }
         _updatingMemo = true;
         try
         {
             MemoEditor.Text = record.Text;
+            _displayedMemoRecord = record;
             _memoDirty = false;
             bool isTodayMine = _selected is not null && string.Equals(record.Path,
                 FileMemoStore.MemoPath(_selected.FullPath, DateTime.Now,
