@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -8,7 +9,7 @@ using Sunrise.FileManager.Features.EiaWorkspace;
 
 namespace Sunrise.FileManager.Controls;
 
-/// <summary>DEV23 review-only window. No creation/approval/updater operations.</summary>
+/// <summary>v1.8.1: project-scoped review and explicit local NTFS folder creation.</summary>
 public partial class EiaWorkspaceExecutionReviewWindow : Window
 {
     private readonly EiaWorkspaceExecutionReadiness _review;
@@ -16,6 +17,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
     private EiaWorkspaceExecutionPreflightResult? _lastPreflight;
     private EiaWorkspaceExecutionManifest? _lastExecutionManifest;
     private CancellationTokenSource? _preflightCancellation;
+    private CancellationTokenSource? _creationCancellation;
 
     public EiaWorkspaceExecutionReviewWindow(EiaWorkspaceExecutionReadiness review)
     {
@@ -47,6 +49,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
         _projectReviewAcknowledgement = null;
         _lastPreflight = null;
         _lastExecutionManifest = null;
+        if (CreateFoldersButton is not null) CreateFoldersButton.IsEnabled = false;
         if (ReadinessPathsGrid is not null) ReadinessPathsGrid.ItemsSource = Array.Empty<EiaFolderPathObservation>();
         if (PreflightStatus is not null) PreflightStatus.Text = "사업 확인이 변경되어 재점검 결과가 폐기됐습니다.";
         if (CopyPreflightButton is not null) CopyPreflightButton.IsEnabled = false;
@@ -61,6 +64,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
         {
             _lastPreflight = null;
             _lastExecutionManifest = null;
+            CreateFoldersButton.IsEnabled = false;
             ReadinessPathsGrid.ItemsSource = Array.Empty<EiaFolderPathObservation>();
             CopyPreflightButton.IsEnabled = false;
             CopyExecutionManifestButton.IsEnabled = false;
@@ -85,6 +89,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
         if (_preflightCancellation is not null) return;
         _lastPreflight = null;
         _lastExecutionManifest = null;
+        CreateFoldersButton.IsEnabled = false;
         CopyPreflightButton.IsEnabled = false;
         CopyExecutionManifestButton.IsEnabled = false;
         // Prior observations are not a current path view. Clear them before rechecking.
@@ -122,6 +127,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
             ReadinessPathsGrid.ItemsSource = result.CurrentPaths;
             CopyPreflightButton.IsEnabled = true;
             CopyExecutionManifestButton.IsEnabled = true;
+            CreateFoldersButton.IsEnabled = _review.SourceLabel == "기본안";
             PreflightStatus.Text = $"재점검 일치: 기존 {result.Existing:N0} / 생성 예상 {result.WouldCreate:N0} / 차단 0 (실제 생성 0)";
         }
         catch (OperationCanceledException)
@@ -129,6 +135,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
             _lastPreflight = null;
             _lastExecutionManifest = null;
             CopyExecutionManifestButton.IsEnabled = false;
+            CreateFoldersButton.IsEnabled = false;
             CopyPreflightButton.IsEnabled = false;
             _projectReviewAcknowledgement = null;
             PreflightStatus.Text = "재점검이 취소됐습니다. 이전 사업 확인은 무효입니다.";
@@ -140,6 +147,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
             _lastPreflight = null;
             _lastExecutionManifest = null;
             CopyExecutionManifestButton.IsEnabled = false;
+            CreateFoldersButton.IsEnabled = false;
             CopyPreflightButton.IsEnabled = false;
             _projectReviewAcknowledgement = null;
             PreflightStatus.Text = "재점검 실패 · 기존 확인 폐기: " + ex.Message;
@@ -150,6 +158,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
             _lastPreflight = null;
             _lastExecutionManifest = null;
             CopyExecutionManifestButton.IsEnabled = false;
+            CreateFoldersButton.IsEnabled = false;
             CopyPreflightButton.IsEnabled = false;
             _projectReviewAcknowledgement = null;
             PreflightStatus.Text = "재점검 처리 오류 · 이전 확인 폐기: " + ex.GetType().Name;
@@ -194,9 +203,90 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
         }
     }
 
+
+    private async void CreateFolders_Click(object sender, RoutedEventArgs e)
+    {
+        if (_creationCancellation is not null || _preflightCancellation is not null ||
+            _lastPreflight is null || _projectReviewAcknowledgement is null ||
+            _review.SourceLabel != "기본안") return;
+        var snapshot = _lastPreflight;
+        var acknowledged = _projectReviewAcknowledgement;
+        string confirmation = "CREATE " + WorkspaceNameConfirmation.Text;
+        if (MessageBox.Show(this,
+                "선택한 사업의 누락 폴더만 새로 만듭니다. 기존 폴더/파일은 삭제·이동·덮어쓰기하지 않습니다.\n" +
+                "기준 폴더: " + _review.BaseDirectory + "\n" +
+                "사업 폴더: " + _review.WorkspaceFolderName + "\n" +
+                $"새로 만들 폴더: {snapshot.WouldCreate:N0}개\n\n" +
+                "로컬 NTFS/ReFS만 지원합니다. 실행하시겠습니까?",
+                "EIASS 폴더 생성 최종 확인", MessageBoxButton.YesNo,
+                MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+            return;
+        var cts = new CancellationTokenSource();
+        _creationCancellation = cts;
+        CreateFoldersButton.IsEnabled = false;
+        CancelFolderCreationButton.IsEnabled = true;
+        RecheckBeforeExecutionButton.IsEnabled = false;
+        WorkspaceNameConfirmation.IsEnabled = false;
+        AcknowledgeProjectButton.IsEnabled = false;
+        PreflightStatus.Text = "폴더 생성 중 · 이미 만들어진 폴더는 취소해도 삭제하지 않습니다.";
+        var progress = new Progress<(int Done, int Total, string Path)>(p =>
+        {
+            if (ReferenceEquals(_creationCancellation, cts))
+                PreflightStatus.Text = $"폴더 처리 {p.Done:N0}/{p.Total:N0} · {p.Path}";
+        });
+        try
+        {
+            var result = await Task.Run(() => EiaWorkspaceProductionWriter.ExecuteReviewed(
+                _review, acknowledged, snapshot, confirmation, cts.Token,
+                (done, total, path) => ((IProgress<(int Done, int Total, string Path)>)progress)
+                    .Report((done, total, path))), cts.Token);
+            var mapped = snapshot.CurrentPaths.Zip(result.Outcomes, (old, actual) =>
+                new EiaFolderPathObservation(old.ScopeLabel, old.RelativePath, old.AbsolutePath,
+                    actual.Outcome, actual.Detail)).ToArray();
+            ReadinessPathsGrid.ItemsSource = mapped;
+            CreatedCountText.Text = $" · 신규 생성 {result.Created:N0} / 기존 {result.AlreadyExists:N0}";
+            PreflightStatus.Text = result.Completed
+                ? $"생성 완료: 신규 {result.Created:N0}, 기존 {result.AlreadyExists:N0}. 현황을 다시 조회하세요."
+                : $"부분 완료/중단: 생성 {result.Created:N0}, 기존 {result.AlreadyExists:N0}, 실패 {result.Failed:N0}, 미시도 {result.NotAttempted:N0}. 새 위치 점검 필요.";
+        }
+        catch (OperationCanceledException)
+        {
+            PreflightStatus.Text = "생성 시작 전 취소됨. 다시 전체 계획을 점검하세요.";
+        }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or
+            UnauthorizedAccessException or System.Security.SecurityException or
+            ArgumentException or NotSupportedException)
+        {
+            PreflightStatus.Text = "폴더 생성 차단: " + ex.Message + " · 기존 자료 보존, 새 점검 필요";
+        }
+        catch (Exception ex)
+        {
+            PreflightStatus.Text = "폴더 생성 오류: " + ex.GetType().Name + " · 결과를 다시 확인하세요.";
+        }
+        finally
+        {
+            _lastPreflight = null;
+            _lastExecutionManifest = null;
+            _projectReviewAcknowledgement = null;
+            CopyPreflightButton.IsEnabled = false;
+            CopyExecutionManifestButton.IsEnabled = false;
+            CreateFoldersButton.IsEnabled = false;
+            CancelFolderCreationButton.IsEnabled = false;
+            RecheckBeforeExecutionButton.IsEnabled = true;
+            WorkspaceNameConfirmation.IsEnabled = true;
+            AcknowledgeProjectButton.IsEnabled = true;
+            _creationCancellation = null;
+            cts.Dispose();
+        }
+    }
+
+    private void CancelFolderCreation_Click(object sender, RoutedEventArgs e) =>
+        _creationCancellation?.Cancel();
+
     protected override void OnClosed(EventArgs e)
     {
         _preflightCancellation?.Cancel();
+        _creationCancellation?.Cancel();
         base.OnClosed(e);
     }
 

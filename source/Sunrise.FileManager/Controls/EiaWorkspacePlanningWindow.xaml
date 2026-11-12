@@ -20,7 +20,7 @@
    </Border>
    <StackPanel>
     <TextBlock Text="환경평가 용역 폴더 계획" FontSize="18" FontWeight="SemiBold"/>
-    <TextBlock Text="사업과 평가유형에 따라 폴더 계획을 계산합니다. 회사·발주처 초안 비교는 선택 사항이며 실제 파일은 생성하지 않습니다."
+    <TextBlock Text="사업과 평가유형에 따라 폴더 계획을 계산합니다. 회사·발주처 초안 비교는 선택 사항입니다. 기본안 경로 점검 후 누락 폴더를 생성할 수 있습니다."
                FontSize="12" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,3,0,0"/>
    </StackPanel>
   </DockPanel>
@@ -379,8 +379,8 @@
             ToolTip="현재 폴더 계획과 기존 경로를 읽기 전용으로 대조합니다. 생성 및 쓰기는 하지 않습니다."/>
     <Button x:Name="ExecutionReadinessButton" Content="생성 준비 검토" Padding="9,4" Margin="6,0,0,0"
             IsEnabled="False" Click="ExecutionReadiness_Click"
-            ToolTip="사업별 계획 및 경로별 상태·생성 예상 개수를 읽기 전용으로 검토합니다. 실행 권한이 아니며 폴더를 생성하지 않습니다."
-            AutomationProperties.Name="자동 폴더 생성 사전 검토표 읽기 전용 실행 금지"/>
+            ToolTip="사업별 계획 및 경로별 상태·생성 예상 개수를 읽기 전용으로 검토합니다. 이 버튼 자체는 생성하지 않으며 검토창에서 따로 승인합니다."
+            AutomationProperties.Name="사업별 폴더 생성 전 검토창 열기"/>
     <Button x:Name="CancelDestinationButton" Content="중지" Padding="7,4" Margin="5,0,0,0"
             Click="CancelDestination_Click" IsEnabled="False"
             ToolTip="읽기 전용 위치 점검 취소 요청. 진행 중인 네트워크 조회는 즉시 종료되지 않을 수 있습니다."

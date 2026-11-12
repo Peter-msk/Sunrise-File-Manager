@@ -14,7 +14,7 @@ namespace Sunrise.FileManager.Services;
 public static class SunriseControlService
 {
     public const string ControlId = "sunrise_file_manager";
-    public const string Version = "1.8.0";
+    public const string Version = "1.8.1";
     public const string Url = "https://raw.githubusercontent.com/Peter-msk/Sunrise_Control/main/control.txt";
     private static readonly string CachePath = SunriseGroupPaths.Local("control-v1-cache.json");
     private static readonly HttpClient Client = MakeClient();

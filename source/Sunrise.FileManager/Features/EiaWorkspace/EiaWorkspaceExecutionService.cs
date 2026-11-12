@@ -28,7 +28,7 @@ public sealed record EiaWorkspaceExecutionManifest(
             throw new ArgumentOutOfRangeException(nameof(maxPaths));
         var sb = new StringBuilder();
         sb.AppendLine("Sunrise File Manager DEV26 · 사업별 폴더 생성 실행 계획표 (읽기 전용)");
-        sb.AppendLine("운영용 폴더 생성 0건 / 회사 표준 승인 트리 없음 / 업데이트 중지 유지");
+        sb.AppendLine("이 보고서는 실행 전 읽기 전용 계획이며, 누락 폴더 생성은 별도 최종승인 작업입니다.");
         sb.AppendLine("경로: " + WorkspacePath);
         sb.AppendLine("범위: " + Scope);
         sb.AppendLine($"기존 {Existing} / 생성 예상 {WouldCreate} / 총 {Paths.Count}");

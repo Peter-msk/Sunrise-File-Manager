@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Style="{StaticResource AppWindow}"
-        Title="사업별 폴더 생성 준비 검토 · DEV26 (실행 금지)"
+        Title="EIASS 사업별 폴더 생성 · v1.8.1"
         Width="1040" Height="690" MinWidth="790" MinHeight="540"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize" ShowInTaskbar="False"
         Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}">
@@ -16,10 +16,10 @@
   <Border Grid.Row="0" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1"
           Background="{DynamicResource ThemeSurface}" CornerRadius="6" Padding="10" Margin="0,0,0,8">
    <StackPanel>
-    <TextBlock Text="자동 폴더 생성 사전 검토 및 재점검 (읽기 전용)" FontSize="17" FontWeight="SemiBold"/>
-    <TextBlock Text="회사 표준 승인 폴더 트리는 사용하지 않습니다. Windows/NTFS/ACL/NAS 검증과 운영용 생성 기능은 미완료이며 이 화면은 쓰기 권한을 부여하지 않습니다."
+    <TextBlock Text="EIASS 사업별 폴더 생성 · 계획 확인" FontSize="17" FontWeight="SemiBold"/>
+    <TextBlock Text="별도 회사 표준은 없습니다. 기본안의 누락 폴더만 생성하며 기존 자료는 유지합니다. NAS/SMB 환경은 별도 검증 전까지 생성할 수 없습니다."
                Margin="0,5,0,0" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}"/>
-    <TextBlock Text="표시된 상태는 직전 읽기 전용 점검 당시의 관찰 결과입니다. 실제 생성 전에는 새로운 재점검과 별도 사용자 승인이 필요합니다."
+    <TextBlock Text="재점검 후 사업 폴더명을 입력하고 마지막 생성 버튼에서 승인해야 합니다. 중단 시 완료된 폴더는 보존됩니다."
                Margin="0,5,0,0" FontSize="11" TextWrapping="Wrap"/>
    </StackPanel>
   </Border>
@@ -42,7 +42,7 @@
     <TextBlock Text="{Binding Missing}" FontWeight="SemiBold"/>
     <TextBlock Text=" · 차단 " />
     <TextBlock Text="{Binding Blocked}" FontWeight="SemiBold"/>
-    <TextBlock Text=" · 실제 생성 0" FontWeight="SemiBold"/>
+    <TextBlock x:Name="CreatedCountText" Text=" · 생성 전" FontWeight="SemiBold"/>
    </StackPanel>
   </Grid>
   <DataGrid Grid.Row="2" x:Name="ReadinessPathsGrid" ItemsSource="{Binding ObservedPaths}"
@@ -65,7 +65,7 @@
     <TextBox Grid.Column="1" x:Name="WorkspaceNameConfirmation" MaxLength="220" Margin="0,0,8,0"
              TextChanged="WorkspaceNameConfirmation_TextChanged"
              AutomationProperties.Name="사업 폴더명 검토 확인 입력 (쓰기 권한 아님)"/>
-    <Button Grid.Column="2" Content="사업별 검토 확인 (생성 아님)" Click="AcknowledgeProject_Click" Padding="9,5"
+    <Button Grid.Column="2" x:Name="AcknowledgeProjectButton" Content="사업별 검토 확인" Click="AcknowledgeProject_Click" Padding="9,5"
             AutomationProperties.Name="사업별 읽기 전용 검토 완료 확인"/>
     <TextBlock Grid.Column="3" x:Name="ProjectReviewStatus" Text="검토 확인은 생성 승인이나 쓰기 권한이 아닙니다."
                Margin="9,0,0,0" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="11"
@@ -82,18 +82,27 @@
             Click="CopyPreflight_Click" Padding="9,5" Margin="0,0,7,0"/>
     <Button Grid.Column="3" x:Name="CopyExecutionManifestButton" Content="실행 계획표 복사"
             Click="CopyExecutionManifest_Click" IsEnabled="False" Padding="9,5" Margin="0,0,7,0"
-            AutomationProperties.Name="검증된 사업별 생성 계획표 복사 실제 폴더 생성 안 함"/>
+            AutomationProperties.Name="검증된 사업별 생성 계획표 복사 실행 전 계획표 복사"/>
     <TextBlock Grid.Column="4" x:Name="PreflightStatus" VerticalAlignment="Center" TextWrapping="Wrap"
                Text="읽기 전용 검토 확인 이후 재점검할 수 있습니다." FontSize="11"
                Foreground="{DynamicResource TextMuted}"/>
    </Grid>
+   <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
+    <Button x:Name="CreateFoldersButton" Content="누락 폴더 생성" Click="CreateFolders_Click"
+            IsEnabled="False" Padding="12,6" Margin="0,0,7,0"
+            AutomationProperties.Name="EIASS 누락 사업폴더 생성 최종 확인"/>
+    <Button x:Name="CancelFolderCreationButton" Content="생성 중지" Click="CancelFolderCreation_Click"
+            IsEnabled="False" Padding="10,6" Margin="0,0,8,0"/>
+    <TextBlock Text="생성은 별도 최종 확인 후 시작합니다. 기존 자료는 보존됩니다."
+               Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+   </StackPanel>
    <DockPanel LastChildFill="True">
     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
      <Button Content="검토표 복사 (저장 아님)" Click="CopyReadiness_Click" Padding="12,6" Margin="0,0,7,0"
              AutomationProperties.Name="읽기 전용 생성 준비 검토표 클립보드 복사"/>
      <Button Content="닫기" Click="CloseReview_Click" Padding="16,6" IsCancel="True"/>
     </StackPanel>
-    <TextBlock Text="실제 생성 기능 잠금 유지 · 이 창은 운영 승인/서명/출시를 수행하지 않습니다."
+    <TextBlock Text="새 폴더만 생성 · 기존 파일 무변경 · NAS/SMB 생성 검증 대기"
                TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
    </DockPanel>
   </StackPanel>
