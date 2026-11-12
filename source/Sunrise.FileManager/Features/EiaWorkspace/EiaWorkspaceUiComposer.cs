@@ -307,7 +307,7 @@ public static class EiaWorkspaceUiComposer
             result.CompanyPolicyVersion != "UNAPPROVED")
             throw new InvalidOperationException("승인된 실행 계획인 것처럼 내보낼 수 없습니다.");
         var text = new StringBuilder();
-        text.AppendLine("[Sunrise EIA 업무 폴더 계획 / 미승인 초안 / 생성 불가]");
+        text.AppendLine("[Sunrise EIA 업무 폴더 계획 / 읽기 전용 미리보기 / 실제 생성은 재점검과 최종 확인 후]");
         text.AppendLine("사업 폴더: " + result.RootFolderName);
         text.AppendLine("상대경로 수: " + result.Entries.Count);
         text.AppendLine("미리보기 지문: " + result.FingerprintSha256);

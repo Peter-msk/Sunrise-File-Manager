@@ -10,7 +10,8 @@ namespace Sunrise.FileManager.Features.EiaWorkspace;
 /// <summary>
 /// DEV26: immutable, read-only handoff after a project-specific acknowledgement and
 /// an independently refreshed path inspection. This is not an authorization token.
-/// Real business-folder writes are not available in the product.
+/// A separate v1.8.1 writer requires explicit final consent; this read-only
+/// manifest itself does not grant permission.
 /// </summary>
 public sealed record EiaWorkspaceExecutionManifest(
     string BaseDirectory, string WorkspacePath, string Scope,

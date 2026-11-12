@@ -9,9 +9,10 @@ using System.Threading;
 namespace Sunrise.FileManager.Features.EiaWorkspace;
 
 /// <summary>
-/// v1.7.8 DEV3: non-destructive PREVIEW and handle-relative sandbox-only executor.
-/// Company templates remain UNAPPROVED. Production cannot call the filesystem writer.
-/// No original documents, design files, templates, updater files or ACLs are modified.
+/// Read-only plan and observation engine; isolated sandbox test writer stays
+/// compilation-gated. v1.8.1 production folder creation is isolated in a
+/// separate, explicitly approved native command with no file operations.
+/// Company/client draft profiles remain unapproved, and originals stay intact.
 /// </summary>
 public sealed record EiaFolderCreationItem(string RelativePath, string AbsolutePath, string BeforeState);
 public sealed record EiaFolderCreationPlan(
