@@ -59,6 +59,29 @@ public static class EiaWorkspaceCasePlanner
             ["contract_termination"] = "11_용역_해지",
         };
 
+    // One authoritative case-to-folder mapping shared by the base and scenario planners.
+    // Internal CaseCode values must never become proposed workspace directory segments.
+    internal static IReadOnlyDictionary<string, string> BuildCaseRootMap(
+        IEnumerable<EiaAssessmentCase> assessmentCases, EiaWorkspaceDraftCatalog catalog)
+    {
+        var ordered = assessmentCases.OrderBy(c => c.CaseCode.Trim().Normalize(NormalizationForm.FormC),
+            StringComparer.OrdinalIgnoreCase).ToArray();
+        var roots = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in ordered)
+        {
+            string typeBase = catalog.WorkstreamPaths[item.Workstream][0].Split('/')[0];
+            int ordinal = counts.TryGetValue(typeBase, out int n) ? n + 1 : 1;
+            counts[typeBase] = ordinal;
+            bool multipleSameType = ordered.Count(c =>
+                catalog.WorkstreamPaths[c.Workstream][0].Split('/')[0]
+                    .Equals(typeBase, StringComparison.OrdinalIgnoreCase)) > 1;
+            roots.Add(item.CaseCode.Trim().Normalize(NormalizationForm.FormC),
+                $"{AssessmentRoot}/{typeBase}" + (multipleSameType ? $"/{ordinal:00}_평가업무" : ""));
+        }
+        return roots;
+    }
+
     public static EiaCaseWorkspacePreview BuildPreview(EiaCaseWorkspaceRequest request)
         => BuildPreview(request, EiaWorkspacePreviewPlanner.LoadDraftCatalog());
 
@@ -145,19 +168,11 @@ public static class EiaWorkspaceCasePlanner
             Add($"{ContractRoot}/{(contractCode == "INTERNAL" ? "용역" : contractCode)}/01_계약원본_변경이력");
 
         var relations = new List<EiaCaseRelationship>();
-        var caseRoots = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var typeCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var caseRoots = BuildCaseRootMap(cases.Values, catalog);
         foreach (var item in cases.Values.OrderBy(c => c.CaseCode, StringComparer.OrdinalIgnoreCase))
         {
             string typeBase = catalog.WorkstreamPaths[item.Workstream][0].Split('/')[0];
-            int ordinal = typeCounts.TryGetValue(typeBase, out int existingCount) ? existingCount + 1 : 1;
-            typeCounts[typeBase] = ordinal;
-            bool multipleSameType = cases.Values.Count(c =>
-                catalog.WorkstreamPaths[c.Workstream][0].Split('/')[0].Equals(typeBase, StringComparison.OrdinalIgnoreCase)) > 1;
-            string caseRoot = $"{AssessmentRoot}/{typeBase}" +
-                (multipleSameType ? $"/{ordinal:00}_평가업무" : "");
-            // CASE IDs remain internal; repeat cases get a stable ordinal path.
-            caseRoots.Add(item.CaseCode, caseRoot);
+            string caseRoot = caseRoots[item.CaseCode];
             Add(caseRoot + "/00_업무범위_계약연결");
             foreach (string path in catalog.WorkstreamPaths[item.Workstream])
             {
@@ -201,7 +216,9 @@ public static class EiaWorkspaceCasePlanner
             int round = PositiveRound(intake.RevisionNumber);
             string key = $"{caseCode}|{intakeCode}|{round}";
             if (!intakeKeys.Add(key)) throw new ArgumentException("같은 설계 수령차수가 중복되었습니다.");
-            string path = $"{IntakeRoot}/{caseCode}/{intakeCode}_수령_{round:00}";
+            // Keep the same readable workstream/ordinal scope as the assessment tree.
+            string caseBranch = caseRoots[caseCode][(AssessmentRoot.Length + 1)..];
+            string path = $"{IntakeRoot}/{caseBranch}/{intakeCode}_수령_{round:00}";
             Add(path + "/01_수령원본");
             Add(path + "/02_자료목록_출처_인수기록");
             Add(path + "/03_전차수_변경대비_작업본");
