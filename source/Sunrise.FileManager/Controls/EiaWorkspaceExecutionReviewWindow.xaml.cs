@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Linq;
@@ -86,7 +88,7 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
 
     private async void RecheckBeforeExecution_Click(object sender, RoutedEventArgs e)
     {
-        if (_preflightCancellation is not null) return;
+        if (_preflightCancellation is not null || _creationCancellation is not null) return;
         _lastPreflight = null;
         _lastExecutionManifest = null;
         CreateFoldersButton.IsEnabled = false;
@@ -104,11 +106,19 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
         _preflightCancellation = cancellation;
         RecheckBeforeExecutionButton.IsEnabled = false;
         CancelPreflightButton.IsEnabled = true;
+        WorkspaceNameConfirmation.IsEnabled = false;
+        AcknowledgeProjectButton.IsEnabled = false;
+        OperationProgress.Visibility = Visibility.Visible;
+        OperationProgress.IsIndeterminate = false;
+        UpdateOperationProgress(0, _review.ObservedPaths.Count);
         PreflightStatus.Text = "저장 위치를 새로 확인하는 중입니다. 생성·삭제·수정은 수행하지 않습니다.";
         var progress = new Progress<(int Done, int Total)>(p =>
         {
             if (ReferenceEquals(_preflightCancellation, cancellation))
+            {
+                UpdateOperationProgress(p.Done, p.Total);
                 PreflightStatus.Text = $"재점검 {p.Done:N0} / {p.Total:N0}개 (읽기 전용)";
+            }
         });
         try
         {
@@ -170,6 +180,10 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
             cancellation.Dispose();
             RecheckBeforeExecutionButton.IsEnabled = true;
             CancelPreflightButton.IsEnabled = false;
+            WorkspaceNameConfirmation.IsEnabled = true;
+            AcknowledgeProjectButton.IsEnabled = true;
+            OperationProgress.Visibility = Visibility.Collapsed;
+            PreflightStatus.ToolTip = null;
         }
     }
 
@@ -224,7 +238,10 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
         var cts = new CancellationTokenSource();
         _creationCancellation = cts;
         CreateFoldersButton.IsEnabled = false;
+        OpenWorkspaceFolderButton.IsEnabled = false;
         CancelFolderCreationButton.IsEnabled = true;
+        OperationProgress.Visibility = Visibility.Visible;
+        OperationProgress.IsIndeterminate = true;
         RecheckBeforeExecutionButton.IsEnabled = false;
         WorkspaceNameConfirmation.IsEnabled = false;
         AcknowledgeProjectButton.IsEnabled = false;
@@ -232,7 +249,13 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
         var progress = new Progress<(int Done, int Total, string Path)>(p =>
         {
             if (ReferenceEquals(_creationCancellation, cts))
-                PreflightStatus.Text = $"폴더 처리 {p.Done:N0}/{p.Total:N0} · {p.Path}";
+            {
+                OperationProgress.IsIndeterminate = false;
+                UpdateOperationProgress(p.Done, p.Total);
+                // Keep the narrow status bar readable; hover for the complete path.
+                PreflightStatus.Text = $"폴더 처리 {p.Done:N0}/{p.Total:N0} · {Path.GetFileName(p.Path.TrimEnd('/', '\\'))}";
+                PreflightStatus.ToolTip = p.Path;
+            }
         });
         try
         {
@@ -244,6 +267,9 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
                 new EiaFolderPathObservation(old.ScopeLabel, old.RelativePath, old.AbsolutePath,
                     actual.Outcome, actual.Detail)).ToArray();
             ReadinessPathsGrid.ItemsSource = mapped;
+            // Explorer access is a secondary UX action: a concurrent path change
+            // must not mask a successful/partial creation outcome.
+            OpenWorkspaceFolderButton.IsEnabled = CanOpenWorkspaceFolder();
             CreatedCountText.Text = $" · 신규 생성 {result.Created:N0} / 기존 {result.AlreadyExists:N0}";
             PreflightStatus.Text = result.Completed
                 ? $"생성 완료: 신규 {result.Created:N0}, 기존 {result.AlreadyExists:N0}. 현황을 다시 조회하세요."
@@ -276,12 +302,72 @@ public partial class EiaWorkspaceExecutionReviewWindow : Window
             WorkspaceNameConfirmation.IsEnabled = true;
             AcknowledgeProjectButton.IsEnabled = true;
             _creationCancellation = null;
+            OperationProgress.IsIndeterminate = false;
+            OperationProgress.Visibility = Visibility.Collapsed;
+            PreflightStatus.ToolTip = null;
             cts.Dispose();
         }
     }
 
     private void CancelFolderCreation_Click(object sender, RoutedEventArgs e) =>
         _creationCancellation?.Cancel();
+
+    private void UpdateOperationProgress(int done, int total)
+    {
+        int count = Math.Max(1, total);
+        OperationProgress.Maximum = count;
+        OperationProgress.Value = Math.Clamp(done, 0, count);
+    }
+
+    private bool CanOpenWorkspaceFolder()
+    {
+        try
+        {
+            return Directory.Exists(_review.WorkspacePath) &&
+                EiaWorkspaceCreationEngine.VerifyExistingChain(_review.WorkspacePath);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or
+            UnauthorizedAccessException or System.Security.SecurityException or
+            ArgumentException or NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    private void OpenWorkspaceFolder_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Explorer is launched only for a directory verified without a reparse chain.
+            if (!EiaWorkspaceCreationEngine.VerifyExistingChain(_review.WorkspacePath))
+                throw new IOException("사업 폴더가 존재하지 않습니다. 경로를 다시 확인하세요.");
+            var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
+            start.ArgumentList.Add(_review.WorkspacePath);
+            Process.Start(start);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or
+            System.Security.SecurityException or InvalidOperationException or
+            ArgumentException or System.ComponentModel.Win32Exception)
+        {
+            MessageBox.Show(this, "결과 폴더를 열지 못했습니다: " + ex.Message,
+                "EIASS 결과 폴더", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (_preflightCancellation is not null || _creationCancellation is not null)
+        {
+            // A running disk operation may have already created directories.
+            // Keep this window alive until the worker reports its final outcome.
+            e.Cancel = true;
+            _preflightCancellation?.Cancel();
+            _creationCancellation?.Cancel();
+            PreflightStatus.Text = "작업 중지 요청 중입니다. 결과 확인 후 창을 닫을 수 있습니다.";
+            return;
+        }
+        base.OnClosing(e);
+    }
 
     protected override void OnClosed(EventArgs e)
     {

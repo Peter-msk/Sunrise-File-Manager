@@ -30,10 +30,12 @@
    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SourceLabel}" Margin="0,3"/>
    <TextBlock Grid.Row="1" Grid.Column="0" Text="사업 경로" Margin="5,3,10,3"/>
    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding WorkspacePath}" IsReadOnly="True"
-            BorderThickness="0" Background="Transparent" Margin="0,3" AutomationProperties.Name="검토 대상 폴더 경로 읽기 전용"/>
+            BorderThickness="0" Background="Transparent" Margin="0,3" ToolTip="{Binding WorkspacePath}"
+            AutomationProperties.Name="검토 대상 폴더 경로 읽기 전용"/>
    <TextBlock Grid.Row="2" Grid.Column="0" Text="경로 관찰 지문" Margin="5,3,10,3"/>
    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding StrictPlanFingerprintSha256}" IsReadOnly="True"
-            BorderThickness="0" Background="Transparent" Margin="0,3" AutomationProperties.Name="생성 준비 검토 경로 지문 읽기 전용"/>
+            BorderThickness="0" Background="Transparent" Margin="0,3" ToolTip="{Binding StrictPlanFingerprintSha256}"
+            AutomationProperties.Name="생성 준비 검토 경로 지문 읽기 전용"/>
    <TextBlock Grid.Row="3" Grid.Column="0" Text="검토 당시 집계" Margin="5,3,10,3"/>
    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,3">
     <TextBlock Text="기존 " />
@@ -60,7 +62,7 @@
   </DataGrid>
   <StackPanel Grid.Row="3" Margin="0,8,0,0">
    <Grid Margin="0,0,0,6">
-    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="160"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="240" MinWidth="200"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
     <TextBlock Grid.Column="0" Text="사업 폴더명 재입력" VerticalAlignment="Center" Margin="0,0,8,0"/>
     <TextBox Grid.Column="1" x:Name="WorkspaceNameConfirmation" MaxLength="220" Margin="0,0,8,0"
              TextChanged="WorkspaceNameConfirmation_TextChanged"
@@ -83,16 +85,23 @@
     <Button Grid.Column="3" x:Name="CopyExecutionManifestButton" Content="실행 계획표 복사"
             Click="CopyExecutionManifest_Click" IsEnabled="False" Padding="9,5" Margin="0,0,7,0"
             AutomationProperties.Name="검증된 사업별 생성 계획표 복사 실행 전 계획표 복사"/>
-    <TextBlock Grid.Column="4" x:Name="PreflightStatus" VerticalAlignment="Center" TextWrapping="Wrap"
+    <TextBlock Grid.Column="4" x:Name="PreflightStatus" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+               AutomationProperties.LiveSetting="Polite"
                Text="읽기 전용 검토 확인 이후 재점검할 수 있습니다." FontSize="11"
                Foreground="{DynamicResource TextMuted}"/>
    </Grid>
+   <ProgressBar x:Name="OperationProgress" Minimum="0" Maximum="1" Value="0"
+                Height="5" Margin="0,0,0,7" Visibility="Collapsed"
+                AutomationProperties.Name="EIASS 작업 진행률"/>
    <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
     <Button x:Name="CreateFoldersButton" Content="누락 폴더 생성" Click="CreateFolders_Click"
             IsEnabled="False" Padding="12,6" Margin="0,0,7,0"
             AutomationProperties.Name="EIASS 누락 사업폴더 생성 최종 확인"/>
     <Button x:Name="CancelFolderCreationButton" Content="생성 중지" Click="CancelFolderCreation_Click"
             IsEnabled="False" Padding="10,6" Margin="0,0,8,0"/>
+    <Button x:Name="OpenWorkspaceFolderButton" Content="결과 폴더 열기" Click="OpenWorkspaceFolder_Click"
+            IsEnabled="False" Padding="10,6" Margin="0,0,8,0"
+            AutomationProperties.Name="EIASS 생성 결과 사업폴더 탐색기로 열기"/>
     <TextBlock Text="생성은 별도 최종 확인 후 시작합니다. 기존 자료는 보존됩니다."
                Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" VerticalAlignment="Center"/>
    </StackPanel>
