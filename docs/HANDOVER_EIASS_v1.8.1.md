@@ -33,3 +33,14 @@
 `BUILD.cmd --release --no-pause`는 Windows 빌드 PC에서만 실행. 이전 PASS로 확인한 무관한 검사 반복 금지. `installer/RELEASE_VERSION.txt=1.8.1` 및 `release/NOTICE_BODY_1.8.1.txt`가 필요.
 
 공식 기존 v1.8.0 Setup: `Sunrise_File_Manager_1.8.0_Setup.exe` / SHA-256 `30767327b56ced5267c8630a9b49b09ae86e472073377e5806a06927a4ec9d9a`. 출시 전까지 그대로 유지.
+
+## R02 (2026-11-13) — 공개 오픈소스 벤치마킹 이후 대상 변경 안정화
+
+- **기준**: R01 `9377700bbbb52224b3588ffb8336b6d08daead94`. 전역 테마, installer/updater, 다른 메뉴 및 원본 v1.8.0 릴리즈는 수정하지 않음.
+- **미리보기**: `EiassRenameDialog`의 코드·파일명 중복 검사에서 반복 목록 전체검색 제거, 대소문자 비구별 경로 집계 유지. 큰 목록의 DataGrid 가상화 및 새 파일명 말줄임/전체값 Tooltip 제공.
+- **목차 일치**: `EiassFileNameService.MatchContents`를 유일키/목차위치 딕셔너리로 계산하여 중복/빈값 거부 의미 보존.
+- **실제 파일명 변경**: 기존 `RunLocalFileJobAsync`로 백그라운드 실행, MainWindow 기존 종료/업데이트 방어 재사용. 2단계 스테이징의 파일 단위 경계에서만 취소 인식. 중단 시 복구 실패가 없으면 `OperationCanceledException`, 복구 실패면 `IOException`으로 보존 경로 제공. 파일 콘텐츠 변경/삭제 없음. 늦게 도착한 진행 이벤트는 완료 메시지 덮어쓰지 않음.
+- **변경영향 테스트**: Python 소스 계약·목차 로직 모델 및 기존 EIASS 테스트 29 PASS. 관련 과거 UI/파일 조작 계약 49 PASS, 22 subtests PASS. R01 소스 패키지에서 빠진 역사 Windows 검사 문서 2개는 원래 R06 기준본의 읽기 전용 문서를 임시 링크한 뒤 통과, 새 소스 패키지에 임의로 역사 검증 자료를 삽입하지 않음.
+- **신규 Windows 실기 시나리오**: UiSmoke의 파일명 변경 후 비동기 완료 대기, 1,000 제목·2,000 목차, stage/publish 중 취소시 원본/`#memo` 복구 및 임시파일 부재. 구현됐으나 **미실행**.
+- **미검증 자격**: .NET 10/WPF Windows 빌드, 실제 NTFS 파일 잠금/ACL/취소, Windows 100–175% DPI, Authenticode signed installer, 공식 v1.8.1 출시는 모두 `PENDING`.
+- **다음 작업**: `docs/STABILIZATION_PLAN_v1.8.1_R02.md`의 R03/R04/REL Gate 및 빌드 후 사용자 실기 결과 기준.
