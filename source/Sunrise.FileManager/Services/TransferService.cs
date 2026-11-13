@@ -72,15 +72,20 @@ public static class TransferService
             if (ReparsePointPolicy.IsBlocked(folder.FullName, folder.Attributes)) throw new IOException("링크 폴더 아래로는 전송하지 않습니다.");
         if (sources.Count > 1000) throw new IOException("한 작업에서는 최대 1,000개 최상위 항목을 선택할 수 있습니다.");
 
-        var uniqueSources = sources.Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        // Nested selections would invalidate child paths when the parent folder is moved.
+        var uniqueSources = sources.Select(path => Path.TrimEndingDirectorySeparator(Path.GetFullPath(path)))
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        // O(selected * path depth), not O(selected^2). A selected parent and its child
+        // must never be processed together because the first move invalidates the second.
+        var selectedDirectories = uniqueSources.Where(Directory.Exists)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (string candidate in uniqueSources)
-            foreach (string other in uniqueSources)
-                if (!string.Equals(candidate, other, StringComparison.OrdinalIgnoreCase) &&
-                    Directory.Exists(other) && IsSameOrDescendant(candidate, other))
+            for (string? parent = Path.GetDirectoryName(candidate); parent is not null;
+                 parent = Path.GetDirectoryName(parent))
+                if (selectedDirectories.Contains(parent))
                     throw new IOException("상위 폴더와 그 안의 하위 항목을 동시에 선택할 수 없습니다.");
 
         var plans = new List<RootPlan>(uniqueSources.Count);
+        var reservedExactDestinations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         int scanned = 0;
         long totalBytes = 0;
         foreach (string source in uniqueSources)
@@ -95,6 +100,11 @@ public static class TransferService
                     string.Equals(exact, source, StringComparison.OrdinalIgnoreCase))
                     throw new IOException("승인된 대상 경로가 올바르지 않습니다.");
                 FileActionsService.ValidateName(Path.GetFileName(exact));
+                // Exact targets are user-reviewed names. Reject duplicate reservations
+                // before the FIRST copy/move; otherwise the second item would fail
+                // after the first had already changed the filesystem.
+                if (!reservedExactDestinations.Add(exact))
+                    throw new IOException("승인된 대상 이름이 둘 이상의 항목에 중복 지정되었습니다. 작업을 시작하지 않습니다: " + exact);
                 plan = plan with { Destination = exact };
             }
             plans.Add(plan);
@@ -447,7 +457,7 @@ public static class TransferService
             {
                 token.ThrowIfCancellationRequested();
                 VerifySourceUnchanged(plan);
-                Directory.Delete(plan.Source, recursive: true);
+                CleanupVerifiedSourceDirectory(plan);
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or OperationCanceledException or InvalidDataException or System.Text.Json.JsonException)
@@ -458,6 +468,39 @@ public static class TransferService
                 "원본과 대상의 파일·메모를 확인한 후 수동으로 정리하세요. " +
                 $"원본: {plan.Source} / 대상: {plan.Destination}. 원인: {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    /// After verified publish, remove ONLY the files captured in the original plan.
+    /// Recursive deletion could erase files another application created between the
+    /// last source scan and cleanup. Non-recursive directory removal fails closed if
+    /// any unexpected files or folders remain, preserving the published destination.
+    /// Once cleanup begins, do not cancel between individual deletions: cancellation
+    /// here would deliberately strand a partially removed source tree.
+    /// </summary>
+    private static void CleanupVerifiedSourceDirectory(RootPlan plan)
+    {
+        if (!plan.IsDirectory) throw new InvalidOperationException("폴더 전용 정리입니다.");
+        foreach (FilePart file in plan.Files)
+        {
+            string path = Path.Combine(plan.Source, file.RelativePath);
+            if (ReparsePointPolicy.IsBlocked(path))
+                throw new IOException("원본 정리 중 연결·접합점이 발견되어 삭제를 중단했습니다: " + path);
+            VerifySourceFile(path, file);
+            File.Delete(path);
+        }
+        // A nested directory always has a longer relative path than its parent.
+        // Never use recursive:true: unexpected concurrent files must remain intact.
+        foreach (string relative in plan.Subdirectories.OrderByDescending(path => path.Length))
+        {
+            string path = Path.Combine(plan.Source, relative);
+            if (!Directory.Exists(path) || ReparsePointPolicy.IsBlocked(path))
+                throw new IOException("원본 정리 중 폴더가 변경되어 삭제를 중단했습니다: " + path);
+            Directory.Delete(path, recursive: false);
+        }
+        if (!Directory.Exists(plan.Source) || ReparsePointPolicy.IsBlocked(plan.Source))
+            throw new IOException("원본 최상위 폴더가 변경되어 삭제를 중단했습니다: " + plan.Source);
+        Directory.Delete(plan.Source, recursive: false);
     }
 
     private static void VerifySourceUnchanged(RootPlan plan)

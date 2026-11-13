@@ -44,3 +44,12 @@
 - **신규 Windows 실기 시나리오**: UiSmoke의 파일명 변경 후 비동기 완료 대기, 1,000 제목·2,000 목차, stage/publish 중 취소시 원본/`#memo` 복구 및 임시파일 부재. 구현됐으나 **미실행**.
 - **미검증 자격**: .NET 10/WPF Windows 빌드, 실제 NTFS 파일 잠금/ACL/취소, Windows 100–175% DPI, Authenticode signed installer, 공식 v1.8.1 출시는 모두 `PENDING`.
 - **다음 작업**: `docs/STABILIZATION_PLAN_v1.8.1_R02.md`의 R03/R04/REL Gate 및 빌드 후 사용자 실기 결과 기준.
+
+## R03 (2026-11-13) — 일반 파일 이동/복구 안전성 및 사전 검증
+
+- R02 코드를 기준으로 `TransferService`의 verified cross-volume **폴더** 이동 후 `Directory.Delete(plan.Source, recursive:true)` 위험을 제거했다. 이제 최초 열거한 파일을 개별 재확인해 제거하고, 하위/상위 폴더는 `recursive:false`로만 정리한다. 원본에 새 파일이 들어오면 삭제 실패로 보고하고 완성된 대상 복사본은 유지한다.
+- 사용자가 검토한 `exactDestinations`에 동일한 목적지 이름이 2건 이상 지정된 경우, 첫 파일 처리 전에 전체 작업을 거부한다. 선택한 상위 폴더/하위 항목의 충돌 확인은 경로 집합으로 최적화했다.
+- 기존 `FileActionsService`, `ExplorerUndoService`, `FileMemoStore`의 로컬 Owner 계약과 기존 UI 테마는 변경하지 않고 영향 테스트로 재확인했다.
+- 실제 실행: R03·R20·R22·R42·R56·R02·R160 Python 변경영향 60 PASS / 41 하위검사 PASS. R20 역사 검증 문서는 R06 ZIP에서 읽어 임시 연결했으며 R03 소스에는 복제하지 않았다.
+- Windows 테스트용 `LogicTests --v181-r03-transfer-safety`는 source ZIP에 작성·포함했으나 .NET 10/Windows 부재로 실행하지 못했다. 실제 NTFS/SMB 파일 경합, 서명 Setup 및 v1.8.1 공식 릴리즈는 **PENDING**. 현행 공식 v1.8.0 배포 유지.
+- 상세: `docs/STABILIZATION_PLAN_v1.8.1_R03.md` / `docs/R03_VALIDATION_REPORT.md`.
