@@ -53,3 +53,14 @@
 - 실제 실행: R03·R20·R22·R42·R56·R02·R160 Python 변경영향 60 PASS / 41 하위검사 PASS. R20 역사 검증 문서는 R06 ZIP에서 읽어 임시 연결했으며 R03 소스에는 복제하지 않았다.
 - Windows 테스트용 `LogicTests --v181-r03-transfer-safety`는 source ZIP에 작성·포함했으나 .NET 10/Windows 부재로 실행하지 못했다. 실제 NTFS/SMB 파일 경합, 서명 Setup 및 v1.8.1 공식 릴리즈는 **PENDING**. 현행 공식 v1.8.0 배포 유지.
 - 상세: `docs/STABILIZATION_PLAN_v1.8.1_R03.md` / `docs/R03_VALIDATION_REPORT.md`.
+
+## R04 (2026-11-13) — 재귀 검색 페이지·분할창 성능 및 UI 안정화
+
+- 기준 R03 `8bc8651890da1b556ee1573669e1cac9dc3bd091`; 제품 코드 변경 5개 파일로 한정.
+- 재귀 검색 2,000행 페이지를 넘길 때 전체 검색 결과 재정렬을 반복하지 않도록 조건·정렬·listing generation 키의 단일 sorted view 캐시 추가. 새 폴더/refresh/pane 상태교환 시 원본 검색·정렬 캐시 모두 무효화.
+- `FileListView.Apply` 선택적 유형 필터 인자로 전체 배열 중복 생성을 제거했고, 전체 결과 선택도 동일 키의 정렬 결과를 재활용한다.
+- 기존 승인 UI: 1~4분할, 파일명 인라인 편집, 가로 스크롤, `EnableRowVirtualization=True`, `EnableColumnVirtualization=False` 유지. WPF `ScrollViewer.CanContentScroll=True`를 명시.
+- 소스/계약 Python 검사 총 164 PASS(하위검사 33). R17/R57/R58 역사 문서는 R06 원본에서 임시 읽기 전용 참조 후 재검증, R04 패키지에 미포함.
+- 신규 Windows opt-in `UiSmokeTests --r04-recursive-page-only`는 2,205개 GUID 임시파일만 생성해 페이지 이동/캐시/정렬/검색어/refresh 무효화를 확인하도록 작성. **실제 Windows에서는 아직 미실행.**
+- R04 상세: `docs/STABILIZATION_PLAN_v1.8.1_R04.md`, `docs/R04_VALIDATION_REPORT.md`.
+- 다음은 Windows x64 .NET 10 / DPI 100·125·150·175% / installer / code signing / 업데이트 검증으로 구성된 R05 Release Gate. 기존 `latest.json`과 v1.8.0 안정 배포 유지.
