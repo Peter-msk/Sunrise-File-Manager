@@ -9,9 +9,10 @@ using System.Threading;
 namespace Sunrise.FileManager.Features.EiaWorkspace;
 
 /// <summary>
-/// v1.7.8 DEV3: non-destructive PREVIEW and handle-relative sandbox-only executor.
-/// Company templates remain UNAPPROVED. Production cannot call the filesystem writer.
-/// No original documents, design files, templates, updater files or ACLs are modified.
+/// Read-only plan and observation engine; isolated sandbox test writer stays
+/// compilation-gated. v1.8.1 production folder creation is isolated in a
+/// separate, explicitly approved native command with no file operations.
+/// Company/client draft profiles remain unapproved, and originals stay intact.
 /// </summary>
 public sealed record EiaFolderCreationItem(string RelativePath, string AbsolutePath, string BeforeState);
 public sealed record EiaFolderCreationPlan(
@@ -29,6 +30,10 @@ public sealed record EiaFolderPathObservation(
         "BLOCKED" => "충돌/접근 불가",
         "EXISTS_DIRECTORY" => "기존 폴더",
         "MISSING" => "새 폴더 필요",
+        "CREATED" => "생성됨",
+        "ALREADY_EXISTS" => "기존 폴더 유지",
+        "FAILED" => "실패/재점검 필요",
+        "NOT_ATTEMPTED" => "중단/미시도",
         _ => "검토 필요"
     };
 }
@@ -305,7 +310,7 @@ public static class EiaWorkspaceCreationEngine
     }
 
     /// <summary>Checks every existing ancestor and rejects links, files, and junctions.</summary>
-    private static bool VerifyExistingChain(string absolute, CancellationToken cancellationToken = default)
+    internal static bool VerifyExistingChain(string absolute, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         string root = Path.GetPathRoot(absolute)

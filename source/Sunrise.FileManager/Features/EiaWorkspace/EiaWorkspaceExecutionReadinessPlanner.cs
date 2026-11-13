@@ -31,14 +31,14 @@ public sealed record EiaWorkspaceExecutionReadiness(
         var sb = new StringBuilder();
         sb.AppendLine("Sunrise File Manager · DEV24 사업별 폴더 생성 준비 검토표 (읽기 전용)");
         sb.AppendLine("사업별 계획을 독립적으로 검토합니다. 별도 회사 표준 승인 트리는 필요하지 않으며 검토 확인은 실행 권한이 아닙니다.");
-        sb.AppendLine("상태: BLOCKED_WRITE_VALIDATION · 생성 및 파일 변경 금지");
+        sb.AppendLine("상태: 읽기 전용 검토 · 운영 생성은 별도 최종승인 후 로컬 NTFS/ReFS에서만 가능");
         sb.AppendLine("범위: " + SourceLabel);
         sb.AppendLine("기준 위치: " + BaseDirectory);
         sb.AppendLine("사업 폴더: " + WorkspacePath);
         sb.AppendLine($"검토 당시 기존 {Existing}개 / 생성 예상 {Missing}개 / 차단 {Blocked}개 / 총 {ObservedPaths.Count}개");
         sb.AppendLine("출처 지문: " + SourceFingerprintSha256);
         sb.AppendLine("경로 관찰 지문: " + StrictPlanFingerprintSha256);
-        sb.AppendLine("필수 미완료: 운영용 생성 엔진, Windows 네이티브 시험, NTFS/ACL, SMB/NAS 실기");
+        sb.AppendLine("유의: Windows/ACL 실기 검증 및 NAS/SMB 지원은 별도 출시 게이트입니다.");
         sb.AppendLine("중요: 검사 이후 파일시스템이 바뀔 수 있습니다. 향후 실제 실행 직전에 별도 재점검과 새 사용자 승인이 필요합니다.");
         sb.AppendLine("--- 검토 당시 경로 (표시 제한 있음) ---");
         foreach (var row in ObservedPaths.Take(maxPaths))

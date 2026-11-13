@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading;
 
 namespace Sunrise.FileManager.Services;
 
@@ -6,9 +7,12 @@ public static partial class FileActionsService
 {
     /// <summary>Two-phase file-only rename supports cycles and restores originals on failure.</summary>
     public static IReadOnlyList<(string OldPath, string NewPath)> BatchRenameFilesSafely(
-        IReadOnlyList<(string SourcePath, string NewName)> operations)
+        IReadOnlyList<(string SourcePath, string NewName)> operations,
+        CancellationToken cancellationToken = default,
+        Action<int, int, string>? onProgress = null)
     {
         ArgumentNullException.ThrowIfNull(operations);
+        cancellationToken.ThrowIfCancellationRequested();
         if (operations.Count > 1000) throw new ArgumentException("한 번에 최대 1,000개 파일을 변경할 수 있습니다.");
         var pairs = operations.Select(op => (OldPath: Path.GetFullPath(op.SourcePath),
             NewPath: Path.Combine(Path.GetDirectoryName(Path.GetFullPath(op.SourcePath))!, ValidateName(op.NewName))))
@@ -18,6 +22,7 @@ public static partial class FileActionsService
         if (sources.Count != pairs.Length || targets.Count != pairs.Length) throw new IOException("원본 또는 변경 후 이름이 중복됩니다.");
         foreach (var pair in pairs)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             EnsureOrdinaryEntry(pair.OldPath);
             if (!File.Exists(pair.OldPath)) throw new IOException("파일만 일괄 변경할 수 있습니다.");
             if (Path.GetFileName(pair.NewPath).Length > 255) throw new IOException("파일 이름이 255자를 초과합니다.");
@@ -29,8 +34,23 @@ public static partial class FileActionsService
         int published = 0;
         try
         {
-            for (int i = 0; i < pairs.Length; i++) { MoveEntry(current[i], staged[i]); current[i] = staged[i]; }
-            for (int i = 0; i < pairs.Length; i++) { MoveEntry(current[i], pairs[i].NewPath); current[i] = pairs[i].NewPath; published++; }
+            // Cancellation is cooperative between whole-file moves. Once a move
+            // starts, complete that memo-aware move before inspecting the token.
+            for (int i = 0; i < pairs.Length; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                MoveEntry(current[i], staged[i]);
+                current[i] = staged[i];
+                onProgress?.Invoke(i + 1, pairs.Length * 2, "임시 이름 보존");
+            }
+            for (int i = 0; i < pairs.Length; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                MoveEntry(current[i], pairs[i].NewPath);
+                current[i] = pairs[i].NewPath;
+                published++;
+                onProgress?.Invoke(pairs.Length + i + 1, pairs.Length * 2, "이름 변경 반영");
+            }
         }
         catch (Exception failure)
         {
@@ -46,6 +66,10 @@ public static partial class FileActionsService
             if (recoveryErrors.Count > 0)
                 throw new IOException("이름 변경과 일부 복구에 실패했습니다. 파일을 보존한 경로를 확인하세요:\n" +
                     string.Join("\n", current.Where((p, i) => p != pairs[i].OldPath)), new AggregateException(new[] { failure }.Concat(recoveryErrors)));
+            // A canceled batch whose rollback succeeded is a normal canceled
+            // outcome. If rollback failed, the IOException above takes priority.
+            if (failure is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                throw;
             throw new IOException("이름 변경에 실패하여 원래 이름으로 복구했습니다. " + failure.Message, failure);
         }
         return pairs;

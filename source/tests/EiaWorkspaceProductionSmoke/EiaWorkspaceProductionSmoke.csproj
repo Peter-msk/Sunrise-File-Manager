@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Sunrise.FileManager/Services/SunriseGroupPaths.cs" Link="SunriseGroupPaths.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceExecutionPreflight.cs" Link="EiaWorkspaceExecutionPreflight.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceExecutionReadinessPlanner.cs" Link="EiaWorkspaceExecutionReadinessPlanner.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceExecutionService.cs" Link="EiaWorkspaceExecutionService.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceProjectReviewAcknowledgement.cs" Link="EiaWorkspaceProjectReviewAcknowledgement.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceProductionWriter.cs" Link="EiaWorkspaceProductionWriter.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceNativeDirectoryWriter.cs" Link="EiaWorkspaceNativeDirectoryWriter.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceCasePlanner.cs" Link="EiaWorkspaceCasePlanner.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceScenarioPlanner.cs" Link="EiaWorkspaceScenarioPlanner.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceOverlayPlanner.cs" Link="EiaWorkspaceOverlayPlanner.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceProfilePlanner.cs" Link="EiaWorkspaceProfilePlanner.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceDraftStore.cs" Link="EiaWorkspaceDraftStore.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceReadinessPlanner.cs" Link="EiaWorkspaceReadinessPlanner.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceRepresentativeAudit.cs" Link="EiaWorkspaceRepresentativeAudit.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceFootprintAudit.cs" Link="EiaWorkspaceFootprintAudit.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceCreationEngine.cs" Link="EiaWorkspaceCreationEngine.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceDiagnosticFilter.cs" Link="EiaWorkspaceDiagnosticFilter.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceDestinationInspector.cs" Link="EiaWorkspaceDestinationInspector.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceProfileDestinationInspector.cs" Link="EiaWorkspaceProfileDestinationInspector.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceUiComposer.cs" Link="EiaWorkspaceUiComposer.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceProfileUiInspector.cs" Link="EiaWorkspaceProfileUiInspector.cs" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspaceProfilePlanComparator.cs" Link="EiaWorkspaceProfilePlanComparator.cs" />
+    <EmbeddedResource Include="../../Sunrise.FileManager/Features/EiaWorkspace/Templates/eia_workspace_overlay_v1.json" LogicalName="Sunrise.FileManager.EiaWorkspace.OverlayDraftPolicy" />
+    <EmbeddedResource Include="../../Sunrise.FileManager/Features/EiaWorkspace/Templates/eia_workspace_scenarios_v1.json" LogicalName="Sunrise.FileManager.EiaWorkspace.ScenarioCatalog" />
+    <Compile Include="../../Sunrise.FileManager/Features/EiaWorkspace/EiaWorkspacePreviewPlanner.cs" Link="EiaWorkspacePreviewPlanner.cs" />
+    <EmbeddedResource Include="../../Sunrise.FileManager/Features/EiaWorkspace/Templates/eia_workspace_draft_v1.json" LogicalName="Sunrise.FileManager.EiaWorkspace.DraftCatalog" />
+  </ItemGroup>
+</Project>

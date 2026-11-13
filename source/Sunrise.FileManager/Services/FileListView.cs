@@ -14,11 +14,19 @@ public static class FileListView
         bool descending,
         CancellationToken token,
         string categoryFilter = "All",
-        bool showHidden = true)
+        bool showHidden = true,
+        ExplorerSearchFilter? selectionFilter = null)
     {
         token.ThrowIfCancellationRequested();
         var filter = ExplorerQuery.Parse(query);
-        var visible = entries.Where(item => { token.ThrowIfCancellationRequested(); return Matches(item, filter, categoryFilter, showHidden); }).ToList();
+        // R04: filter once in a single pass. The caller previously built a second
+        // full array for type/extension filtering before this method allocated its list.
+        var visible = entries.Where(item =>
+        {
+            token.ThrowIfCancellationRequested();
+            return (selectionFilter?.Allows(item.IsDirectory, item.Name) ?? true) &&
+                Matches(item, filter, categoryFilter, showHidden);
+        }).ToList();
         visible.Sort(CreateComparer(field, descending));
         token.ThrowIfCancellationRequested();
         return visible;

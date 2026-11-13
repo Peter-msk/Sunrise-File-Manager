@@ -995,9 +995,9 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         BeginInlineRename(selection[0]);
     }
 
-    public void ExecuteEiassRename()
+    public async void ExecuteEiassRename()
     {
-        if (!_actionsEnabled) return;
+        if (!_actionsEnabled || _localFileJob is not null) return;
         var selected = FilesGrid.SelectedItems.OfType<FileEntry>().ToHashSet();
         string[] paths = FilesGrid.Items.OfType<FileEntry>().Where(selected.Contains).Select(x => x.FullPath).ToArray();
         int pdfCount = paths.Count(p => File.Exists(p) && Path.GetExtension(p).Equals(".pdf", StringComparison.OrdinalIgnoreCase));
@@ -1009,18 +1009,42 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
         if (BeforeFileChange?.Invoke() == false) return;
         var dialog = new EiassRenameDialog(paths) { Owner = Window.GetWindow(this) };
         if (dialog.ShowDialog() != true || dialog.ApprovedRenames.Count == 0) return;
+        // The approved preview is immutable during execution. Existing local-job
+        // ownership blocks close/update and prevents a second command from racing.
+        var approved = dialog.ApprovedRenames.ToArray();
+        bool reportsActive = true;
+        var progress = new Progress<(int Done, int Total, string Phase)>(p =>
+        {
+            // Discard posted callbacks after completion; they must not replace
+            // the final result label or leak into a subsequent local operation.
+            if (reportsActive && _localFileJob is not null)
+                PaneStatus.Text = $"EIASS {p.Phase} {p.Done:N0}/{p.Total:N0}";
+        });
         try
         {
-            var pairs = FileActionsService.BatchRenameFilesSafely(dialog.ApprovedRenames);
+            var pairs = await RunLocalFileJobAsync(token =>
+                FileActionsService.BatchRenameFilesSafely(approved, token,
+                    (done, total, phase) =>
+                        ((IProgress<(int Done, int Total, string Phase)>)progress).Report((done, total, phase))),
+                $"EIASS PDF {approved.Length:N0}개 파일명 변경 중…");
             _undoService.RecordBatchRename(pairs, safeFileRename: true);
             UpdateUndoButtonState();
             if (pairs.Count > 0) _restoreSelectionPath = pairs[^1].NewPath;
+            PaneStatus.Text = $"EIASS 이름 변경 완료 {pairs.Count:N0}개 · Ctrl+Z 실행 취소";
+            if (FileActionCompleted is null) RefreshCurrent(); else FileActionCompleted.Invoke();
+        }
+        catch (OperationCanceledException)
+        {
+            PaneStatus.Text = "EIASS 이름 변경 취소 · 기존 이름 복구";
             if (FileActionCompleted is null) RefreshCurrent(); else FileActionCompleted.Invoke();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
+            PaneStatus.Text = "EIASS 이름 변경 실패 · 원본 및 복구 결과 확인 필요";
+            if (FileActionCompleted is null) RefreshCurrent(); else FileActionCompleted.Invoke();
             MessageBox.Show(Window.GetWindow(this), ex.Message, "EIASS 문서명 변경 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+        finally { reportsActive = false; }
     }
 
     private void EiassRename_Click(object sender, RoutedEventArgs e) => ExecuteEiassRename();
