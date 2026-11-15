@@ -34,3 +34,9 @@ EIASS 생성은 사업 기본안의 누락 디렉터리만 대상으로 하며 N
 - 변경: 페이지 이동 시 정렬된 재귀 검색 결과 재사용, 검색 조건 변경 시 무효화, 유형 필터 중복 배열 제거, 2,000행 제한·열 가상화 보존.
 - Windows 전용 테스트(미실행): `dotnet run --project source/tests/UiSmokeTests -- --r04-recursive-page-only <증적폴더>`
 - 결과: Python 변경영향/관련 UI 계약 164 PASS, 33 하위검사 PASS. WPF/서명된 Setup은 미검증.
+
+
+### v1.8.2 R01 EIASS 화면 간소화
+- 사업명·용역명·평가 유형 → 폴더 목록 계산 → 기존 기준 위치 선택 → 누락 폴더 생성. 내부 충돌/경로 검증 후 확인 1회.
+- Windows 로컬 NTFS/ReFS에 새 디렉터리만 생성; 기존 파일은 삭제하거나 변경하지 않음. NAS/SMB 생성은 미지원.
+- 실행·서명 검증은 `validation/R01/RUN_EIASS_R01_WINDOWS.ps1`와 Windows 실화면 점검으로 확인.

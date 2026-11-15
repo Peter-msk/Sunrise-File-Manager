@@ -32,3 +32,9 @@
 - 기존 R01~R05 관련 파일명·테스트 플래그 `--v181-*`·보존된 검증 로그는 사용 중인 내역 추적 키이므로 변경하지 않는다. 새 빌드에 대한 기대 버전 비교 값만 1.8.2로 교정한다.
 - `docs/HANDOVER_EIASS_v1.8.1.md`, `docs/R05_*` 보고서 및 `source/docs/P181_...`은 역사적 증적으로 유지한다. 과거의 테스트 수치가 이번 v1.8.2 버전의 새로운 시험 결과로 변환된 것이 아니다.
 - 현행 게이트: `docs/V182_RELEASE_BLOCKERS.md`; 승격 검증 증적: `docs/V182_VERSION_MIGRATION_REPORT.md`.
+
+
+## R01 UI 직결 활성화 (2026-11-15)
+- 기준본 v1.8.2 R01. 기존 폴더 설계와 Native Writer는 재사용. 2차 검토창 접근 경로를 제거하고 주 화면에서 자동 재점검 + 한 번의 최종 확인으로 누락 폴더 생성.
+- 레이아웃·진단표 4열·진행률·중지·결과 열기 개선. `Controls/EiaWorkspacePlanningWindow.DirectCreation.cs`는 화면 전용 실행 오케스트레이션, 파일시스템 쓰기는 `EiaWorkspaceProductionWriter`만 수행.
+- 변경 상세/Windows 미검증 사항: `docs/V182_R01_EIASS_DIRECT_CREATE_UI_AUDIT.md`.

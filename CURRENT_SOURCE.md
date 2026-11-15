@@ -7,3 +7,8 @@
 - **Windows 테스트**: powershell -NoProfile -ExecutionPolicy Bypass -File .\validation\R05\RUN_WINDOWS_GATES.ps1 (R05는 검사 스위트 이름으로 유지됨). Windows .NET10/WPF/실파일/고DPI/서명 등은 미실행이며 필수 Gate.
 - **업데이트 채널**: 기존 v1.8.0 latest.json/notice.txt 불변. v1.8.2 설치파일 Authenticode 및 SHA256 완료 전 파일·릴리즈 링크나 download_url을 생성·게시하지 않음.
 - **과거 이력 보존**: docs/HANDOVER_EIASS_v1.8.1.md 및 docs/R05_INDEPENDENT_VALIDATION_2026-11-15.md는 역사 증거이며, R05 제품 기능 변경 결과는 현재 브랜치에 포함.
+
+
+## v1.8.2 R01 직접 폴더 생성 화면
+- 현재 작업 기준: v1.8.2 R01 (설치형 UI 소스 수정; 공식 배포 아직 v1.8.0).
+- 이중 검토창 생략, 한 화면 기본안 계획 → 생성, 최종 확인 1회; Windows 현장 실행 검증 필수.
