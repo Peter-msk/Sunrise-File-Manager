@@ -963,9 +963,9 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
     private async void ZipExtract_Click(object sender, RoutedEventArgs e) => await ExecuteZipExtractAsync();
     private void ExportList_Click(object sender, RoutedEventArgs e) => ExecuteExportDirectoryListing();
 
-    private void Rename_Click(object sender, RoutedEventArgs e)
+    private async void Rename_Click(object sender, RoutedEventArgs e)
     {
-        if (!_actionsEnabled) return;
+        if (!_actionsEnabled || _localFileJob is not null) return;
         var selection = FilesGrid.SelectedItems.OfType<FileEntry>().ToArray();
         if (selection.Length == 0)
         {
@@ -977,17 +977,31 @@ public partial class ExplorerPane : UserControl, INotifyPropertyChanged
             if (BeforeFileChange?.Invoke() == false) return;
             var batchDialog = new BatchRenameDialog(selection.Select(x => x.FullPath).ToArray()) { Owner = Window.GetWindow(this) };
             if (batchDialog.ShowDialog() != true || batchDialog.ApprovedRenames.Count == 0) return;
+            // Reuse the existing single-owner local file job, including the main
+            // window close/update guard and cooperative cancellation. The dialog's
+            // approved names are an immutable snapshot for the background worker.
+            var approved = batchDialog.ApprovedRenames.ToArray();
             try
             {
-                var pairs = FileActionsService.BatchRename(batchDialog.ApprovedRenames);
+                var pairs = await RunLocalFileJobAsync(
+                    token => FileActionsService.BatchRename(approved, token),
+                    $"선택 항목 {approved.Length:N0}개 일괄 이름 변경 중…");
                 _undoService.RecordBatchRename(pairs, safeFileRename: pairs.All(p => File.Exists(p.NewPath)));
                 UpdateUndoButtonState();
                 if (pairs.Count > 0) _restoreSelectionPath = pairs[^1].NewPath;
+                PaneStatus.Text = $"일괄 이름 변경 완료 {pairs.Count:N0}개 · Ctrl+Z 실행 취소";
                 if (FileActionCompleted is null) RefreshCurrent();
                 else FileActionCompleted.Invoke();
             }
+            catch (OperationCanceledException)
+            {
+                PaneStatus.Text = "일괄 이름 변경 취소 · 기존 이름 복구";
+                if (FileActionCompleted is null) RefreshCurrent(); else FileActionCompleted.Invoke();
+            }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
+                PaneStatus.Text = "일괄 이름 변경 실패 · 원본 및 복구 경로 확인 필요";
+                if (FileActionCompleted is null) RefreshCurrent(); else FileActionCompleted.Invoke();
                 MessageBox.Show(Window.GetWindow(this), ex.Message, "일괄 이름 변경 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             return;

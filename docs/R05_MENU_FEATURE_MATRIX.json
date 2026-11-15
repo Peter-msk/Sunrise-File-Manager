@@ -1,0 +1,1163 @@
+{
+  "baseline": "Sunrise_File_Manager_v1.8.1_R04_SOURCE.zip",
+  "audit_release_candidate": "v1.8.1 R05 pre-release static audit",
+  "counts": {
+    "cs_source_files": 190,
+    "xaml_files": 22,
+    "resource_keys": 106,
+    "resource_references": 570,
+    "event_routes": 498,
+    "MenuItem": 249,
+    "Button": 201,
+    "DataGrid": 23,
+    "TextBox": 46
+  },
+  "menus": [
+    {
+      "title": "EIASS ▾",
+      "owner": "MainWindow.xaml",
+      "tag": null,
+      "click": null,
+      "children": [
+        {
+          "title": "EIASS 제출용 문서명 설정…",
+          "owner": "MainWindow.xaml",
+          "tag": "Eiass",
+          "click": "MenuShellCommand_Click",
+          "children": []
+        },
+        {
+          "title": "환경평가 용역 폴더 계획…",
+          "owner": "MainWindow.xaml",
+          "tag": null,
+          "click": "EiaWorkspacePlanning_Click",
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "설정 · 기능 ▾",
+      "owner": "MainWindow.xaml",
+      "tag": null,
+      "click": null,
+      "children": [
+        {
+          "title": "파일 관리",
+          "owner": "MainWindow.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "파일 작업",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": null,
+              "children": [
+                {
+                  "title": "새 폴더",
+                  "owner": "MainWindow.xaml",
+                  "tag": "NewFolder",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                },
+                {
+                  "title": "이름 변경",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Rename",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                },
+                {
+                  "title": "잘라내기",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Cut",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                },
+                {
+                  "title": "복사",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Copy",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                },
+                {
+                  "title": "붙여넣기",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Paste",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                },
+                {
+                  "title": "삭제",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Delete",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                },
+                {
+                  "title": "실행 취소",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Undo",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                },
+                {
+                  "title": "다시 실행",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Redo",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "title": "압축 · 도구",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": null,
+              "children": [
+                {
+                  "title": "ZIP 압축",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Zip",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                },
+                {
+                  "title": "압축 풀기",
+                  "owner": "MainWindow.xaml",
+                  "tag": "Extract",
+                  "click": "MenuShellCommand_Click",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "검색 · 문서",
+          "owner": "MainWindow.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "스마트 검색 · 필터…",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "SmartSearch_Click",
+              "children": []
+            },
+            {
+              "title": "선택 항목 미리보기",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "MainPreview_Click",
+              "children": []
+            },
+            {
+              "title": "스마트 파일 메모",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "MemoToggle_Click",
+              "children": []
+            },
+            {
+              "title": "상세정보",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "DetailsPanelToggle_Click",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "분할 · 작업 공간",
+          "owner": "MainWindow.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "파일 작업 공간 집중",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "FocusWorkspace_Click",
+              "children": []
+            },
+            {
+              "title": "다음 작업 영역으로 이동",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "NextWorkspaceFocus_Click",
+              "children": []
+            },
+            {
+              "title": "이전 작업 영역으로 이동",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "PreviousWorkspaceFocus_Click",
+              "children": []
+            },
+            {
+              "title": "새 독립 창 열기",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "NewWindow_Click",
+              "children": []
+            },
+            {
+              "title": "현재 분할 배치 선택…",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "CurrentSplitLayoutGallery_Click",
+              "children": []
+            },
+            {
+              "title": "분할창 위치 맞바꾸기",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "SwapPanes_Click",
+              "children": []
+            },
+            {
+              "title": "분할창을 같은 폴더로 동기화",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "SyncPanes_Click",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "전송 · 복구",
+          "owner": "MainWindow.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "분할창 간 파일 복사…",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "CrossPaneCopy_Click",
+              "children": []
+            },
+            {
+              "title": "분할창 간 검증 후 안전 이동…",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "CrossPaneMove_Click",
+              "children": []
+            },
+            {
+              "title": "폴더 비교 · 안전 단방향 동기화…",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "FolderSync_Click",
+              "children": []
+            },
+            {
+              "title": "중단 작업 · 복구 기록",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": null,
+              "children": [
+                {
+                  "title": "전송 복구 기록 확인…",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "RecoveryJournal_Click",
+                  "children": []
+                },
+                {
+                  "title": "중단 복사 임시파일 직접 정리…",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "ResumePartCleanup_Click",
+                  "children": []
+                },
+                {
+                  "title": "중단 클라우드 다운로드 임시파일 정리…",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "CloudDownloadPartCleanup_Click",
+                  "children": []
+                },
+                {
+                  "title": "중단 클라우드 업로드 세션 정리…",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "CloudUploadSessionCleanup_Click",
+                  "children": []
+                },
+                {
+                  "title": "중단 클라우드 폴더 복구 기록 정리…",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "CloudFolderRecoveryCleanup_Click",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "클라우드 · AI",
+          "owner": "MainWindow.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "Google Drive · OneDrive 계정 및 파일 관리",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "CloudDriveManage_Click",
+              "children": []
+            },
+            {
+              "title": "AI 연결 및 설치",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "AiConnect_Click",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "패널 · 화면",
+          "owner": "MainWindow.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "파일 상세정보 켜기/끄기",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "DetailsPanelToggle_Click",
+              "children": []
+            },
+            {
+              "title": "스마트 파일 메모 켜기/끄기",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "MemoToggle_Click",
+              "children": []
+            },
+            {
+              "title": "미리보기 켜기/끄기",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "MainPreview_Click",
+              "children": []
+            },
+            {
+              "title": "우측 패널 하나씩 보기",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "SingleUtilityPanel_Click",
+              "children": []
+            },
+            {
+              "title": "화면 테마",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": null,
+              "children": [
+                {
+                  "title": "PC 설정 적용",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "ThemeSystem_Click",
+                  "children": []
+                },
+                {
+                  "title": "라이트 모드",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "ThemeLight_Click",
+                  "children": []
+                },
+                {
+                  "title": "다크 모드",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "ThemeDark_Click",
+                  "children": []
+                },
+                {
+                  "title": "라이트 맞춤 색상 선택…",
+                  "owner": "MainWindow.xaml",
+                  "tag": null,
+                  "click": "LightAccentSettings_Click",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "프로그램 정보",
+          "owner": "MainWindow.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "공지사항 · 버전 정보",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "Notice_Click",
+              "children": []
+            },
+            {
+              "title": "업데이트 확인",
+              "owner": "MainWindow.xaml",
+              "tag": null,
+              "click": "UpdateCheck_Click",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "파일(_F)",
+      "owner": "ExplorerPane.xaml",
+      "tag": null,
+      "click": null,
+      "children": [
+        {
+          "title": "새 탭 열기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "NewTab_Click",
+          "children": []
+        },
+        {
+          "title": "새 폴더",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "NewFolder_Click",
+          "children": []
+        },
+        {
+          "title": "새 파일",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "NewFile_Click",
+          "children": []
+        },
+        {
+          "title": "Windows 등록 문서 만들기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": null,
+          "children": []
+        },
+        {
+          "title": "열기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ContextOpen_Click",
+          "children": []
+        },
+        {
+          "title": "연결 프로그램 선택",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ContextOpenWith_Click",
+          "children": []
+        },
+        {
+          "title": "Windows 확장 메뉴…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "WindowsMenu_Click",
+          "children": []
+        },
+        {
+          "title": "Windows 공유…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "WindowsShare_Click",
+          "children": []
+        },
+        {
+          "title": "클라우드 파일 · 항상 이 장치에 유지",
+          "owner": "ExplorerPane.xaml",
+          "tag": "keep",
+          "click": "CloudOffline_Click",
+          "children": []
+        },
+        {
+          "title": "클라우드 파일 · 공간 확보 요청",
+          "owner": "ExplorerPane.xaml",
+          "tag": "free",
+          "click": "CloudOffline_Click",
+          "children": []
+        },
+        {
+          "title": "CMD에서 열기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "OpenCmd_Click",
+          "children": []
+        },
+        {
+          "title": "Windows 탐색기에서 열기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "OpenWindowsExplorer_Click",
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "편집(_E)",
+      "owner": "ExplorerPane.xaml",
+      "tag": null,
+      "click": null,
+      "children": [
+        {
+          "title": "실행 취소",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "Undo_Click",
+          "children": []
+        },
+        {
+          "title": "다시 실행",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "Redo_Click",
+          "children": []
+        },
+        {
+          "title": "잘라내기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ClipboardCut_Click",
+          "children": []
+        },
+        {
+          "title": "복사",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ClipboardCopy_Click",
+          "children": []
+        },
+        {
+          "title": "붙여넣기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ClipboardPaste_Click",
+          "children": []
+        },
+        {
+          "title": "바로가기 붙여넣기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "PasteShortcut_Click",
+          "children": []
+        },
+        {
+          "title": "바로가기 만들기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "CreateShortcut_Click",
+          "children": []
+        },
+        {
+          "title": "이름 바꾸기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "Rename_Click",
+          "children": []
+        },
+        {
+          "title": "EIASS 제출용 문서명 설정…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "EiassRename_Click",
+          "children": []
+        },
+        {
+          "title": "복제",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "Duplicate_Click",
+          "children": []
+        },
+        {
+          "title": "삭제",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "Recycle_Click",
+          "children": []
+        },
+        {
+          "title": "영구 삭제",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "PermanentDelete_Click",
+          "children": []
+        },
+        {
+          "title": "모두 선택 (현재 페이지)",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "SelectAll_Click",
+          "children": []
+        },
+        {
+          "title": "조건 일치 전체 결과 선택 (최대 20,000개)",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "SelectAllResults_Click",
+          "children": []
+        },
+        {
+          "title": "선택 해제",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ClearSelection_Click",
+          "children": []
+        },
+        {
+          "title": "선택 반전 (현재 페이지)",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "InvertSelection_Click",
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "보기(_V)",
+      "owner": "ExplorerPane.xaml",
+      "tag": null,
+      "click": null,
+      "children": [
+        {
+          "title": "현재 폴더 고급 필터…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "AdvancedFilter_Click",
+          "children": []
+        },
+        {
+          "title": "파일·폴더 유형별 검색 옵션…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "SearchOptions_Click",
+          "children": []
+        },
+        {
+          "title": "검색 범위",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "현재 폴더 이름 필터",
+              "owner": "ExplorerPane.xaml",
+              "tag": "Current",
+              "click": "SearchScope_Click",
+              "children": []
+            },
+            {
+              "title": "하위 폴더 포함 · 이름",
+              "owner": "ExplorerPane.xaml",
+              "tag": "Descendants",
+              "click": "SearchScope_Click",
+              "children": []
+            },
+            {
+              "title": "하위 폴더 포함 · 이름과 본문",
+              "owner": "ExplorerPane.xaml",
+              "tag": "Contents",
+              "click": "SearchScope_Click",
+              "children": []
+            },
+            {
+              "title": "Windows 인덱스 · 이름과 본문",
+              "owner": "ExplorerPane.xaml",
+              "tag": "Index",
+              "click": "SearchScope_Click",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "그룹 기준",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "그룹 없음",
+              "owner": "ExplorerPane.xaml",
+              "tag": "",
+              "click": "GroupField_Click",
+              "children": []
+            },
+            {
+              "title": "파일 종류",
+              "owner": "ExplorerPane.xaml",
+              "tag": "TypeName",
+              "click": "GroupField_Click",
+              "children": []
+            },
+            {
+              "title": "수정한 날짜",
+              "owner": "ExplorerPane.xaml",
+              "tag": "ModifiedGroup",
+              "click": "GroupField_Click",
+              "children": []
+            },
+            {
+              "title": "크기",
+              "owner": "ExplorerPane.xaml",
+              "tag": "SizeGroup",
+              "click": "GroupField_Click",
+              "children": []
+            },
+            {
+              "title": "상위 폴더",
+              "owner": "ExplorerPane.xaml",
+              "tag": "ParentFolder",
+              "click": "GroupField_Click",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "새로 고침",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "Refresh_Click",
+          "children": []
+        },
+        {
+          "title": "탐색 창 켜기/끄기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "TreeToggle_Click",
+          "children": []
+        },
+        {
+          "title": "탐색 창 자동 숨김",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "NavigationAutoHide_Click",
+          "children": []
+        },
+        {
+          "title": "파일 상세정보 켜기/끄기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "DetailsToggle_Click",
+          "children": []
+        },
+        {
+          "title": "스마트 파일 메모 켜기/끄기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "MemoToggle_Click",
+          "children": []
+        },
+        {
+          "title": "미리보기 켜기/끄기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "PreviewToggle_Click",
+          "children": []
+        },
+        {
+          "title": "자세히 보기 표시 열",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "수정한 날짜",
+              "owner": "ExplorerPane.xaml",
+              "tag": "2",
+              "click": "DetailColumn_Click",
+              "children": []
+            },
+            {
+              "title": "유형",
+              "owner": "ExplorerPane.xaml",
+              "tag": "3",
+              "click": "DetailColumn_Click",
+              "children": []
+            },
+            {
+              "title": "크기",
+              "owner": "ExplorerPane.xaml",
+              "tag": "4",
+              "click": "DetailColumn_Click",
+              "children": []
+            },
+            {
+              "title": "메모",
+              "owner": "ExplorerPane.xaml",
+              "tag": "5",
+              "click": "DetailColumn_Click",
+              "children": []
+            },
+            {
+              "title": "만든 날짜",
+              "owner": "ExplorerPane.xaml",
+              "tag": "6",
+              "click": "DetailColumn_Click",
+              "children": []
+            },
+            {
+              "title": "클라우드 상태",
+              "owner": "ExplorerPane.xaml",
+              "tag": "9",
+              "click": "DetailColumn_Click",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "표시 방식",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "자세히",
+              "owner": "ExplorerPane.xaml",
+              "tag": "0",
+              "click": "ViewModeMenu_Click",
+              "children": []
+            },
+            {
+              "title": "목록",
+              "owner": "ExplorerPane.xaml",
+              "tag": "1",
+              "click": "ViewModeMenu_Click",
+              "children": []
+            },
+            {
+              "title": "큰 아이콘",
+              "owner": "ExplorerPane.xaml",
+              "tag": "2",
+              "click": "ViewModeMenu_Click",
+              "children": []
+            },
+            {
+              "title": "작은 아이콘",
+              "owner": "ExplorerPane.xaml",
+              "tag": "3",
+              "click": "ViewModeMenu_Click",
+              "children": []
+            },
+            {
+              "title": "타일",
+              "owner": "ExplorerPane.xaml",
+              "tag": "4",
+              "click": "ViewModeMenu_Click",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "파일 유형 필터",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "전체 항목",
+              "owner": "ExplorerPane.xaml",
+              "tag": "0",
+              "click": "CategoryMenu_Click",
+              "children": []
+            },
+            {
+              "title": "폴더만",
+              "owner": "ExplorerPane.xaml",
+              "tag": "1",
+              "click": "CategoryMenu_Click",
+              "children": []
+            },
+            {
+              "title": "문서",
+              "owner": "ExplorerPane.xaml",
+              "tag": "2",
+              "click": "CategoryMenu_Click",
+              "children": []
+            },
+            {
+              "title": "이미지",
+              "owner": "ExplorerPane.xaml",
+              "tag": "3",
+              "click": "CategoryMenu_Click",
+              "children": []
+            },
+            {
+              "title": "동영상",
+              "owner": "ExplorerPane.xaml",
+              "tag": "4",
+              "click": "CategoryMenu_Click",
+              "children": []
+            },
+            {
+              "title": "오디오",
+              "owner": "ExplorerPane.xaml",
+              "tag": "5",
+              "click": "CategoryMenu_Click",
+              "children": []
+            },
+            {
+              "title": "압축파일",
+              "owner": "ExplorerPane.xaml",
+              "tag": "6",
+              "click": "CategoryMenu_Click",
+              "children": []
+            },
+            {
+              "title": "메모 있음",
+              "owner": "ExplorerPane.xaml",
+              "tag": "7",
+              "click": "CategoryMenu_Click",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "표시 항목",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "숨긴 항목 표시 켜기/끄기",
+              "owner": "ExplorerPane.xaml",
+              "tag": null,
+              "click": "ToggleHiddenMenu_Click",
+              "children": []
+            },
+            {
+              "title": "파일 확장명 표시 켜기/끄기",
+              "owner": "ExplorerPane.xaml",
+              "tag": null,
+              "click": "ToggleExtensionsMenu_Click",
+              "children": []
+            },
+            {
+              "title": "항목 확인란 켜기/끄기",
+              "owner": "ExplorerPane.xaml",
+              "tag": null,
+              "click": "ToggleCheckboxesMenu_Click",
+              "children": []
+            },
+            {
+              "title": "색상 구분 켜기/끄기",
+              "owner": "ExplorerPane.xaml",
+              "tag": null,
+              "click": "ToggleColorCodingMenu_Click",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "즐겨찾기(_A)",
+      "owner": "ExplorerPane.xaml",
+      "tag": null,
+      "click": null,
+      "children": [
+        {
+          "title": "현재 폴더 고정",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ContextPinFolder_Click",
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "추가 기능(_X)",
+      "owner": "ExplorerPane.xaml",
+      "tag": null,
+      "click": null,
+      "children": [
+        {
+          "title": "최근 파일 · 관련 폴더",
+          "owner": "ExplorerPane.xaml",
+          "tag": "shell:Recent",
+          "click": "WindowsLocations_Click",
+          "children": []
+        },
+        {
+          "title": "Windows 라이브러리",
+          "owner": "ExplorerPane.xaml",
+          "tag": "shell:Libraries",
+          "click": "WindowsLocations_Click",
+          "children": []
+        },
+        {
+          "title": "네트워크 장치 · 공유",
+          "owner": "ExplorerPane.xaml",
+          "tag": "shell:NetworkPlacesFolder",
+          "click": "WindowsLocations_Click",
+          "children": []
+        },
+        {
+          "title": "네트워크 드라이브 연결…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ConnectDrive_Click",
+          "children": []
+        },
+        {
+          "title": "네트워크 드라이브 연결 끊기…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "DisconnectDrive_Click",
+          "children": []
+        },
+        {
+          "title": "OneDrive 계정 폴더",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "OneDriveAccounts_Click",
+          "children": []
+        },
+        {
+          "title": "사진 모아보기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "PhotoGallery_Click",
+          "children": []
+        },
+        {
+          "title": "Windows OCR로 이미지·PDF 텍스트 읽기…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "OcrRead_Click",
+          "children": []
+        },
+        {
+          "title": "ZIP 압축",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ZipCompress_Click",
+          "children": []
+        },
+        {
+          "title": "TAR 압축",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "TarCompress_Click",
+          "children": []
+        },
+        {
+          "title": "7z 압축",
+          "owner": "ExplorerPane.xaml",
+          "tag": "7z",
+          "click": "TarCompress_Click",
+          "children": []
+        },
+        {
+          "title": "ZIP·7z·RAR·TAR 압축 풀기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ZipExtract_Click",
+          "children": []
+        },
+        {
+          "title": "암호 입력 후 압축 풀기…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "PasswordExtract_Click",
+          "children": []
+        },
+        {
+          "title": "압축 파일 내용·선택 항목 풀기…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ArchiveContents_Click",
+          "children": []
+        },
+        {
+          "title": "목록 내보내기",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ExportList_Click",
+          "children": []
+        },
+        {
+          "title": "전체 결과 목록 내보내기…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ExportAllResults_Click",
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "정보(_I)",
+      "owner": "ExplorerPane.xaml",
+      "tag": null,
+      "click": null,
+      "children": [
+        {
+          "title": "속성",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "ContextProperties_Click",
+          "children": []
+        },
+        {
+          "title": "태그 · 작성자 · 평점 편집…",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": "MetadataEdit_Click",
+          "children": []
+        },
+        {
+          "title": "파일 속성 변경",
+          "owner": "ExplorerPane.xaml",
+          "tag": null,
+          "click": null,
+          "children": [
+            {
+              "title": "숨김 설정",
+              "owner": "ExplorerPane.xaml",
+              "tag": "hidden-on",
+              "click": "SetFileAttribute_Click",
+              "children": []
+            },
+            {
+              "title": "숨김 해제",
+              "owner": "ExplorerPane.xaml",
+              "tag": "hidden-off",
+              "click": "SetFileAttribute_Click",
+              "children": []
+            },
+            {
+              "title": "읽기 전용 설정 (파일)",
+              "owner": "ExplorerPane.xaml",
+              "tag": "readonly-on",
+              "click": "SetFileAttribute_Click",
+              "children": []
+            },
+            {
+              "title": "읽기 전용 해제 (파일)",
+              "owner": "ExplorerPane.xaml",
+              "tag": "readonly-off",
+              "click": "SetFileAttribute_Click",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

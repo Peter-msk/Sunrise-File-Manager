@@ -28,6 +28,7 @@ public partial class ExplorerPane
     }
 
     private CancellationTokenSource? _localFileJob;
+    internal bool IsLocalFileJobActive => _localFileJob is not null;
     internal void CancelLocalFileJob() => _localFileJob?.Cancel();
 
     private async Task<T> RunLocalFileJobAsync<T>(Func<CancellationToken, T> operation, string status)

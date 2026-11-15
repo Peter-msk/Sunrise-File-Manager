@@ -103,11 +103,13 @@ public static partial class FileActionsService
     }
 
     public static IReadOnlyList<(string OldPath, string NewPath)> BatchRename(
-        IReadOnlyList<(string SourcePath, string NewName)> operations)
+        IReadOnlyList<(string SourcePath, string NewName)> operations,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(operations);
+        cancellationToken.ThrowIfCancellationRequested();
         if (operations.All(op => File.Exists(op.SourcePath)))
-            return BatchRenameFilesSafely(operations);
+            return BatchRenameFilesSafely(operations, cancellationToken);
 
         // Validate the whole mixed file/folder plan before moving its first entry.
         var plan = operations.Select(op => (Source: Path.GetFullPath(op.SourcePath), Name: ValidateName(op.NewName)))
@@ -116,7 +118,10 @@ public static partial class FileActionsService
         var targetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var op in plan)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             EnsureOrdinaryEntry(op.Source);
+            if (op.Name.Length > 255)
+                throw new IOException("Windows 파일 이름은 255자를 초과할 수 없습니다.");
             string target = Path.Combine(Path.GetDirectoryName(op.Source)!, op.Name);
             if (!sourceSet.Add(op.Source) || !targetSet.Add(target)) throw new IOException("원본 또는 변경 후 이름이 중복됩니다.");
             if (File.Exists(target) || Directory.Exists(target)) throw new IOException("대상에 같은 이름이 존재합니다: " + target);
@@ -126,7 +131,13 @@ public static partial class FileActionsService
         var results = new List<(string OldPath, string NewPath)>(operations.Count);
         try
         {
-            foreach (var op in plan) results.Add((op.Source, Rename(op.Source, op.Name)));
+            foreach (var op in plan)
+            {
+                // A user cancellation is honored between complete memo-aware moves.
+                // Never interrupt an already started single entry move.
+                cancellationToken.ThrowIfCancellationRequested();
+                results.Add((op.Source, Rename(op.Source, op.Name)));
+            }
         }
         catch (Exception failure)
         {
@@ -134,6 +145,8 @@ public static partial class FileActionsService
             foreach (var pair in results.AsEnumerable().Reverse())
                 try { MoveEntry(pair.NewPath, pair.OldPath); }
                 catch (Exception ex) { errors.Add(pair.NewPath + " → " + pair.OldPath + ": " + ex.Message); }
+            if (errors.Count == 0 && failure is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                throw;
             throw new IOException(errors.Count == 0 ? "일괄 이름 변경에 실패하여 원래 이름으로 복구했습니다. " + failure.Message
                 : "일부 항목 복구에 실패했습니다. 보존된 경로를 확인하세요:\n" + string.Join("\n", errors), failure);
         }

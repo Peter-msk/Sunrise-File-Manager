@@ -13,7 +13,7 @@
 
   <StackPanel Grid.Row="0" Margin="0,0,0,10">
    <TextBlock Text="선택 항목 일괄 이름 변경" FontSize="16" FontWeight="SemiBold"/>
-   <TextBlock x:Name="SubtitleText" Text="접두어, 접미어, 문자열 치환, 일련번호를 조합하여 결과를 미리 확인한 뒤 적용합니다. (#memo 자동 동반)" Foreground="{DynamicResource TextMuted}" FontSize="12" Margin="0,3,0,0"/>
+   <TextBlock x:Name="SubtitleText" Text="접두어, 접미어, 문자열 치환, 일련번호를 조합하여 결과를 미리 확인한 뒤 적용합니다. (#memo 자동 동반)" Foreground="{DynamicResource TextMuted}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
   </StackPanel>
 
   <Border Grid.Row="1" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,10">
@@ -43,15 +43,25 @@
     <CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" x:Name="NumberingCheck" Content="일련번호 붙이기 (_001, _002...)" Checked="Rule_Changed" Unchecked="Rule_Changed" VerticalAlignment="Center"/>
     <StackPanel Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal">
      <TextBlock Text="시작 번호:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-     <TextBox x:Name="StartNumberBox" Text="1" Width="60" TextChanged="Rule_Changed"/>
+     <TextBox x:Name="StartNumberBox" Text="1" Width="72" MaxLength="9" TextChanged="Rule_Changed"
+              PreviewTextInput="StartNumber_PreviewTextInput" DataObject.Pasting="StartNumber_Pasting" InputMethod.IsInputMethodEnabled="False"
+              AutomationProperties.Name="일괄 이름 변경 시작 번호 숫자 입력" ToolTip="1 이상의 정수를 입력하세요. 숫자 외 문자와 잘못된 붙여넣기는 차단됩니다."/>
     </StackPanel>
    </Grid>
   </Border>
 
-  <DataGrid Grid.Row="2" Style="{StaticResource PopupResultDataGrid}" x:Name="PreviewGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+  <DataGrid Grid.Row="2" Style="{StaticResource PopupResultDataGrid}" x:Name="PreviewGrid" AutoGenerateColumns="False"
+            IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
+            EnableRowVirtualization="True" VirtualizingPanel.VirtualizationMode="Recycling"
+            ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto"
+            AutomationProperties.Name="일괄 이름 변경 사전 검토표">
    <DataGrid.Columns>
-    <DataGridTextColumn Header="현재 이름" Binding="{Binding OldName}" Width="*"/>
-    <DataGridTextColumn Header="변경 후 이름 미리보기" Binding="{Binding NewName}" Width="*"/>
+    <DataGridTextColumn Header="현재 이름" Binding="{Binding OldName}" Width="*" MinWidth="140">
+     <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextTrimming" Value="CharacterEllipsis"/><Setter Property="ToolTip" Value="{Binding OldName}"/></Style></DataGridTextColumn.ElementStyle>
+    </DataGridTextColumn>
+    <DataGridTextColumn Header="변경 후 이름 미리보기" Binding="{Binding NewName}" Width="*" MinWidth="160">
+     <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextTrimming" Value="CharacterEllipsis"/><Setter Property="ToolTip" Value="{Binding NewName}"/></Style></DataGridTextColumn.ElementStyle>
+    </DataGridTextColumn>
     <DataGridTextColumn Header="상태" Binding="{Binding Status}" Width="140"/>
    </DataGrid.Columns>
   </DataGrid>
@@ -62,7 +72,8 @@
     <ColumnDefinition Width="Auto"/>
     <ColumnDefinition Width="Auto"/>
    </Grid.ColumnDefinitions>
-   <TextBlock Grid.Column="0" x:Name="ValidationStatus" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" FontSize="12"/>
+   <TextBlock Grid.Column="0" x:Name="ValidationStatus" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12"
+               AutomationProperties.LiveSetting="Polite"/>
    <Button Grid.Column="1" Content="취소" IsCancel="True" Style="{StaticResource ExplorerCommand}" Margin="0,0,8,0"/>
    <Button Grid.Column="2" x:Name="ApplyButton" Content="일괄 이름 변경 실행" Click="Apply_Click" Style="{StaticResource PrimaryButton}" FontWeight="SemiBold" Padding="14,5"/>
   </Grid>

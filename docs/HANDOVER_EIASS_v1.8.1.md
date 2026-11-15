@@ -64,3 +64,11 @@
 - 신규 Windows opt-in `UiSmokeTests --r04-recursive-page-only`는 2,205개 GUID 임시파일만 생성해 페이지 이동/캐시/정렬/검색어/refresh 무효화를 확인하도록 작성. **실제 Windows에서는 아직 미실행.**
 - R04 상세: `docs/STABILIZATION_PLAN_v1.8.1_R04.md`, `docs/R04_VALIDATION_REPORT.md`.
 - 다음은 Windows x64 .NET 10 / DPI 100·125·150·175% / installer / code signing / 업데이트 검증으로 구성된 R05 Release Gate. 기존 `latest.json`과 v1.8.0 안정 배포 유지.
+
+## R05 (2026-11-15) — 전체 UI/UX/기능 공개 GitHub 벤치마킹 및 출시 전 감사
+
+- 기준 R04: `ffbdc1e691f3a4a31db9cf3d658c3bd31771241b`. `docs/R05_FULL_APP_AUDIT.md`와 `docs/R05_MENU_FEATURE_MATRIX.json` 참조.
+- 전체 정적 구조: C# 제품 파일 190, WPF XAML 22, 메뉴항목 249, 버튼 201, TextBox 46, DataGrid 23, 관련 클래스에 연결된 이벤트 498 (누락 0), 리소스 참조 570건 중 이름 누락 0. 숫자는 **코드 선언 수**이며 실제 실행 성공이나 화면 상태를 뜻하지 않는다.
+- 일반 일괄 이름 변경을 기존 local FileJob + 취소/rollback 경로로 개선, 메인 상태표시줄에서 local job 취소 가능하게 보완. 숫자/길이 미리보기 검증, EIASS 활성 local pane 조건과 오래된 폴더생성 안내 정비.
+- Windows `UiSmokeTests --r05-batch-rename-only` 신규 시나리오는 source ZIP에 포함하되 네이티브 실행 전이므로 PENDING. 이미 통과한 기존 기능 무관 검사는 중복하지 않는다.
+- Windows 실화면·실파일·업데이트·서명 게이트 전까지 공식 v1.8.0 Release/`latest.json`/`notice.txt` 보존.

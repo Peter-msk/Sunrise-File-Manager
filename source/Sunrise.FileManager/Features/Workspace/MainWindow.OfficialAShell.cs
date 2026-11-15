@@ -22,6 +22,20 @@ public partial class MainWindow
         if (sender is MenuItem { Tag: string command }) ExecuteShellCommand(command);
     }
 
+    // UI-only gating: folder planning stays available as a read-only operation,
+    // while PDF rename requires an active local explorer and an idle job owner.
+    private void EiassMainMenu_SubmenuOpened(object sender, RoutedEventArgs e)
+    {
+        bool local = _activePane >= 0 && _activePane < _visiblePanels &&
+                     !IsCloudPaneActive && _panes[_activePane] is not null;
+        bool busy = _working || _aiBusy || _activeRecycleJobs > 0;
+        EiassRenameShellMenuItem.IsEnabled = local && !busy;
+        EiassRenameShellMenuItem.ToolTip = !local
+            ? "EIASS PDF 이름 변경은 로컬 파일 탐색창을 활성화한 후 이용할 수 있습니다."
+            : busy ? "현재 작업이 종료된 후 EIASS PDF 이름 변경을 시작할 수 있습니다."
+            : "활성 탐색창에서 PDF 1~1,000개를 선택한 후 이름을 검토합니다.";
+    }
+
     private void CloudDriveManage_Click(object sender, RoutedEventArgs e) => OpenCloudDrive(null);
 
     private void RailGoogleDrive_Click(object sender, RoutedEventArgs e) => OpenCloudDrive(Services.CloudDrive.CloudProvider.GoogleDrive);
@@ -69,6 +83,13 @@ public partial class MainWindow
     private void ExecuteShellCommand(string command)
     {
         if (command == "Filter") { ShowSmartSearchWindow(); return; }
+        // Inform only on the EIASS local-only route; preserve the original
+        // shared shell guard verbatim for all other commands and prior contracts.
+        if (command == "Eiass" && IsCloudPaneActive)
+        {
+            JobStatus.Text = "EIASS PDF 이름 변경은 로컬 탐색창에서만 가능합니다. 먼저 로컬 분할창을 선택하세요.";
+            return;
+        }
         if (_working || _aiBusy || _activeRecycleJobs > 0 || IsCloudPaneActive) return;
         if (_activePane < 0 || _activePane >= _visiblePanels) return;
         _panes[_activePane]?.ExecuteOfficialAShellCommand(command);
