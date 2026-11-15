@@ -7,7 +7,7 @@ using System.Threading;
 namespace Sunrise.FileManager.Features.EiaWorkspace;
 
 /// <summary>
-/// v1.8.1: explicit, project-scoped, directory-only execution.
+/// v1.8.2: explicit, project-scoped, directory-only execution.
 /// The existing read-only acknowledgement/manifest remains an observation, NOT a
 /// transferable write token. This separate command requires a new final consent,
 /// re-observes the exact approved tree, and performs only handle-relative creates.

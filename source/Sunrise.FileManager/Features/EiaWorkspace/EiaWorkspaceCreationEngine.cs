@@ -10,7 +10,7 @@ namespace Sunrise.FileManager.Features.EiaWorkspace;
 
 /// <summary>
 /// Read-only plan and observation engine; isolated sandbox test writer stays
-/// compilation-gated. v1.8.1 production folder creation is isolated in a
+/// compilation-gated. v1.8.2 production folder creation is isolated in a
 /// separate, explicitly approved native command with no file operations.
 /// Company/client draft profiles remain unapproved, and originals stay intact.
 /// </summary>

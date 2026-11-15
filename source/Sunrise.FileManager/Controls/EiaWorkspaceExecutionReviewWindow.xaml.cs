@@ -11,7 +11,7 @@ using Sunrise.FileManager.Features.EiaWorkspace;
 
 namespace Sunrise.FileManager.Controls;
 
-/// <summary>v1.8.1: project-scoped review and explicit local NTFS folder creation.</summary>
+/// <summary>v1.8.2: project-scoped review and explicit local NTFS folder creation.</summary>
 public partial class EiaWorkspaceExecutionReviewWindow : Window
 {
     private readonly EiaWorkspaceExecutionReadiness _review;

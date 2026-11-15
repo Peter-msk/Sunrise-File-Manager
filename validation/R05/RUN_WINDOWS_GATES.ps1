@@ -1,4 +1,4 @@
-# Sunrise File Manager v1.8.1 R05 targeted Windows release-blocker checks.
+# Sunrise File Manager v1.8.2 R00 targeted Windows release-blocker checks.
 # No install, no updater, no GitHub Actions, no live business folder writes.
 # Run with: powershell -NoProfile -ExecutionPolicy Bypass -File .\validation\R05\RUN_WINDOWS_GATES.ps1
 [CmdletBinding()]
@@ -7,6 +7,12 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $root = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 Set-Location -LiteralPath $root
+# Version gate: never record native PASS against a stale candidate.
+$expectedProductVersion = '1.8.2'
+$actualProductVersion = (Get-Content -LiteralPath (Join-Path $root 'installer/RELEASE_VERSION.txt') -Raw).Trim()
+if ($actualProductVersion -ne $expectedProductVersion) {
+    throw "Wrong source candidate: expected $expectedProductVersion, got '$actualProductVersion'."
+}
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
     throw 'Windows-only WPF/native smoke. Do not report this gate PASS on non-Windows hosts.'
 }
@@ -60,7 +66,7 @@ try {
     $overall = 'PASS_TARGETED_WINDOWS_CODE'
 } finally {
     $summary = [PSCustomObject]@{
-        product='Sunrise File Manager'; version='1.8.1 R05';
+        product='Sunrise File Manager'; version='1.8.2 R00';
         evidence_kind='ISOLATED_WINDOWS_CODE_SMOKE_ONLY';
         overall=$overall; dotnet=$dotnetVersion;
         executed_utc=[DateTimeOffset]::UtcNow.ToString('O');
