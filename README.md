@@ -1,4 +1,4 @@
-# Sunrise File Manager v1.8.2 R00 — EIASS·파일관리 통합 개발 소스
+# Sunrise File Manager v1.8.2 R02 — 기능 실행·다크/라이트 UI/UX 통합 개발 소스
 
 **상태: 정식 설치파일이 아닌 소스 후보.** 공식 v1.8.0 설치파일은 그대로 유지됩니다.
 
@@ -15,7 +15,7 @@ EIASS 생성은 사업 기본안의 누락 디렉터리만 대상으로 하며 N
 
 ## 현행 버전 계약 (2026-11-15)
 
-- **개발 후보**: 1.8.2 R00. WPF 제목·표시, csproj Assembly/FileVersion, app.manifest, Sunrise Control 보고 버전, 설치 버전 파일을 통일했습니다.
+- **개발 후보**: 1.8.2 R02 (기본 버전 계약은 R00에서 승격). WPF 제목·표시, csproj Assembly/FileVersion, app.manifest, Sunrise Control 보고 버전, 설치 버전 파일을 통일했습니다.
 - **공식 사용자 배포**: v1.8.0 유지. `main/latest.json`·`notice.txt` 및 기존 GitHub Release를 변경하지 않습니다.
 - `release/NOTICE_BODY_1.8.2.txt`는 서명된 배포 아티팩트가 생성된 이후 사용할 공지 후보이며, GitHub 배포 자체가 아닙니다.
 - 과거 R01~R05의 검증 숫자와 `v1.8.1` 명칭은 **역사적 증적**입니다. 새 v1.8.2의 Windows 검증을 완료했다는 뜻이 아닙니다.
@@ -40,3 +40,11 @@ EIASS 생성은 사업 기본안의 누락 디렉터리만 대상으로 하며 N
 - 사업명·용역명·평가 유형 → 폴더 목록 계산 → 기존 기준 위치 선택 → 누락 폴더 생성. 내부 충돌/경로 검증 후 확인 1회.
 - Windows 로컬 NTFS/ReFS에 새 디렉터리만 생성; 기존 파일은 삭제하거나 변경하지 않음. NAS/SMB 생성은 미지원.
 - 실행·서명 검증은 `validation/R01/RUN_EIASS_R01_WINDOWS.ps1`와 Windows 실화면 점검으로 확인.
+
+
+## R02 기능 사용성 및 테마 감사 (2026-11-16)
+- EIASS 사업 폴더: 생성 전 별도 미리보기 클릭 필수조건 제거. 생성 버튼에서 즉시 계획 갱신·엄격한 경로 검증·한 번의 최종 승인.
+- 로컬 분할창 간 폴더 이동: 기존 안전 전송 엔진으로 연결, 충돌/취소/부분실패 별도 보고. 원본을 조건부로 삭제할 수 없는 클라우드 이동·NAS/SMB EIASS 쓰기 차단은 유지.
+- 라이트/다크: 팝업 글자 크기, 스크롤바, 비활성 컨트롤 대비, 입력 포커스, 창별 탭 스타일, AI 메뉴의 단일 강조 행동 개선.
+- 세부 기준 및 미지원 사항: `docs/V182_R02_FEATURE_THEME_AUDIT.md` / 임시 Windows 전용 스모크: `validation/R02/RUN_R02_WINDOWS.ps1`.
+- 변경영향 소스 검사 69 PASS 및 하위검사 11 PASS. **실제 Windows 기능·UI·서명된 설치파일 검증은 별도 필수**.

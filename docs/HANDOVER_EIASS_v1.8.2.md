@@ -38,3 +38,11 @@
 - 기준본 v1.8.2 R01. 기존 폴더 설계와 Native Writer는 재사용. 2차 검토창 접근 경로를 제거하고 주 화면에서 자동 재점검 + 한 번의 최종 확인으로 누락 폴더 생성.
 - 레이아웃·진단표 4열·진행률·중지·결과 열기 개선. `Controls/EiaWorkspacePlanningWindow.DirectCreation.cs`는 화면 전용 실행 오케스트레이션, 파일시스템 쓰기는 `EiaWorkspaceProductionWriter`만 수행.
 - 변경 상세/Windows 미검증 사항: `docs/V182_R01_EIASS_DIRECT_CREATE_UI_AUDIT.md`.
+
+
+## v1.8.2 R02 — 기능·UI/UX 감사 인계
+- EIASS는 수동 미리보기 없이 자동 검증 후 최종 동의 1회로 로컬 폴더를 생성하는 코드 경로. 기존 자료 보존/NTFS·ReFS 전용.
+- 로컬 파일/폴더 분할창 간 검증 이동을 기존 `TransferService`로 연결. cloud-to-cloud 원본 제거·원격 폴더 MOVE는 버전 조건부 보호가 없어 계속 금지.
+- 다크/라이트 양쪽에서 팝업 글자 1.0 배율, 9 DIP 스크롤바, 0.68 비활성 컨트롤, 입력 강조, 탭 로컬 스타일, AI 행동 정리.
+- 신규 감사 `docs/V182_R02_FEATURE_THEME_AUDIT.md`, Windows 고립 스모크 `validation/R02/RUN_R02_WINDOWS.ps1`.
+- Python 변경영향 69건 PASS / 11 subtests, Windows 런타임/시각·업데이트/서명 PASS 아님.

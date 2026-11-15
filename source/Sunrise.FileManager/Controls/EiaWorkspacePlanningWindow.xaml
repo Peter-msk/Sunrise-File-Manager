@@ -5,6 +5,35 @@
         Width="1120" Height="780" MinWidth="850" MinHeight="610"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize" ShowInTaskbar="False"
         Background="{DynamicResource AppBackground}" Foreground="{DynamicResource TextPrimary}">
+ <Window.Resources>
+  <Style TargetType="TabItem">
+   <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+   <Setter Property="Background" Value="{DynamicResource ThemeSoftAlt}"/>
+   <Setter Property="BorderBrush" Value="{DynamicResource ThemeInputBorder}"/>
+   <Setter Property="Padding" Value="11,6"/>
+   <Setter Property="MinHeight" Value="32"/>
+   <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem">
+    <Border x:Name="TabSurface" Background="{TemplateBinding Background}"
+      BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="4,4,0,0"
+      Padding="{TemplateBinding Padding}" Margin="0,0,3,0">
+     <ContentPresenter ContentSource="Header" VerticalAlignment="Center" HorizontalAlignment="Center"
+       RecognizesAccessKey="True"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TabSurface" Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>
+     <Trigger Property="IsSelected" Value="True">
+      <Setter TargetName="TabSurface" Property="Background" Value="{DynamicResource ThemeSurface}"/>
+      <Setter TargetName="TabSurface" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+     </Trigger>
+     <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="TabSurface" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.68"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+ </Window.Resources>
+
  <Grid Margin="12">
   <Grid.RowDefinitions>
    <RowDefinition Height="Auto"/>
@@ -20,7 +49,7 @@
    </Border>
    <StackPanel>
     <TextBlock Text="EIASS 사업별 폴더 생성" FontSize="18" FontWeight="SemiBold"/>
-    <TextBlock Text="사업명과 평가 유형을 선택하고 저장 위치를 지정하세요. 계획을 확인한 뒤 누락 폴더 생성 버튼을 누르면 안전 점검과 최종 확인을 진행합니다."
+    <TextBlock Text="사업명·용역명·평가 유형·저장 위치를 입력한 뒤 누락 폴더 생성을 누르세요. 폴더 목록과 경로를 자동 검증한 후 확인 한 번으로 생성합니다."
                FontSize="12" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,3,0,0"/>
    </StackPanel>
   </DockPanel>
@@ -64,7 +93,7 @@
    </Grid>
   </Border>
   <!-- DEV2: optional read-only detailed case input. Every edit invalidates the prior preview. -->
-  <Expander x:Name="DetailExpander" Header="복합계약 · 업무상황 48 · 선택적 회사·발주처 초안 비교"
+  <Expander x:Name="DetailExpander" Header="상세 설정 (선택) · 추가 계약·차수·업무상황"
             Expanded="DetailMode_Changed" Collapsed="DetailMode_Changed" Margin="0,0,0,8"
             BorderBrush="{DynamicResource PanelBorder}" BorderThickness="1" Padding="8"
             Background="{DynamicResource ThemeSurface}" AutomationProperties.Name="용역 상세 입력">
@@ -354,10 +383,10 @@
    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
    <StackPanel>
     <TextBlock x:Name="SummaryText" Text="사업명·용역명·평가 유형을 입력하세요." FontWeight="SemiBold" TextWrapping="Wrap"/>
-    <TextBlock x:Name="StatusText" Text="계획 계산 → 저장 위치 선택 → 누락 폴더 생성. NAS/SMB는 지원하지 않습니다." FontSize="11" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+    <TextBlock x:Name="StatusText" Text="저장 위치를 선택하고 누락 폴더 생성을 누르세요. 미리보기·안전 점검은 자동입니다. NAS/SMB 쓰기는 별도 검증 전 제한됩니다." FontSize="11" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" Margin="0,3,0,0"/>
    </StackPanel>
    <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
-    <Button x:Name="PreviewButton" Content="폴더 목록 계산" Click="Preview_Click" Padding="13,7" Margin="0,0,8,0" IsDefault="True"/>
+    <Button x:Name="PreviewButton" Content="폴더 미리보기 (선택)" Click="Preview_Click" Padding="11,6" Margin="0,0,8,0"/>
     <Button x:Name="CopyButton" Content="계획 텍스트 복사" Click="Copy_Click" IsEnabled="False" Padding="11,7"/>
    </StackPanel>
   </Grid>
@@ -384,14 +413,17 @@
    <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,7,0,0">
     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <TextBlock Grid.Column="0" x:Name="DestinationInspectionStatus"
-               Text="먼저 폴더 목록을 계산하고 저장 위치를 선택하세요."
+               Text="사업명·용역명·평가 유형과 저장 위치를 입력하면 바로 생성할 수 있습니다."
                TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
                VerticalAlignment="Center" FontSize="11"
                Foreground="{DynamicResource TextMuted}" AutomationProperties.LiveSetting="Polite"/>
     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
      <Button x:Name="CreateFoldersButton" Content="누락 폴더 생성" Click="CreateFoldersDirect_Click"
-             IsEnabled="False" Padding="15,6" FontWeight="SemiBold"
-             AutomationProperties.Name="사업별 누락 폴더 생성: 자동 점검과 최종 확인"/>
+             IsEnabled="False" Style="{StaticResource PrimaryButton}" IsDefault="True"
+             Padding="15,6" FontWeight="SemiBold"
+             AutomationProperties.Name="사업별 누락 폴더 생성: 자동 점검과 최종 확인"
+             ToolTip="사업명·용역명·저장 위치 입력 후 클릭하세요. 최신 폴더 계획과 경로를 자동 점검한 후 마지막으로 확인합니다."
+             ToolTipService.ShowOnDisabled="True"/>
      <Button x:Name="CancelFolderCreationButton" Content="중지" Click="CancelFolderCreationDirect_Click"
              IsEnabled="False" Padding="11,6" Margin="6,0,0,0"/>
      <Button x:Name="OpenWorkspaceFolderButton" Content="결과 폴더 열기"

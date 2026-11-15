@@ -16,12 +16,22 @@ public partial class MainWindow
         int sourceIndex = _activePane;
         string originalMode = _paneLocationModes[sourceIndex];
         IReadOnlyList<CrossPaneCopySource> sources;
+        bool hasLocalFolder = false;
         if (originalMode == "Local")
         {
             var paths = _panes[sourceIndex].SelectedPaths.ToArray();
             if (paths.Length == 0 || paths.Length > CrossPaneBatchCopyService.MaximumFiles ||
-                paths.Any(path => !File.Exists(path) || Directory.Exists(path)))
-            { JobStatus.Text = "이동할 파일만 선택해 주세요. 폴더 이동은 아직 지원하지 않습니다."; return; }
+                paths.Any(path => !File.Exists(path) && !Directory.Exists(path)))
+            { JobStatus.Text = $"이동할 파일·폴더를 1~{CrossPaneBatchCopyService.MaximumFiles}개 선택하세요."; return; }
+            hasLocalFolder = paths.Any(Directory.Exists);
+            // Make nested selection errors actionable BEFORE opening the move dialog.
+            var selectedFolderPaths = paths.Where(Directory.Exists)
+                .Select(Path.GetFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (string selected in paths)
+                for (string? parent = Path.GetDirectoryName(Path.GetFullPath(selected)); parent is not null;
+                     parent = Path.GetDirectoryName(parent))
+                    if (selectedFolderPaths.Contains(parent))
+                    { JobStatus.Text = "상위 폴더와 내부 항목을 함께 선택했습니다. 한쪽만 선택하세요."; return; }
             sources = paths.Select(path => new CrossPaneCopySource(path, null, null)).ToArray();
         }
         else
@@ -35,11 +45,21 @@ public partial class MainWindow
                 string.IsNullOrWhiteSpace(s.RemoteFile?.VersionTag)))
             { JobStatus.Text = "이 클라우드 파일은 버전 보호 이동을 지원하지 않습니다. '복사' 기능을 사용하세요."; return; }
         }
-        var options = Enumerable.Range(0, _visiblePanels).Where(i => i != sourceIndex)
+        var options = Enumerable.Range(0, _visiblePanels)
+            .Where(i => i != sourceIndex && (!hasLocalFolder || _paneLocationModes[i] == "Local"))
             .Select(i => new CrossPaneCopyWindow.DestinationOption(i,
                 $"창 {i + 1} · " + (_paneLocationModes[i] == "Local" ? "내 PC · 네트워크" : _paneLocationModes[i]))).ToArray();
+        if (options.Length == 0)
+        {
+            JobStatus.Text = hasLocalFolder
+                ? "폴더 이동 대상은 내 PC 분할창입니다. 다른 창에서 로컬 폴더를 열거나 클라우드 복사를 이용하세요."
+                : "다른 분할창에서 대상 폴더를 여세요.";
+            return;
+        }
         bool refreshWarning = false;
-        var dialog = new CrossPaneCopyWindow("검증 후 안전 이동 · 성공한 파일만 원본 정리", sources.Count,
+        var dialog = new CrossPaneCopyWindow(hasLocalFolder
+            ? "내 PC 폴더·파일 안전 이동 · 원본 정리 전 복사본 검증"
+            : "검증 후 안전 이동 · 성공한 파일만 원본 정리", sources.Count,
             options, async (destinationIndex, progress, token) =>
             {
                 if (_crossPaneCopyBusy || _paneLocationModes[sourceIndex] != originalMode)
@@ -79,7 +99,7 @@ public partial class MainWindow
                     return report;
                 }
                 finally { _crossPaneCopyBusy = false; }
-            }, move: true) { Owner = this };
+            }, move: true, localFolders: hasLocalFolder) { Owner = this };
         dialog.ShowDialog();
         if (dialog.CompletionMessage is { } message)
             JobStatus.Text = "안전 이동 · " + message +

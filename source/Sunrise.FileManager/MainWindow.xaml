@@ -105,7 +105,7 @@
        </MenuItem>
        <MenuItem Header="전송 · 복구">
         <MenuItem Header="분할창 간 파일 복사…" Click="CrossPaneCopy_Click"/>
-        <MenuItem Header="분할창 간 검증 후 안전 이동…" Click="CrossPaneMove_Click"/>
+        <MenuItem Header="분할창 간 파일·폴더 안전 이동…" Click="CrossPaneMove_Click"/>
         <MenuItem Header="폴더 비교 · 안전 단방향 동기화…" Click="FolderSync_Click" ToolTip="비교 결과를 검토한 뒤 대상에 없는 항목만 추가합니다. 삭제·덮어쓰기는 하지 않습니다."/>
         <MenuItem Header="중단 작업 · 복구 기록">
          <MenuItem Header="전송 복구 기록 확인…" Click="RecoveryJournal_Click"/>

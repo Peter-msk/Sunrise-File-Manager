@@ -21,7 +21,8 @@ public partial class EiaWorkspacePlanningWindow
     private CancellationTokenSource? _folderCreationCancellation;
     private string? _createdWorkspacePath;
 
-    // The visible workflow is now: preview -> choose an existing base -> create.
+    // Preview remains optional: create auto-previews the current inputs before
+    // read-only safety checks and one final Yes/No authorization.
     // All former explicit read-only recheck/acknowledgement steps are performed
     // inside this one command, followed by exactly one final Yes/No consent.
     // The locked preview engine remains read-only: the isolated pinned NTFS
@@ -31,7 +32,8 @@ public partial class EiaWorkspacePlanningWindow
         if (CreateFoldersButton is null || DestinationPathInput is null) return;
         CreateFoldersButton.IsEnabled = !_windowClosed && _folderCreationCancellation is null &&
             !_destinationInspectionRunning && !_profileDestinationInspectionRunning &&
-            _lastPreview is not null && _lastInputSignature == CurrentInputSignature() &&
+            !string.IsNullOrWhiteSpace(ProjectTitleInput.Text) &&
+            !string.IsNullOrWhiteSpace(ContractDescriptionInput.Text) &&
             !string.IsNullOrWhiteSpace(DestinationPathInput.Text);
     }
 
@@ -49,6 +51,13 @@ public partial class EiaWorkspacePlanningWindow
         try
         {
             CommitDetailedEdits();
+            // A separate "calculate" click is optional, not a precondition.
+            // A changed input always generates a new visible preview BEFORE
+            // inspecting or writing any directory.
+            if (_lastPreview is null || _lastInputSignature != CurrentInputSignature())
+                Preview_Click(sender, e);
+            if (_lastPreview is null || _lastInputSignature != CurrentInputSignature())
+                return; // Preview_Click already displayed the validation error.
             preview = RequireFreshVisiblePlan();
             string mode = (CoreModeSelector.SelectedItem as ComboBoxItem)?.Tag as string
                 ?? throw new InvalidDataException("폴더 구성 유형을 선택하세요.");

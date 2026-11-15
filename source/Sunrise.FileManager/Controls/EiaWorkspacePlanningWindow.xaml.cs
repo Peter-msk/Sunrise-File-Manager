@@ -194,7 +194,7 @@ public partial class EiaWorkspacePlanningWindow : Window
     private void Input_Changed(object sender, RoutedEventArgs e)
     {
         if (_types is not null) UpdateBasicCaseLegend();
-        InvalidateDestinationInspection("사업 입력이 변경됐습니다. 계획을 재계산한 후 위치를 다시 점검하세요.");
+        InvalidateDestinationInspection("사업 입력이 변경됐습니다. 생성할 때 최신 폴더 목록을 자동 계산합니다.");
         // Do not persist any input or use previous approvals after a changed field.
         if (_lastPreview is null) return;
         _lastPreview = null;
@@ -204,8 +204,8 @@ public partial class EiaWorkspacePlanningWindow : Window
         FolderGrid.ItemsSource = null;
         ScenarioOutcomesGrid.ItemsSource = null;
         ScenarioOutcomeText.Text = "입력 변경: 업무상황 처리 결과를 다시 계산해야 합니다.";
-        SummaryText.Text = "입력값이 바뀌었습니다. 폴더 계획을 다시 계산하세요.";
-        StatusText.Text = "입력이 변경됐습니다. 목록을 다시 계산하세요.";
+        SummaryText.Text = "입력값이 바뀌었습니다. 생성 버튼을 누르면 최신 계획을 자동 계산합니다.";
+        StatusText.Text = "입력이 변경됐습니다. 미리보기는 선택 사항입니다.";
         RefreshDirectCreationAvailability();
     }
 

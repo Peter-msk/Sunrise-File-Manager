@@ -4,6 +4,35 @@
  Style="{StaticResource AppWindow}" Title="파일 속성 · Sunrise File Manager"
  Width="690" Height="640" MinWidth="590" MinHeight="510"
  WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+ <Window.Resources>
+  <Style TargetType="TabItem">
+   <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+   <Setter Property="Background" Value="{DynamicResource ThemeSoftAlt}"/>
+   <Setter Property="BorderBrush" Value="{DynamicResource ThemeInputBorder}"/>
+   <Setter Property="Padding" Value="11,6"/>
+   <Setter Property="MinHeight" Value="32"/>
+   <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem">
+    <Border x:Name="TabSurface" Background="{TemplateBinding Background}"
+      BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="4,4,0,0"
+      Padding="{TemplateBinding Padding}" Margin="0,0,3,0">
+     <ContentPresenter ContentSource="Header" VerticalAlignment="Center" HorizontalAlignment="Center"
+       RecognizesAccessKey="True"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TabSurface" Property="Background" Value="{DynamicResource ThemeHover}"/></Trigger>
+     <Trigger Property="IsSelected" Value="True">
+      <Setter TargetName="TabSurface" Property="Background" Value="{DynamicResource ThemeSurface}"/>
+      <Setter TargetName="TabSurface" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+     </Trigger>
+     <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="TabSurface" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.68"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+ </Window.Resources>
+
  <Grid Background="{DynamicResource AppBackground}">
   <Grid.RowDefinitions><RowDefinition Height="86"/><RowDefinition Height="*"/><RowDefinition Height="62"/></Grid.RowDefinitions>
   <Border Grid.Row="0" Background="{DynamicResource ThemeShellBrand}" BorderBrush="{DynamicResource PanelBorder}" BorderThickness="0,0,0,1" Padding="20,14">
