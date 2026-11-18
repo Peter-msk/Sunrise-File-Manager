@@ -340,6 +340,12 @@ public partial class MainWindow : Window
             pane.BlockingFileActionChanged += busy =>
             {
                 _activeRecycleJobs += busy ? 1 : -1;
+                // Local jobs disable their own ExplorerPane. Put the cancel entry
+                // on the still-enabled application status bar, never inside it.
+                bool cancellable = _panes.Any(p => p?.IsLocalFileJobActive == true) ||
+                                   pane.IsLocalFileJobActive;
+                CancelLocalJobButton.Visibility = cancellable ? Visibility.Visible : Visibility.Collapsed;
+                CancelLocalJobButton.IsEnabled = cancellable;
             };
             _panes[i] = pane;
             pane.GotKeyboardFocus += (_, _) => ActivatePane(pane);
@@ -1057,6 +1063,14 @@ public partial class MainWindow : Window
             PauseJobButton.Content = "다시 시작";
             JobDetail.Text = "일시 중지됨";
         }
+    }
+
+    private void CancelLocalJob_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var pane in _panes)
+            if (pane?.IsLocalFileJobActive == true) pane.CancelLocalFileJob();
+        CancelLocalJobButton.IsEnabled = false;
+        JobStatus.Text = "파일 작업 중지 요청 · 현재 항목을 안전하게 마친 뒤 복구합니다.";
     }
 
     private void CancelJob_Click(object sender, RoutedEventArgs e)

@@ -20,6 +20,24 @@ public partial class ExplorerPane
     private bool _directoryHasMore;
     private (string Folder, string Query, ExplorerSearchScope Scope, bool Hidden, int Generation, ExplorerSearchTarget Target, string FileType, string Custom)? _searchCacheKey;
     private ExplorerSearchResult? _searchCache;
+    // R04: keep a single sorted/filtered view for the active recursive search.
+    // Search results are already bounded by ExplorerSearchService.MaxResults;
+    // this avoids sorting that entire result set on every 2,000-row page turn.
+    private readonly record struct RecursiveSortedViewKey(
+        string Folder, string Query, ExplorerSearchScope Scope, bool Hidden,
+        int ListingGeneration, ExplorerSearchTarget Target, string FileType, string Custom,
+        string SortField, bool Descending, string Category);
+    private RecursiveSortedViewKey? _sortedSearchKey;
+    private List<FileEntry>? _sortedSearchEntries;
+
+    private void InvalidateRecursiveResults()
+    {
+        _searchCache = null;
+        _searchCacheKey = null;
+        _sortedSearchKey = null;
+        _sortedSearchEntries = null;
+    }
+
     private bool UsesRecursiveResults => _searchScope != ExplorerSearchScope.Current &&
         (SearchBox.Text.Trim().Length > 0 || HasSearchTypeSelection) && ActiveFolder is not null && !IsThisPc && !IsRecycleBin;
     private async void PreviousPage_Click(object sender, RoutedEventArgs e)
@@ -51,16 +69,19 @@ public partial class ExplorerPane
         bool descending = _sortDescending;
         string category = IsThisPc ? "All" : _categoryFilter;
         bool showHidden = _showHidden;
+        bool recursiveResults = UsesRecursiveResults;
+        string? recursiveFolder = recursiveResults ? ActiveFolder : null;
+        var selectionFilter = CurrentSearchFilter;
         try
         {
             string effectiveQuery = query;
             string? searchWarning = null;
-            if (UsesRecursiveResults && ActiveFolder is string searchFolder)
+            if (recursiveResults && recursiveFolder is string searchFolder)
             {
                 PaneStatus.Text = "하위 폴더 검색 중… (Esc: 취소)";
                 var key = (searchFolder, query, _searchScope, showHidden, listingGeneration, _searchTarget, _searchFileType, _searchCustomExtensions);
                 var result = _searchCacheKey == key && _searchCache is not null ? _searchCache
-                    : await ExplorerSearchService.SearchAsync(searchFolder, query, _searchScope, showHidden, cancellation.Token, CurrentSearchFilter);
+                    : await ExplorerSearchService.SearchAsync(searchFolder, query, _searchScope, showHidden, cancellation.Token, selectionFilter);
                 cancellation.Token.ThrowIfCancellationRequested();
                 if (filterGeneration != _filterGeneration || listingGeneration != _listingGeneration) return;
                 _searchCache = result; _searchCacheKey = key;
@@ -68,14 +89,32 @@ public partial class ExplorerPane
                 searchWarning = result.Warning;
                 effectiveQuery = "";
             }
-            var selectionFilter = CurrentSearchFilter;
-            List<FileEntry> visible = await Task.Run(
-                () => FileListView.Apply(snapshot.Where(item => selectionFilter.Allows(item.IsDirectory, item.Name)).ToArray(),
-                    effectiveQuery, field, descending, cancellation.Token, category, showHidden), cancellation.Token);
+            RecursiveSortedViewKey? viewKey = recursiveResults && recursiveFolder is not null
+                ? new RecursiveSortedViewKey(recursiveFolder, query, _searchScope, showHidden,
+                    listingGeneration, _searchTarget, _searchFileType, _searchCustomExtensions,
+                    field, descending, category)
+                : null;
+            List<FileEntry> visible;
+            if (viewKey is not null && _sortedSearchKey == viewKey && _sortedSearchEntries is not null)
+            {
+                // Paging and grouping are UI-only; neither changes the sorted result.
+                visible = _sortedSearchEntries;
+            }
+            else
+            {
+                visible = await Task.Run(
+                    () => FileListView.Apply(snapshot, effectiveQuery, field, descending,
+                        cancellation.Token, category, showHidden, selectionFilter), cancellation.Token);
+            }
             if (cancellation.IsCancellationRequested || filterGeneration != _filterGeneration ||
                 listingGeneration != _listingGeneration) return;
+            if (viewKey is not null)
+            {
+                _sortedSearchKey = viewKey;
+                _sortedSearchEntries = visible;
+            }
             int filteredTotal = visible.Count;
-            if (UsesRecursiveResults)
+            if (recursiveResults)
             {
                 _searchPageOffset = Math.Min(_searchPageOffset, Math.Max(0, (filteredTotal - 1) / DirectoryScanner.PageSize * DirectoryScanner.PageSize));
                 visible = visible.Skip(_searchPageOffset).Take(DirectoryScanner.PageSize).ToList();

@@ -4,7 +4,8 @@ using System.Security.Cryptography;
 namespace Sunrise.FileManager.Services.CloudDrive;
 
 /// <summary>
-/// R25 explicit, file-only copy-verify-retire operation. The source is never retired
+/// R02 local folders use the existing verified directory transfer engine; files
+/// continue to use R25 per-file SHA-256 copy-verify-retire. The source is never retired
 /// unless a fresh destination read and a second source read match the initial SHA-256.
 /// Any denial, conflict, cancellation or source mutation preserves the original.
 /// A failed retirement may leave BOTH copies; it is reported, never called success.
@@ -21,6 +22,18 @@ public static class CrossPaneVerifiedMoveService
         if (sources is null || sources.Count is < 1 or > CrossPaneBatchCopyService.MaximumFiles)
             throw new ArgumentException("이동할 파일은 1~128개여야 합니다.");
         if (target is null) throw new ArgumentNullException(nameof(target));
+        // Reject nested folder + child selections BEFORE changing anything.
+        // The transfer engine normally sees only a single root per iteration.
+        var localRoots = sources.Where(s => s?.LocalFile is not null)
+            .Select(s => Path.TrimEndingDirectorySeparator(Path.GetFullPath(s.LocalFile!)))
+            .ToArray();
+        var selectedFolders = localRoots.Where(Directory.Exists)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var local in localRoots)
+            for (string? parent = Path.GetDirectoryName(local); parent is not null;
+                 parent = Path.GetDirectoryName(parent))
+                if (selectedFolders.Contains(parent))
+                    throw new ArgumentException("상위 폴더와 하위 항목이 함께 선택됐습니다. 하나만 선택하세요.");
         var results = new List<BatchCopyItemResult>();
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         bool canceled = false;
@@ -40,9 +53,45 @@ public static class CrossPaneVerifiedMoveService
             bool copied = false;
             try
             {
-                // Fail closed for folders until remote recursive copy verification and rollback is implemented.
-                if (source.LocalFile is { } local && Directory.Exists(local) || source.RemoteFile?.IsFolder == true)
-                    throw new NotSupportedException("폴더 이동은 하위 항목 전체 검증 및 복구 구현 후 지원합니다.");
+                // Local directory trees now reuse the hardened local verified move.
+                // Remote folder retirement stays blocked until the provider exposes
+                // an atomic, version-conditional recursive retirement contract.
+                if (source.LocalFile is { } local && Directory.Exists(local))
+                {
+                    if (target.LocalFolder is null)
+                        throw new NotSupportedException("폴더 이동은 내 PC 분할창 사이에서 이용하세요. 클라우드로는 복사를 이용할 수 있습니다.");
+                    copied = true; // if cleanup fails, both paths must be reviewed.
+                    var localProgress = new Progress<Sunrise.FileManager.Services.TransferProgress>(p =>
+                    {
+                        int percent = p.BytesTotal > 0
+                            ? (int)Math.Clamp(p.BytesDone * 100.0 / p.BytesTotal, 0, 99)
+                            : 0;
+                        progress?.Report(new(index, sources.Count, label, percent));
+                    });
+                    var moved = await Sunrise.FileManager.Services.TransferService.RunAsync(
+                        [local], target.LocalFolder, Sunrise.FileManager.Services.TransferKind.Move,
+                        localProgress, token, Sunrise.FileManager.Services.CollisionPolicy.Skip,
+                        forceVerifiedMove: true).ConfigureAwait(false);
+                    if (moved.Completed == 1 && !moved.Canceled && moved.Failed == 0)
+                        results.Add(new(label, true, "하위 폴더·파일 검증 후 원본 정리 완료"));
+                    else if (moved.Skipped == 1)
+                        results.Add(new(label, false, "대상 폴더가 이미 존재해 건너뜀 · 원본 유지")
+                        { Outcome = BatchCopyItemOutcome.Skipped });
+                    else if (moved.Canceled || token.IsCancellationRequested)
+                    {
+                        results.Add(new(label, false, "취소 · 원본·대상 양쪽을 확인하세요. 완료된 파일은 복원하지 않습니다.")
+                        { Outcome = BatchCopyItemOutcome.Canceled });
+                        canceled = true;
+                        break;
+                    }
+                    else
+                        results.Add(new(label, false,
+                            "일부 항목 이동 또는 검증 실패 · 원본·대상 양쪽을 확인하세요."));
+                    progress?.Report(new(index + 1, sources.Count, label, 0));
+                    continue;
+                }
+                if (source.RemoteFile?.IsFolder == true)
+                    throw new NotSupportedException("클라우드 폴더 이동은 원본 버전 보호를 보장할 수 없습니다. 복사 기능을 이용하세요.");
                 // Preflight BEFORE making any destination copy: Google Drive v3 has no
                 // verified atomic compare-and-trash contract in this implementation.
                 if (source.RemoteFile is not null &&

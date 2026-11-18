@@ -62,6 +62,7 @@ public partial class ExplorerPane
         HasUserNavigated = otherNav;
         _hasInitialSessionPath = otherInit;
         _allEntries = otherEntries;
+        InvalidateRecursiveResults();
         _sortField = otherSort;
         _sortDescending = otherDesc;
         SearchBox.Text = otherSearch;
@@ -72,6 +73,7 @@ public partial class ExplorerPane
         other.HasUserNavigated = myNav;
         other._hasInitialSessionPath = myInit;
         other._allEntries = myEntries;
+        other.InvalidateRecursiveResults();
         other._sortField = mySort;
         other._sortDescending = myDesc;
         other.SearchBox.Text = mySearch;
@@ -270,7 +272,7 @@ public partial class ExplorerPane
             }
         }
         PreviousPageButton.IsEnabled = NextPageButton.IsEnabled = false;
-        _searchCache = null; _searchCacheKey = null;
+        InvalidateRecursiveResults();
         if (_activeTab is null) return;
         EndMarquee();
         _listingCancellation?.Cancel();

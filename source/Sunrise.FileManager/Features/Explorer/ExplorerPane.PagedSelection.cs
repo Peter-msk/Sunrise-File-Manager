@@ -31,9 +31,20 @@ public partial class ExplorerPane
                     _searchCache.Warning?.Contains("중단") == true ||
                     _searchCache.Warning?.Contains("한도") == true)
                     throw new InvalidOperationException("검색을 완료한 후 전체 선택을 다시 실행하세요. 결과 한도에 도달했다면 검색 범위를 좁혀주세요.");
-                var matches = await Task.Run(() => FileListView.Apply(_searchCache.Entries, "", _sortField,
-                    _sortDescending, cancellation.Token, category, _showHidden), cancellation.Token);
-                paths = matches.Select(x => x.FullPath).ToArray();
+                var sortedKey = new RecursiveSortedViewKey(folder, query, _searchScope, _showHidden,
+                    generation, searchTarget, searchFileType, searchCustom, _sortField, _sortDescending, category);
+                if (_sortedSearchKey == sortedKey && _sortedSearchEntries is not null)
+                {
+                    // Same snapshot/conditions: no second sort needed for selecting all pages.
+                    paths = _sortedSearchEntries.Select(x => x.FullPath).ToArray();
+                }
+                else
+                {
+                    var searchFilter = CurrentSearchFilter;
+                    var matches = await Task.Run(() => FileListView.Apply(_searchCache.Entries, "", _sortField,
+                        _sortDescending, cancellation.Token, category, _showHidden, searchFilter), cancellation.Token);
+                    paths = matches.Select(x => x.FullPath).ToArray();
+                }
             }
             else paths = await DirectoryScanner.ReadMatchingPathsAsync(folder, query, category, _showHidden,
                     PagedSelectionSet.MaxSelection, cancellation.Token, HasSearchTypeSelection ? CurrentSearchFilter : null);

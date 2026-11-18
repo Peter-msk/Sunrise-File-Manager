@@ -88,13 +88,20 @@
    <TextBlock Text="행을 선택해 순서를 바꾸세요. 번호·문서 제목은 표에서 직접 수정할 수 있습니다." TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}" FontSize="12"/>
   </DockPanel>
   <DataGrid Grid.Row="4" x:Name="PreviewGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"
-    SelectionMode="Single" HeadersVisibility="Column" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    SelectionMode="Single" HeadersVisibility="Column" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+    EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.IsVirtualizing="True"
+    VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True">
    <DataGrid.RowStyle><Style TargetType="DataGridRow"><Setter Property="ToolTip" Value="{Binding SourcePath}"/></Style></DataGrid.RowStyle>
    <DataGrid.Columns>
     <DataGridTextColumn Header="현재 파일명" Binding="{Binding OldName}" IsReadOnly="True" Width="190"/>
     <DataGridTextColumn Header="목차번호" Binding="{Binding Code, UpdateSourceTrigger=PropertyChanged}" Width="78"/>
     <DataGridTextColumn Header="문서 제목 (편집)" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Width="180"/>
-    <DataGridTextColumn Header="변경 후 이름 미리보기" Binding="{Binding NewName}" IsReadOnly="True" Width="*" MinWidth="240"/>
+    <DataGridTextColumn Header="변경 후 이름 미리보기" Binding="{Binding NewName}" IsReadOnly="True" Width="*" MinWidth="240">
+     <DataGridTextColumn.ElementStyle><Style TargetType="TextBlock">
+      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+      <Setter Property="ToolTip" Value="{Binding NewName}"/>
+     </Style></DataGridTextColumn.ElementStyle>
+    </DataGridTextColumn>
     <DataGridTextColumn Header="검사 / 목차 일치" Binding="{Binding Status}" IsReadOnly="True" Width="200"/>
    </DataGrid.Columns>
   </DataGrid>

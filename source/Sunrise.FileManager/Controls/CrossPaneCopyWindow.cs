@@ -31,11 +31,14 @@ public sealed class CrossPaneCopyWindow : Window
     private bool _busy;
     private bool _cancelRequested;
     private readonly bool _move;
+    private readonly bool _localFolders;
 
     public CrossPaneCopyWindow(string sourceLabel, int sourceCount, IReadOnlyList<DestinationOption> targets,
-        Func<int, IProgress<BatchCopyProgress>, CancellationToken, Task<BatchCopyReport>> copy, bool move = false)
+        Func<int, IProgress<BatchCopyProgress>, CancellationToken, Task<BatchCopyReport>> copy,
+        bool move = false, bool localFolders = false)
     {
         _move = move;
+        _localFolders = localFolders;
         Title = move ? "Sunrise 분할창 간 검증 후 안전 이동" : "Sunrise 분할창 간 파일·폴더 복사";
         Width = 540; MinWidth = 430; Height = 390; MinHeight = 350;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -46,19 +49,22 @@ public sealed class CrossPaneCopyWindow : Window
         _copy = copy; _sourceCount = sourceCount;
         if (_move) _start.Content = "이동 시작";
         var panel = new StackPanel { Margin = new Thickness(16) };
-        AutomationProperties.SetName(_targets, "복사할 대상 분할창");
+        AutomationProperties.SetName(_targets, move ? "이동할 대상 분할창" : "복사할 대상 분할창");
         AutomationProperties.SetName(_results, "파일별 전송 결과");
         AutomationProperties.SetName(_bar, "선택 항목 처리 진행률 (성공률이 아님)");
         AutomationProperties.SetLiveSetting(_status, AutomationLiveSetting.Polite);
         panel.Children.Add(new TextBlock { Text = "원본", FontWeight = FontWeights.SemiBold });
         panel.Children.Add(new TextBlock { Text = sourceLabel, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 3, 0, 12) });
-        panel.Children.Add(new TextBlock { Text = "복사할 대상 분할창", FontWeight = FontWeights.SemiBold });
+        panel.Children.Add(new TextBlock { Text = move ? "이동할 대상 분할창" : "복사할 대상 분할창",
+            FontWeight = FontWeights.SemiBold });
         foreach (var option in targets) _targets.Items.Add(option);
         _targets.SelectedIndex = targets.Count > 0 ? 0 : -1;
         panel.Children.Add(_targets);
         panel.Children.Add(_bar);
         _status.Text = _move
-            ? $"파일 {sourceCount}개를 복사 후 SHA-256 재검증하여 원본을 정리합니다. 폴더 이동·자동 덮어쓰기는 금지됩니다. 이동 후 되돌리기는 지원하지 않습니다."
+            ? _localFolders
+                ? $"로컬 파일·폴더 {sourceCount}개를 검증 후 이동합니다. 대상이 존재하면 건너뛰며, 취소 시 이미 이동된 항목은 자동으로 되돌리지 않습니다."
+                : $"파일 {sourceCount}개를 SHA-256 재검증 후 원본 정리합니다. 대상 덮어쓰기 없음 · 자동 되돌리기 없음."
             : $"선택 파일·폴더 {sourceCount}개를 순서대로 복사합니다. 기존 대상 파일은 덮어쓰지 않으며 원본은 삭제하지 않습니다.";
         panel.Children.Add(_status);
         panel.Children.Add(_results);
@@ -79,6 +85,7 @@ public sealed class CrossPaneCopyWindow : Window
             e.Handled = true;
             if (_busy) RequestCancel(); else Close();
         };
+        _start.SetResourceReference(FrameworkElement.StyleProperty, "PrimaryButton");
         _start.IsEnabled = targets.Count > 0 && sourceCount > 0;
         _start.Click += Start_Click;
         _cancel.Click += (_, _) => { if (_busy) RequestCancel(); else Close(); };

@@ -1,5 +1,5 @@
 <Window x:Class="Sunrise.FileManager.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:Sunrise.FileManager.Controls"
- Style="{StaticResource AppWindow}" Title="Sunrise File Manager 1.8.0" Width="1520" Height="930" MinWidth="800" MinHeight="530" WindowStartupLocation="CenterScreen" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown">
+ Style="{StaticResource AppWindow}" Title="Sunrise File Manager 1.8.2" Width="1520" Height="930" MinWidth="800" MinHeight="530" WindowStartupLocation="CenterScreen" Closing="Window_Closing" PreviewKeyDown="Window_PreviewKeyDown">
  <Window.Resources>
   <!-- Component-owned A-layout utility rail. Keep the navy icon hover color legible; do not style the folder tree. -->
   <Style x:Key="UtilityRailIconButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
@@ -36,23 +36,27 @@
      <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
       <Image Source="/Sunrise.FileManager;component/Assets/SunriseFileManager.ico" Width="22" Height="22" Margin="0,0,7,0" RenderOptions.BitmapScalingMode="HighQuality" ToolTip="Sunrise File Manager 공식 제품 아이콘"/>
       <TextBlock Text="Sunrise File Manager" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemeShellBrandText}" VerticalAlignment="Center"/>
-      <TextBlock Text="v1.8.0" Foreground="{DynamicResource ThemeShellBrandMuted}" FontSize="11" Margin="7,1,0,0" VerticalAlignment="Center"/>
+      <TextBlock Text="v1.8.2" Foreground="{DynamicResource ThemeShellBrandMuted}" FontSize="11" Margin="7,1,0,0" VerticalAlignment="Center"/>
        <!-- R05: EIASS is a visible top-level workspace menu beside the product name
             in every split, without the narrow right-side command overflow. -->
        <Border Background="{DynamicResource ThemeSoftAlt}" BorderBrush="{DynamicResource PanelBorder}"
                BorderThickness="1" CornerRadius="5" Margin="12,0,0,0" VerticalAlignment="Center">
         <Menu Style="{StaticResource SunrisePaneMenu}" Background="Transparent" MinHeight="32">
-         <MenuItem x:Name="EiassMainMenu" Header="EIASS ▾" Padding="10,6" AutomationProperties.Name="EIASS 전용 메뉴">
-          <MenuItem Header="EIASS 제출용 문서명 설정…" Tag="Eiass" Click="MenuShellCommand_Click"
-                    ToolTip="현재 활성 탐색창에서 선택한 PDF의 EIASS 제출 문서명을 검토하고 변경"/>
+         <MenuItem x:Name="EiassMainMenu" Header="EIASS ▾" Padding="10,6" AutomationProperties.Name="EIASS 전용 메뉴"
+                   SubmenuOpened="EiassMainMenu_SubmenuOpened">
+          <MenuItem x:Name="EiassRenameShellMenuItem" Header="EIASS 제출용 문서명 설정…" Tag="Eiass" Click="MenuShellCommand_Click" ToolTipService.ShowOnDisabled="True"
+                    AutomationProperties.Name="활성 로컬 탐색창 PDF EIASS 파일명 검토"
+                    ToolTip="현재 활성 로컬 탐색창에서 선택한 PDF의 EIASS 제출 문서명을 검토하고 변경"/>
           <Separator/>
           <MenuItem Header="환경평가 용역 폴더 계획…" Click="EiaWorkspacePlanning_Click"
-                    ToolTip="사업별 폴더 계획 미리보기·검토 및 실행 전 재점검. 실제 자동 생성은 Windows·권한·NAS 검증 전 비활성입니다."/>
+                    ToolTip="사업별 기본 폴더 계획·재점검 후 승인된 누락 폴더만 생성합니다. 운영 생성은 Windows 로컬 NTFS/ReFS만 지원하며 NAS/SMB는 제한됩니다."/>
          </MenuItem>
         </Menu>
        </Border>
      </StackPanel>
-     <ScrollViewer x:Name="HeaderPrimaryViewport" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False" VerticalAlignment="Center" HorizontalAlignment="Stretch" Focusable="False">
+     <ScrollViewer x:Name="HeaderPrimaryViewport" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" CanContentScroll="False" VerticalAlignment="Center" HorizontalAlignment="Stretch" Focusable="False"
+                   ToolTip="좁은 창에서는 분할·배율·설정 명령을 이 영역에서 좌우로 스크롤하여 확인할 수 있습니다."
+                   AutomationProperties.Name="상단 분할 배치 배율 테마 설정 명령 가로 이동 영역">
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
        <TextBlock Text="분할" FontSize="12" Foreground="{DynamicResource ThemeShellBrandMuted}" VerticalAlignment="Center" Margin="0,0,7,0"/>
        <Button x:Name="OneButton" AutomationProperties.Name="단일 화면 즉시 적용" Style="{StaticResource ShellSplitButton}" Content="단일" Click="One_Click" MinWidth="55" Padding="8,5" Margin="0,0,4,0" ToolTip="단일 화면으로 즉시 전환 (Ctrl+1)"/>
@@ -101,7 +105,7 @@
        </MenuItem>
        <MenuItem Header="전송 · 복구">
         <MenuItem Header="분할창 간 파일 복사…" Click="CrossPaneCopy_Click"/>
-        <MenuItem Header="분할창 간 검증 후 안전 이동…" Click="CrossPaneMove_Click"/>
+        <MenuItem Header="분할창 간 파일·폴더 안전 이동…" Click="CrossPaneMove_Click"/>
         <MenuItem Header="폴더 비교 · 안전 단방향 동기화…" Click="FolderSync_Click" ToolTip="비교 결과를 검토한 뒤 대상에 없는 항목만 추가합니다. 삭제·덮어쓰기는 하지 않습니다."/>
         <MenuItem Header="중단 작업 · 복구 기록">
          <MenuItem Header="전송 복구 기록 확인…" Click="RecoveryJournal_Click"/>
@@ -247,7 +251,15 @@
     <!-- Both former footer commands opened the same Sunrise Control window.
          Keep both settings-menu entry points for keyboard/user workflow compatibility. -->
     <!-- Notice/update remains accessible through Settings · Features; the status bar is for work progress. -->
-    <StackPanel Grid.Column="2" Orientation="Horizontal"><Button x:Name="PauseJobButton" Content="일시 중지" Visibility="Collapsed" Click="PauseJob_Click" Padding="8,2" MinHeight="28" Margin="0,0,4,0"/><Button x:Name="CancelJobButton" Visibility="Collapsed" Content="취소" Click="CancelJob_Click" IsEnabled="False" Padding="8,2" MinHeight="28"/></StackPanel>
+    <StackPanel Grid.Column="2" Orientation="Horizontal">
+     <!-- Outside the disabled pane so an in-progress local rename can be canceled. -->
+     <Button x:Name="CancelLocalJobButton" Content="파일 작업 중지" Visibility="Collapsed" IsEnabled="False"
+             Click="CancelLocalJob_Click" Padding="9,2" MinHeight="28" Margin="0,0,6,0"
+             AutomationProperties.Name="진행 중인 로컬 파일 작업 취소 요청"
+             ToolTip="진행 중인 파일 이동을 안전하게 마친 뒤 취소하고 원래 이름 복구를 시도합니다."/>
+     <Button x:Name="PauseJobButton" Content="일시 중지" Visibility="Collapsed" Click="PauseJob_Click" Padding="8,2" MinHeight="28" Margin="0,0,4,0"/>
+     <Button x:Name="CancelJobButton" Visibility="Collapsed" Content="취소" Click="CancelJob_Click" IsEnabled="False" Padding="8,2" MinHeight="28"/>
+    </StackPanel>
    </Grid>
   </Border>
  </Grid>

@@ -15,7 +15,7 @@ using Sunrise.FileManager.Features.EiaWorkspace;
 
 namespace Sunrise.FileManager.Controls;
 
-/// <summary>Read-only DEV1 planning window. No Directory, File or updater calls.</summary>
+/// <summary>v1.8.2 R01: compact EIASS preview and explicitly approved folder-only execution.</summary>
 public partial class EiaWorkspacePlanningWindow : Window
 {
     public sealed class WorkstreamChoice
@@ -120,11 +120,7 @@ public partial class EiaWorkspacePlanningWindow : Window
         Array.Empty<EiaFolderPathObservation>();
     private ICollectionView? _diagnosticView;
     private string _diagnosticSummary = "";
-    // DEV23: read-only pre-execution handoff, never permission to create directories.
-    // Invalidated with every scan, source/destination change, cancel or failure.
-    private EiaWorkspaceExecutionReadiness? _executionReadiness;
-    private string? _executionReadinessSignature;
-    private string? _executionReadinessDestination;
+    // Direct creation scans and validates the current plan on demand; no saved wizard token.
 
     private async Task<T> RunExclusiveDestinationScanAsync<T>(Func<T> scan, CancellationToken token)
     {
@@ -198,7 +194,7 @@ public partial class EiaWorkspacePlanningWindow : Window
     private void Input_Changed(object sender, RoutedEventArgs e)
     {
         if (_types is not null) UpdateBasicCaseLegend();
-        InvalidateDestinationInspection("사업 입력이 변경됐습니다. 계획을 재계산한 후 위치를 다시 점검하세요.");
+        InvalidateDestinationInspection("사업 입력이 변경됐습니다. 생성할 때 최신 폴더 목록을 자동 계산합니다.");
         // Do not persist any input or use previous approvals after a changed field.
         if (_lastPreview is null) return;
         _lastPreview = null;
@@ -208,8 +204,9 @@ public partial class EiaWorkspacePlanningWindow : Window
         FolderGrid.ItemsSource = null;
         ScenarioOutcomesGrid.ItemsSource = null;
         ScenarioOutcomeText.Text = "입력 변경: 업무상황 처리 결과를 다시 계산해야 합니다.";
-        SummaryText.Text = "입력값이 바뀌었습니다. 폴더 계획을 다시 계산하세요.";
-        StatusText.Text = "이전 미리보기는 무효화됐습니다. 실제 폴더는 생성되지 않았습니다.";
+        SummaryText.Text = "입력값이 바뀌었습니다. 생성 버튼을 누르면 최신 계획을 자동 계산합니다.";
+        StatusText.Text = "입력이 변경됐습니다. 미리보기는 선택 사항입니다.";
+        RefreshDirectCreationAvailability();
     }
 
     private IEnumerable<ObservableCollection<DraftRow>> DetailCollections()
@@ -446,11 +443,13 @@ public partial class EiaWorkspacePlanningWindow : Window
             ScenarioOutcomesGrid.ItemsSource = result.ScenarioOutcomes;
             ScenarioOutcomeText.Text = $"선택 상황 {scenarioCount}건 · 기존 자료 참조 {linkedRecords}건 · 안전검증 미완료 {scenarioSafetyGates}건 · 공식승인 아님";
             StatusText.Text = $"{(DetailExpander.IsExpanded ? "복합계약·차수·상황 검토" : "기본 계획")} · 회사 정책 {result.CompanyPolicyVersion} · 검증 대기 {result.UnverifiedGates.Count}종 · " +
-                $"지문 {result.FingerprintSha256[..12]}… · 생성 기능 없음";
+                $"계획 확인 완료 · {result.FingerprintSha256[..12]}… · 저장 위치 선택 후 생성 가능";
             UpdateFilter();
+            DestinationReviewTabs.SelectedIndex = 0; // A new plan must not open on a stale empty diagnostic tab.
             CopyButton.IsEnabled = true;
             InspectDestinationButton.IsEnabled = !_destinationInspectionRunning;
             RefreshAppliedComparisonAvailability();
+            RefreshDirectCreationAvailability();
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or System.IO.InvalidDataException)
         {
@@ -552,30 +551,8 @@ public partial class EiaWorkspacePlanningWindow : Window
         DestinationReviewTabs.SelectedIndex = 1;
     }
 
-    private void ExecutionReadiness_Click(object sender, RoutedEventArgs e)
-    {
-        // DEV23: do not mistake a historical snapshot for live filesystem authority.
-        // No CreateDirectory, creation engine executor, update service, or user
-        // approval action may be reached from this button.
-        if (_windowClosed || _destinationInspectionRunning || _profileDestinationInspectionRunning ||
-            _executionReadiness is null || _executionReadinessSignature != CurrentInputSignature() ||
-            _executionReadinessDestination != DestinationPathInput.Text ||
-            _lastPreview is null || _lastInputSignature != CurrentInputSignature())
-        {
-            ClearDestinationDiagnostics("검토할 유효한 최신 위치 점검 결과가 없습니다. 위치를 다시 점검하세요.");
-            return;
-        }
-        var dialog = new EiaWorkspaceExecutionReviewWindow(_executionReadiness) { Owner = this };
-        dialog.ShowDialog();
-    }
-
     private void ClearDestinationDiagnostics(string reason)
     {
-        _executionReadiness = null;
-        _executionReadinessSignature = null;
-        _executionReadinessDestination = null;
-        if (ExecutionReadinessButton is not null)
-            ExecutionReadinessButton.IsEnabled = false;
         _diagnosticView = null;
         _diagnosticRows = Array.Empty<EiaFolderPathObservation>();
         _diagnosticSummary = "";
@@ -587,6 +564,13 @@ public partial class EiaWorkspacePlanningWindow : Window
 
     private void InvalidateDestinationInspection(string message)
     {
+        // A changed destination or business must never keep the old result-folder action.
+        if (_folderCreationCancellation is null)
+        {
+            _createdWorkspacePath = null;
+            if (OpenWorkspaceFolderButton is not null)
+                OpenWorkspaceFolderButton.IsEnabled = false;
+        }
         _destinationInspectionCts?.Cancel();
         _destinationProgressOpen = false;
         InvalidateProfileDestinationInspection("저장 위치 또는 사업 계획이 변경됐습니다. 프로파일 포함 점검을 다시 실행하세요.");
@@ -599,6 +583,7 @@ public partial class EiaWorkspacePlanningWindow : Window
         if (CancelDestinationButton is not null)
             CancelDestinationButton.IsEnabled = _destinationInspectionRunning &&
                 _destinationInspectionCts is { IsCancellationRequested: false };
+        RefreshDirectCreationAvailability();
     }
 
     private void CancelDestination_Click(object sender, RoutedEventArgs e)
@@ -616,6 +601,7 @@ public partial class EiaWorkspacePlanningWindow : Window
 
     private void ChooseDestination_Click(object sender, RoutedEventArgs e)
     {
+        if (_folderCreationCancellation is not null) return;
         // Native Windows picker does not create or modify a directory.
         var picker = new Microsoft.Win32.OpenFolderDialog
         {
@@ -710,14 +696,6 @@ public partial class EiaWorkspacePlanningWindow : Window
                 signature != CurrentInputSignature() || basePath != DestinationPathInput.Text)
                 return;
             ShowDestinationDiagnostics(diagnostics, "기본안 저장 위치");
-            if (inspection is not null)
-            {
-                _executionReadiness = EiaWorkspaceExecutionReadinessPlanner.PrepareReadOnlyReview(
-                    diagnostics, fresh.FingerprintSha256, inspection.PlanFingerprint, "기본안");
-                _executionReadinessSignature = signature;
-                _executionReadinessDestination = basePath;
-                ExecutionReadinessButton.IsEnabled = true;
-            }
             DestinationInspectionStatus.Text = inspection is not null
                 ? $"기존 {inspection.ExistingDirectories}개 · 새 폴더 필요 {inspection.MissingDirectories}개 " +
                   $"(총 {inspection.TotalDirectories}개) · 충돌 없음 · 생성/승인 아님"
@@ -750,6 +728,7 @@ public partial class EiaWorkspacePlanningWindow : Window
                 _destinationInspectionCts = null;
             CancelDestinationButton.IsEnabled = false;
             InspectDestinationButton.IsEnabled = !_windowClosed && _lastPreview is not null;
+            RefreshDirectCreationAvailability();
         }
     }
 
@@ -892,15 +871,6 @@ public partial class EiaWorkspacePlanningWindow : Window
                 latestAgain.FingerprintSha256 != latestProfile.FingerprintSha256)
                 throw new InvalidOperationException("점검 중 회사 초안 개정본이 변경됐습니다.");
             ShowDestinationDiagnostics(diagnostics, "기본안 + 회사·발주처 추가");
-            if (inspection is not null)
-            {
-                _executionReadiness = EiaWorkspaceExecutionReadinessPlanner.PrepareReadOnlyReview(
-                    diagnostics, shownComparison.AppliedFingerprintSha256,
-                    inspection.PathInspectionFingerprintSha256, "기본안 + 회사·발주처 미승인 초안");
-                _executionReadinessSignature = signature;
-                _executionReadinessDestination = basePath;
-                ExecutionReadinessButton.IsEnabled = true;
-            }
             ProfileDestinationStatus.Text = inspection is not null
                 ? $"기본 기존 {inspection.ExistingBaselineDirectories}/필요 {inspection.MissingBaselineDirectories} · " +
                   $"회사 추가 기존 {inspection.ExistingAddedDirectories}/필요 {inspection.MissingAddedDirectories} " +

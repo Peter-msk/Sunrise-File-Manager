@@ -102,14 +102,30 @@ public partial class EiassRenameDialog : Window
             }
             catch (ArgumentException ex) { row.NewName = ""; row.Status = ex.Message; row.HasError = true; }
         }
-        var activeSources = names.Where(p => p.Key.CanApply).Select(p => p.Key.SourcePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // Code uniqueness is global to the approved batch; file-path uniqueness is
+        // Windows case-insensitive. Keep this index local to this dialog/preview.
+        var codeCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var row in _rows)
+        {
+            string key = row.Code ?? string.Empty;
+            codeCounts[key] = codeCounts.GetValueOrDefault(key) + 1;
+        }
+        var pathCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (string path in names.Values)
+            pathCounts[path] = pathCounts.GetValueOrDefault(path) + 1;
+
+        var activeSources = names.Where(p => p.Key.CanApply).Select(p => p.Key.SourcePath)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in names)
         {
             var row = pair.Key;
-            if (_rows.Count(r => r.Code == row.Code) > 1)
+            if (codeCounts[row.Code ?? string.Empty] > 1)
             { row.CanApply = false; row.HasError = true; row.Status = "목차번호 중복 · 수정 필요"; }
-            if (names.Values.Count(p => p.Equals(pair.Value, StringComparison.OrdinalIgnoreCase)) > 1 ||
-                ((File.Exists(pair.Value) || Directory.Exists(pair.Value)) && !pair.Value.Equals(row.SourcePath, StringComparison.OrdinalIgnoreCase) && !activeSources.Contains(pair.Value)))
+            // Do not query the filesystem for paths that the same approved batch vacates.
+            bool otherTarget = !pair.Value.Equals(row.SourcePath, StringComparison.OrdinalIgnoreCase) &&
+                               !activeSources.Contains(pair.Value);
+            if (pathCounts[pair.Value] > 1 ||
+                (otherTarget && (File.Exists(pair.Value) || Directory.Exists(pair.Value))))
             { row.CanApply = false; row.HasError = true; row.Status = "이름 충돌 · 덮어쓰지 않음"; }
             if (!File.Exists(row.SourcePath)) { row.CanApply = false; row.HasError = true; row.Status = "원본 파일 없음"; }
         }

@@ -343,7 +343,7 @@
     </Border>
     <DataGrid Grid.Column="2" x:Name="FilesGrid" RowHeaderWidth="0" MinColumnWidth="46" Margin="5,0,5,0" FontSize="13" SelectionMode="Extended" CanUserResizeColumns="True"
               EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizingWhenGrouping="True" EnableColumnVirtualization="False"
-              VirtualizingPanel.VirtualizationMode="Recycling" SelectionChanged="FilesGrid_SelectionChanged"
+              VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True" SelectionChanged="FilesGrid_SelectionChanged"
               MouseDoubleClick="FilesGrid_MouseDoubleClick" Sorting="FilesGrid_Sorting"
               LoadingRow="FilesGrid_LoadingRow" PreviewMouseRightButtonDown="FilesGrid_PreviewMouseRightButtonDown"
               PreviewMouseWheel="FilesGrid_PreviewMouseWheel"

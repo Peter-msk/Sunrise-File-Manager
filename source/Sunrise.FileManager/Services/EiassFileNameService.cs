@@ -65,9 +65,23 @@ public static class EiassFileNameService
     private static string MatchKey(string title) => Regex.Replace(title.Normalize(NormalizationForm.FormKC), @"\s+", "").ToUpperInvariant();
     public static int?[] MatchContents(IReadOnlyList<string> titles, IReadOnlyList<string> contents)
     {
-        var titleKeys = titles.Select(MatchKey).ToArray();
-        var contentsKeys = contents.Select(MatchKey).ToArray();
-        return titleKeys.Select(key => key.Length > 0 && titleKeys.Count(k => k == key) == 1 && contentsKeys.Count(k => k == key) == 1
-            ? (int?)Array.IndexOf(contentsKeys, key) : null).ToArray();
+        // A thousand-file preview must not rescan both input lists for every row.
+        // Only a unique title key paired with a unique TOC key is eligible.
+        string[] titleKeys = titles.Select(MatchKey).ToArray();
+        var titleCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (string key in titleKeys)
+            titleCounts[key] = titleCounts.GetValueOrDefault(key) + 1;
+
+        var contentPositions = new Dictionary<string, int?>(StringComparer.Ordinal);
+        for (int i = 0; i < contents.Count; i++)
+        {
+            string key = MatchKey(contents[i]);
+            if (!contentPositions.TryAdd(key, i)) contentPositions[key] = null;
+        }
+
+        return titleKeys.Select(key =>
+            key.Length > 0 && titleCounts[key] == 1 &&
+            contentPositions.TryGetValue(key, out int? position)
+                ? position : null).ToArray();
     }
 }

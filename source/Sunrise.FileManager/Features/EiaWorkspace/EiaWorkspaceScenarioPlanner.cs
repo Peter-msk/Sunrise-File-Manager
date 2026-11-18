@@ -90,6 +90,8 @@ public static class EiaWorkspaceScenarioPlanner
             c => Normalize(c.ContractCode, "계약번호", 45), IgnoreCase);
         var caseKeys = request.AssessmentCases.ToDictionary(
             c => Normalize(c.CaseCode, "평가업무번호", 45), IgnoreCase);
+        var caseRoots = EiaWorkspaceCasePlanner.BuildCaseRootMap(
+            caseKeys.Values, EiaWorkspacePreviewPlanner.LoadDraftCatalog());
         var paths = new HashSet<string>(baseline.DirectoryPaths, IgnoreCase);
         var events = new HashSet<string>(IgnoreCase);
         var outcomes = new List<EiaScenarioOutcome>();
@@ -147,7 +149,7 @@ public static class EiaWorkspaceScenarioPlanner
 
             string root = scenario.Scope switch
             {
-                "case" => CaseRoot(assessment!),
+                "case" => caseRoots[caseCode!],
                 "contract" => $"10_계약_용역관리/07_계약별/{contractCode}",
                 _ => "00_사업기본정보"
             };
@@ -209,12 +211,6 @@ public static class EiaWorkspaceScenarioPlanner
         string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(seed))).ToLowerInvariant();
         return new(baseline, catalog.CatalogVersion, Array.AsReadOnly(orderedPaths),
             Array.AsReadOnly(orderedOutcomes), hash, catalog.Warning, true, false);
-    }
-
-    private static string CaseRoot(EiaAssessmentCase item)
-    {
-        var catalog = EiaWorkspacePreviewPlanner.LoadDraftCatalog();
-        return $"40_평가업무_법정절차/{catalog.WorkstreamPaths[item.Workstream][0].Split('/')[0]}/{item.CaseCode.Trim().Normalize(NormalizationForm.FormC)}";
     }
 
     private static void AddWithParents(HashSet<string> paths, string projectRoot, string relative)

@@ -31,7 +31,17 @@ public partial class BatchRenameDialog : Window
         string find = FindBox?.Text ?? "";
         string replace = ReplaceBox?.Text ?? "";
         bool useNumber = NumberingCheck?.IsChecked == true;
-        if (!int.TryParse(StartNumberBox?.Text, out int startNum) || startNum < 0) startNum = 1;
+        bool validNumber = int.TryParse(StartNumberBox?.Text, out int startNum) &&
+                           startNum >= 1 && startNum <= int.MaxValue - _sourcePaths.Count;
+        if (useNumber && !validNumber)
+        {
+            _currentRows = [];
+            PreviewGrid.ItemsSource = _currentRows;
+            ValidationStatus.Text = "시작 번호는 1 이상의 숫자여야 하며 선택 개수만큼 증가해도 범위를 넘지 않아야 합니다.";
+            ApplyButton.IsEnabled = false;
+            return;
+        }
+        if (!validNumber) startNum = 1; // Numbering is off; this value is not used.
 
         var rows = new List<PreviewRow>();
         var seenTargets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -58,6 +68,8 @@ public partial class BatchRenameDialog : Window
             try
             {
                 FileActionsService.ValidateName(candidateName);
+                if (candidateName.Length > 255)
+                    throw new ArgumentException("Windows 파일 이름은 255자를 초과할 수 없습니다.");
                 string targetFull = Path.Combine(parent, candidateName);
                 if (string.Equals(oldName, candidateName, StringComparison.Ordinal))
                 {
@@ -94,6 +106,19 @@ public partial class BatchRenameDialog : Window
                 ? $"변경 대상 {validChangeCount}건 준비 완료"
                 : "접두어, 접미어, 치환 문자열 또는 일련번호를 입력하세요.";
         ApplyButton.IsEnabled = conflictCount == 0 && validChangeCount > 0;
+    }
+
+    private void StartNumber_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        => e.Handled = e.Text.Any(c => c is < '0' or > '9');
+
+    private void StartNumber_Pasting(object sender, DataObjectPastingEventArgs e)
+    {
+        string? text = e.DataObject.GetDataPresent(DataFormats.UnicodeText)
+            ? e.DataObject.GetData(DataFormats.UnicodeText) as string
+            : e.DataObject.GetDataPresent(DataFormats.Text)
+                ? e.DataObject.GetData(DataFormats.Text) as string : null;
+        if (text is null || text.Any(c => c is < '0' or > '9'))
+            e.CancelCommand();
     }
 
     private void Apply_Click(object sender, RoutedEventArgs e)
